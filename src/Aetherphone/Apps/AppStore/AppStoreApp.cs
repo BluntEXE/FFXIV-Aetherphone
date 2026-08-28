@@ -60,6 +60,7 @@ internal sealed partial class AppStoreApp : IPhoneApp
     private string lastSearch = string.Empty;
     private bool resetScroll;
     private bool rowAnchorTaken;
+    private string pendingAppId = string.Empty;
 
     public AppStoreApp(AppInstaller installer, IReadOnlyList<IPhoneApp> apps)
     {
@@ -74,6 +75,8 @@ internal sealed partial class AppStoreApp : IPhoneApp
     public string DisplayName => Loc.T(L.Apps.AppStore);
     public string Glyph => "A";
     public int BadgeCount => 0;
+
+    public void RequestApp(string appId) => pendingAppId = appId;
 
     public void OnOpened()
     {
@@ -105,6 +108,15 @@ internal sealed partial class AppStoreApp : IPhoneApp
             tab = StoreTab.Apps;
             resetScroll = true;
             router.Reset();
+        }
+
+        if (pendingAppId.Length > 0)
+        {
+            tab = StoreTab.Apps;
+            resetScroll = true;
+            router.Reset();
+            router.Push(StoreView.ForApp(pendingAppId), false);
+            pendingAppId = string.Empty;
         }
 
         var delta = ImGui.GetIO().DeltaTime;

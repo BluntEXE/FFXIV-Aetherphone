@@ -271,7 +271,8 @@ internal sealed partial class ChirperApp
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        ChirperIcons.Image(drawList, photoCenter, 19f * scale, canAttach ? ChirperInk.AccentLink : photoInk);
+        PhoneIcon.Draw(drawList, photoCenter, PhoneIcons.Photo,
+            canAttach ? ChirperInk.AccentLink : photoInk, 19f * scale);
         HoverTooltip.Show(new Rect(photoCenter - photoExtent, photoCenter + photoExtent), Loc.T(L.Chirper.AddPhotos),
             HoverLabelSide.Above);
         if (UiInteract.Click(photoCenter - photoExtent, photoCenter + photoExtent, photoHovered))
@@ -338,7 +339,7 @@ internal sealed partial class ChirperApp
             var ink = composeSensitive ? ChirperInk.MineInk : ChirperInk.MutedInk;
             Squircle.Fill(drawList, pillMin, pillMax, pillHeight * 0.5f, ImGui.GetColorU32(fill));
             Squircle.Stroke(drawList, pillMin, pillMax, pillHeight * 0.5f, ImGui.GetColorU32(stroke), 1f);
-            ChirperIcons.Sensitive(drawList, (pillMin + pillMax) * 0.5f, 15f * scale, ink);
+            PhoneIcon.Draw(drawList, (pillMin + pillMax) * 0.5f, PhoneIcons.EyeOff, ink, 15f * scale);
             if (pillHovered)
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -441,7 +442,7 @@ internal sealed partial class ChirperApp
         var badgeHovered = UiInteract.Hover(badgeMin, badgeMax);
         drawList.AddCircleFilled(badgeCenter, badgeRadius,
             ImGui.GetColorU32(badgeHovered ? Palette.WithAlpha(RemoveChipFill, 0.85f) : RemoveChipFill), 24);
-        ChirperIcons.Close.Stroke(drawList, badgeCenter, 11f * scale, ImGui.GetColorU32(ChirperInk.White), 3f);
+        PhoneIcon.Draw(drawList, badgeCenter, PhoneIcons.X, ChirperInk.White, 11f * scale);
         if (badgeHovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

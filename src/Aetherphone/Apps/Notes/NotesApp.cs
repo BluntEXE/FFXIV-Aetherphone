@@ -46,6 +46,7 @@ internal sealed class NotesApp : IResumableApp, ISpotlightNotes
 
     private PhoneNote? editingNote;
     private Guid? pendingNoteId;
+    private bool pendingNewNote;
     private string noteBuffer = string.Empty;
     private bool noteDirty;
 
@@ -79,8 +80,17 @@ internal sealed class NotesApp : IResumableApp, ISpotlightNotes
 
     public void RequestNote(Guid noteId) => pendingNoteId = noteId;
 
+    public void RequestNewNote() => pendingNewNote = true;
+
     private void ConsumePendingNote()
     {
+        if (pendingNewNote)
+        {
+            pendingNewNote = false;
+            StartNewNote();
+            return;
+        }
+
         if (pendingNoteId is not { } id)
         {
             return;

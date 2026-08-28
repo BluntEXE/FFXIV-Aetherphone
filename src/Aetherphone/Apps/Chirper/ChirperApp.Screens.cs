@@ -1,6 +1,7 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Animation;
+using Aetherphone.Core.Emoji;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
@@ -16,6 +17,10 @@ internal sealed partial class ChirperApp
     private const float UserRowHeight = 62f;
     private const float FollowPillHeight = 31f;
     private const float ActivityIconRadius = 19f;
+    private const float ActivityBadgeRadius = 9f;
+    private const float ActivityBadgeRimFraction = 0.70711f;
+    private const float ReactionBadgeRadius = 9f;
+    private const float ReactionRailHeight = 46f;
     private const float SearchDebounceSeconds = 0.35f;
     private const float TagRowHeight = 60f;
     private const float TagGlyphSize = 38f;
@@ -47,10 +52,8 @@ internal sealed partial class ChirperApp
     private static readonly Vector4 GlassPillInk = new(0.875f, 0.902f, 0.941f, 1f);
     private static readonly Vector4 GlassPillStroke = new(1f, 1f, 1f, 0.12f);
     private static readonly Vector4 RowHover = new(1f, 1f, 1f, 0.03f);
-    private static readonly Vector4 LikeWash = new(1f, 0.216f, 0.373f, 0.14f);
-    private static readonly Vector4 RechirpWash = new(0.188f, 0.820f, 0.345f, 0.13f);
     private static readonly Vector4 MentionInk = new(0.718f, 0.612f, 1f, 1f);
-    private static readonly Vector4 MentionWash = new(0.655f, 0.545f, 0.980f, 0.15f);
+    private static readonly Vector4 ActivityBadgeRing = new(0f, 0f, 0f, 0.55f);
     private static readonly Vector4 UnreadTint = Palette.WithAlpha(ChirperInk.Accent, 0.045f);
     private static readonly Vector4 EditCardFill = new(1f, 1f, 1f, 0.045f);
     private static readonly Vector4 EditCardStroke = new(1f, 1f, 1f, 0.07f);
@@ -84,7 +87,8 @@ internal sealed partial class ChirperApp
             var hitMax = chipCenter + new Vector2(hitHalf, hitHalf);
             var hovered = UiInteract.Hover(hitMin, hitMax);
             drawList.AddCircleFilled(chipCenter, chipRadius, ImGui.GetColorU32(hovered ? BackChipHover : BackChipFill), 32);
-            ChirperIcons.ChevronLeft.Stroke(drawList, chipCenter, 17f * scale, ImGui.GetColorU32(ChirperInk.TitleInk), 2.4f);
+            PhoneIcon.Draw(drawList, chipCenter, PhoneIcons.ChevronLeft,
+                ChirperInk.TitleInk, 17f * scale);
             if (hovered)
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -132,7 +136,8 @@ internal sealed partial class ChirperApp
             var hitHalf = 22f * scale;
             var hovered = UiInteract.Hover(chipCenter - new Vector2(hitHalf, hitHalf), chipCenter + new Vector2(hitHalf, hitHalf));
             drawList.AddCircleFilled(chipCenter, chipRadius, ImGui.GetColorU32(hovered ? BackChipHover : BackChipFill), 32);
-            ChirperIcons.ChevronLeft.Stroke(drawList, chipCenter, 17f * scale, ImGui.GetColorU32(ChirperInk.TitleInk), 2.4f);
+            PhoneIcon.Draw(drawList, chipCenter, PhoneIcons.ChevronLeft,
+                ChirperInk.TitleInk, 17f * scale);
             if (hovered)
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -151,7 +156,8 @@ internal sealed partial class ChirperApp
         var fieldMax = new Vector2(area.Max.X - 14f * scale, rowCenterY + fieldHeight * 0.5f);
         Squircle.Fill(drawList, fieldMin, fieldMax, 12f * scale, ImGui.GetColorU32(SearchFieldFill));
         Squircle.Stroke(drawList, fieldMin, fieldMax, 12f * scale, ImGui.GetColorU32(SearchFieldStroke), 1f);
-        ChirperIcons.Search(drawList, new Vector2(fieldMin.X + 19f * scale, rowCenterY), 15f * scale, ChirperInk.MutedInk, 2.2f);
+        PhoneIcon.Draw(drawList, new Vector2(fieldMin.X + 19f * scale, rowCenterY), PhoneIcons.Search,
+            ChirperInk.MutedInk, 15f * scale);
         ImGui.SetCursorScreenPos(new Vector2(fieldMin.X + 32f * scale, rowCenterY - ImGui.GetFrameHeight() * 0.5f));
         ImGui.SetNextItemWidth(fieldMax.X - fieldMin.X - 40f * scale);
         var hint = Loc.T(L.Chirper.SearchHint);
@@ -266,8 +272,8 @@ internal sealed partial class ChirperApp
             : Loc.Plural(L.Chirper.Posts, summary.Posts);
         Typography.Draw(drawList, new Vector2(textLeft, textTop + nameHeight + 2f * scale),
             Typography.FitText(count, textWidth, TagCountStyle), ChirperInk.MutedInk, TagCountStyle);
-        ChirperIcons.ChevronRight.Stroke(drawList, new Vector2(chevronLeft, origin.Y + height * 0.5f), 14f * scale,
-            ImGui.GetColorU32(ChirperInk.FaintInk), 2.4f);
+        PhoneIcon.Draw(drawList, new Vector2(chevronLeft, origin.Y + height * 0.5f), PhoneIcons.ChevronRight,
+            ChirperInk.FaintInk, 14f * scale);
         if (UiInteract.Click(origin, rowMax, hovered))
         {
             OpenHashtag(summary.Tag, summary.PostsToday);
@@ -322,13 +328,14 @@ internal sealed partial class ChirperApp
         var displayName = SocialIdentity.Name(user.DisplayName, user.Handle);
         DrawAvatar(drawList, avatarCenter, radius, user.IsMe ? user.Name : displayName,
             user.IsMe ? user.World : string.Empty, user.AvatarUrl, 0.95f, 32, Frames.Of(user.FrameId));
+        DrawReactionBadge(drawList, avatarCenter, radius, store.ReactionKindOf(user.Id));
         var textLeft = avatarCenter.X + radius + AvatarGap * scale;
         var textRight = pillLabel.Length > 0 ? pillMin.X - 10f * scale : rowMax.X - padX;
         var textWidth = MathF.Max(1f, textRight - textLeft);
         var nameHeight = Typography.LineHeight(UserNameStyle);
         var subHeight = Typography.LineHeight(UserSubStyle);
         var textTop = origin.Y + (height - nameHeight - subHeight - 2f * scale) * 0.5f;
-        UserName.DrawPlain(drawList, "chirper.row.name." + user.Id, displayName, user.Badges, user.ProfileBadges,
+        UserName.DrawAuto(drawList, "chirper.row.name." + user.Id, displayName, user.Badges, user.ProfileBadges,
             textLeft, textTop, textWidth, UserNameStyle, ChirperInk.TitleInk, theme);
         var regionCode = user.IsMe
             ? SocialRegion.EffectiveCode(configuration, gameData)
@@ -377,6 +384,15 @@ internal sealed partial class ChirperApp
         DrawScreenHeader(area, SocialProfilePages.UserListTitle(kind));
         var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
+        var counts = kind == UserListKind.Likers ? store.UserListReactionCounts : null;
+        if (counts is not null && ActiveReactionKinds(counts) > 1)
+        {
+            var rail = new Rect(new Vector2(area.Min.X, top),
+                new Vector2(area.Max.X, top + ReactionRailHeight * scale));
+            DrawReactionFilterRail(rail, counts);
+            top = rail.Max.Y;
+        }
+
         var listRect = new Rect(new Vector2(area.Min.X, top), area.Max);
         var snapshot = store.UserListResults;
         using (AppSurface.BeginEdgeToEdge(listRect))
@@ -408,6 +424,130 @@ internal sealed partial class ChirperApp
 
             ImGui.Dummy(new Vector2(0f, 12f * scale));
         }
+    }
+
+    private static int ActiveReactionKinds(int[] counts)
+    {
+        var active = 0;
+        for (var kind = 0; kind < counts.Length; kind++)
+        {
+            if (counts[kind] > 0)
+            {
+                active++;
+            }
+        }
+
+        return active;
+    }
+
+    private static void DrawReactionBadge(ImDrawListPtr drawList, Vector2 avatarCenter, float avatarRadius, int kind)
+    {
+        if (kind < 0)
+        {
+            return;
+        }
+
+        var scale = UiScale.Current;
+        var offset = avatarRadius * ActivityBadgeRimFraction;
+        var center = avatarCenter + new Vector2(offset, offset);
+        var radius = ReactionBadgeRadius * scale;
+        drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ActivityBadgeRing), 20);
+        var emoji = radius * 1.35f;
+        var half = new Vector2(emoji * 0.5f, emoji * 0.5f);
+        EmojiImages.TryDraw(drawList, ChirperReactions.EmojiFile(kind), center - half, center + half, 0xFFFFFFFFu);
+    }
+
+    private void DrawReactionFilterRail(Rect rail, int[] counts)
+    {
+        var scale = UiScale.Current;
+        var selected = store.UserListReactionFilter;
+        var total = 0;
+        for (var kind = 0; kind < counts.Length; kind++)
+        {
+            total += counts[kind];
+        }
+
+        ImGui.SetCursorScreenPos(rail.Min);
+        using (var child = ImRaii.Child("##chirperReactionRail", new Vector2(rail.Width, rail.Height), false,
+                   ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoScrollbar
+                   | ImGuiWindowFlags.HorizontalScrollbar))
+        {
+            if (child)
+            {
+                var drawList = ImGui.GetWindowDrawList();
+                var origin = ImGui.GetCursorScreenPos();
+                var centerY = origin.Y + rail.Height * 0.5f;
+                var gap = ReactionChipGap * scale;
+                var cursorX = origin.X + CellPadX * scale;
+                cursorX += DrawReactionFilterChip(drawList, cursorX, centerY, -1, total, selected < 0) + gap;
+                for (var kind = 0; kind < counts.Length; kind++)
+                {
+                    if (counts[kind] == 0)
+                    {
+                        continue;
+                    }
+
+                    cursorX += DrawReactionFilterChip(drawList, cursorX, centerY, kind, counts[kind],
+                        selected == kind) + gap;
+                }
+
+                ImGui.Dummy(new Vector2(cursorX - origin.X + CellPadX * scale - gap, rail.Height));
+            }
+        }
+
+        DrawHairline(ImGui.GetWindowDrawList(), rail.Min.X, rail.Max.X, rail.Max.Y);
+    }
+
+    private float DrawReactionFilterChip(ImDrawListPtr drawList, float x, float centerY, int kind, int count,
+        bool selected)
+    {
+        var scale = UiScale.Current;
+        var label = kind < 0 ? Loc.T(L.Chirper.ReactionsAll) : string.Empty;
+        var countText = count.ToString(Loc.Culture);
+        var countSize = Typography.Measure(countText, ChipCountStyle);
+        var labelSize = label.Length > 0 ? Typography.Measure(label, ChipCountStyle) : Vector2.Zero;
+        var emojiSize = ReactionChipEmoji * scale;
+        var lead = kind < 0 ? labelSize.X : emojiSize;
+        var chipWidth = (11f + 5f + 11f) * scale + lead + countSize.X;
+        var chipHeight = ReactionChipHeight * scale;
+        var min = new Vector2(x, centerY - chipHeight * 0.5f);
+        var max = new Vector2(x + chipWidth, centerY + chipHeight * 0.5f);
+        var hovered = UiInteract.Hover(min, max);
+        var fill = selected ? ChirperInk.MineFill : ChirperInk.ChipFill;
+        var stroke = selected ? ChirperInk.MineStroke : ChirperInk.ChipStroke;
+        var ink = selected ? ChirperInk.MineInk : ChirperInk.BodyInk;
+        Squircle.Fill(drawList, min, max, chipHeight * 0.5f, ImGui.GetColorU32(fill));
+        Squircle.Stroke(drawList, min, max, chipHeight * 0.5f, ImGui.GetColorU32(stroke), 1f);
+        var leadLeft = min.X + 11f * scale;
+        if (kind < 0)
+        {
+            Typography.Draw(drawList, new Vector2(leadLeft, centerY - labelSize.Y * 0.5f), label, ink, ChipCountStyle);
+        }
+        else
+        {
+            var emojiMin = new Vector2(leadLeft, centerY - emojiSize * 0.5f);
+            EmojiImages.TryDraw(drawList, ChirperReactions.EmojiFile(kind), emojiMin,
+                emojiMin + new Vector2(emojiSize, emojiSize), 0xFFFFFFFFu);
+        }
+
+        Typography.Draw(drawList, new Vector2(leadLeft + lead + 5f * scale, centerY - countSize.Y * 0.5f), countText,
+            ink, ChipCountStyle);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        if (kind >= 0)
+        {
+            HoverTooltip.Show(new Rect(min, max), ChirperReactions.Label(kind), HoverLabelSide.Below);
+        }
+
+        if (UiInteract.Click(min, max, hovered))
+        {
+            store.FilterUserListByReaction(kind);
+        }
+
+        return chipWidth;
     }
 
     private void DrawActivity(Rect area, bool root = false)
@@ -528,11 +668,14 @@ internal sealed partial class ChirperApp
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        var iconCenter = new Vector2(origin.X + padX + iconRadius, origin.Y + padY + iconRadius);
-        DrawActivityIcon(drawList, iconCenter, iconRadius, item.Type, scale);
+        var avatarCenter = new Vector2(origin.X + padX + iconRadius, origin.Y + padY + iconRadius);
+        DrawAvatar(drawList, avatarCenter, iconRadius, actor, string.Empty, item.ActorAvatarUrl, 0.95f, 32,
+            Frames.Of(item.ActorFrameId));
+        var badgeOffset = iconRadius * ActivityBadgeRimFraction;
+        DrawActivityBadge(drawList, avatarCenter + new Vector2(badgeOffset, badgeOffset), item.Type, scale);
         var textTop = origin.Y + padY;
-        Typography.Draw(drawList, new Vector2(textLeft, textTop), Typography.FitText(actor, textWidth, ActivityActorStyle),
-            ChirperInk.TitleInk, ActivityActorStyle);
+        UserName.DrawAuto(drawList, "chirper.activity.actor." + item.Id, actor, item.ActorBadges, item.ActorBadgeIds,
+            textLeft, textTop, textWidth, ActivityActorStyle, ChirperInk.TitleInk, theme);
         if (bodyHeight > 0f)
         {
             Typography.DrawWrappedLeft(new Vector2(textLeft, textTop + actorHeight + 2f * scale), body, ChirperInk.BodyInk,
@@ -548,7 +691,12 @@ internal sealed partial class ChirperApp
         }
 
         DrawHairline(drawList, origin.X, rowMax.X, rowMax.Y);
-        if (UiInteract.Click(origin, rowMax, hovered))
+        var avatarExtent = new Vector2(iconRadius, iconRadius);
+        if (UiInteract.HoverClick(avatarCenter - avatarExtent, avatarCenter + avatarExtent))
+        {
+            OpenProfile(item.ActorId);
+        }
+        else if (UiInteract.Click(origin, rowMax, hovered))
         {
             if (SocialActivity.OpensPost(item))
             {
@@ -564,41 +712,44 @@ internal sealed partial class ChirperApp
         ImGui.Dummy(new Vector2(width, rowHeight));
     }
 
-    private static void DrawActivityIcon(ImDrawListPtr drawList, Vector2 center, float radius, int type, float scale)
+    private static void DrawActivityBadge(ImDrawListPtr drawList, Vector2 center, int type, float scale)
     {
-        var iconSize = 17f * scale;
+        var radius = ActivityBadgeRadius * scale;
+        var iconSize = radius * 1.15f;
+        var ink = ImGui.GetColorU32(ChirperInk.White);
+        drawList.AddCircleFilled(center, radius + 1.6f * scale, ImGui.GetColorU32(ActivityBadgeRing), 20);
         switch (type)
         {
             case SocialActivity.TypeLike:
             case SocialActivity.TypeCommentLike:
-                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(LikeWash), 32);
-                ChirperIcons.HeartFilled(drawList, center, iconSize, ChirperInk.LikeRed);
+                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.LikeRed), 20);
+                PhoneIcon.Draw(drawList, center, PhoneIcons.HeartFilled, ChirperInk.White, iconSize);
                 break;
             case SocialActivity.TypeRepost:
             case SocialActivity.TypeQuote:
-                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(RechirpWash), 32);
-                ChirperIcons.Rechirp.Stroke(drawList, center, iconSize, ImGui.GetColorU32(ChirperInk.RechirpGreen), 2.1f);
+                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.RechirpGreen), 20);
+                PhoneIcon.Draw(drawList, center, PhoneIcons.Repeat, ink, iconSize);
                 break;
             case SocialActivity.TypeComment:
-                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.AccentWash), 32);
-                ChirperIcons.Reply.Stroke(drawList, center, iconSize, ImGui.GetColorU32(ChirperInk.AccentLink), 1.9f);
+                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.AccentLink), 20);
+                PhoneIcon.Draw(drawList, center, PhoneIcons.MessageCircle, ink, iconSize);
                 break;
             case SocialActivity.TypeMention:
             case SocialActivity.TypeCommentMention:
-                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(MentionWash), 32);
-                Typography.DrawCentered(drawList, center, "@", MentionInk, ActivityActorStyle);
+                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(MentionInk), 20);
+                Typography.DrawCentered(drawList, center, "@", ChirperInk.White, TextStyles.Caption2);
                 break;
             case SocialActivity.TypeFollow:
             case SocialActivity.TypeFollowRequest:
             case SocialActivity.TypeFollowAccept:
             case SocialActivity.TypeConnectRequest:
             case SocialActivity.TypeConnectAccept:
-                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.AccentWash), 32);
-                ChirperIcons.Plus.Stroke(drawList, center, iconSize, ImGui.GetColorU32(ChirperInk.AccentLink), 2.4f);
+                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.AccentLink), 20);
+                PhoneIcon.Draw(drawList, center, PhoneIcons.Plus, ink, iconSize);
                 break;
             default:
-                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.ChipFill), 32);
-                ChirperIcons.Bell.Stroke(drawList, center, iconSize, ImGui.GetColorU32(ChirperInk.MutedInk), 2f);
+                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.MutedInk), 20);
+                PhoneIcon.Draw(drawList, center, PhoneIcons.Bell, ink, iconSize);
                 break;
         }
     }
@@ -698,7 +849,7 @@ internal sealed partial class ChirperApp
             listDrawList.AddCircleFilled(badgeCenter, badgeRadius + 3f * scale, ImGui.GetColorU32(ChirperInk.BackdropTop), 32);
             Squircle.FillCircleVerticalGradient(listDrawList, badgeCenter, badgeRadius, ImGui.GetColorU32(ChirperInk.Accent),
                 ImGui.GetColorU32(ChirperInk.AccentDeep));
-            ChirperIcons.CameraBadge(listDrawList, badgeCenter, 13f * scale, ChirperInk.White);
+            PhoneIcon.Draw(listDrawList, badgeCenter, PhoneIcons.Camera, ChirperInk.White, 13f * scale);
             var avatarExtent = new Vector2(avatarRadius + 4f * scale, avatarRadius + 4f * scale);
             if (UiInteract.HoverClick(avatarCenter - avatarExtent, avatarCenter + avatarExtent))
             {
@@ -744,7 +895,8 @@ internal sealed partial class ChirperApp
             if (showAvailable)
             {
                 var checkCenter = new Vector2(cardRight - innerPad - availableSize.X - 9f * scale, handleRowTop + rowHeight * 0.5f);
-                ChirperIcons.Check.Stroke(listDrawList, checkCenter, 13f * scale, ImGui.GetColorU32(ChirperInk.RechirpGreen), 2.6f);
+                PhoneIcon.Draw(listDrawList, checkCenter, PhoneIcons.Check,
+                    ChirperInk.RechirpGreen, 13f * scale);
                 Typography.Draw(listDrawList, new Vector2(cardRight - innerPad - availableSize.X, handleRowTop + (rowHeight - availableSize.Y) * 0.5f),
                     availableLabel, ChirperInk.RechirpGreen, EditHintStyle);
             }

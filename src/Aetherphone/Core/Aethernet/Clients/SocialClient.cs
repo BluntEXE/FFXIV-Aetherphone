@@ -82,9 +82,15 @@ internal sealed class SocialClient
     }
 
     public Task<UserListPage?> PostLikersAsync(string postId, string? cursor, CancellationToken token,
-        Action<AepFailure>? onFailure = null)
+        int reactionKind = -1, Action<AepFailure>? onFailure = null)
     {
-        return UserListAsync($"/posts/{Uri.EscapeDataString(postId)}/likers", cursor, token, onFailure);
+        var path = $"/posts/{Uri.EscapeDataString(postId)}/likers";
+        if (reactionKind >= 0)
+        {
+            path += $"?kind={reactionKind}";
+        }
+
+        return UserListAsync(path, cursor, token, onFailure);
     }
 
     public Task<UserListPage?> MutualFollowersAsync(string userId, string? cursor, CancellationToken token,
@@ -98,7 +104,8 @@ internal sealed class SocialClient
     {
         if (cursor is not null)
         {
-            path += $"?cursor={Uri.EscapeDataString(cursor)}";
+            path += path.Contains('?') ? "&" : "?";
+            path += $"cursor={Uri.EscapeDataString(cursor)}";
         }
 
         return net.GetAsync(path, AethernetJsonContext.Default.UserListPage, token, null, onFailure);

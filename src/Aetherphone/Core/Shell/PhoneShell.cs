@@ -103,7 +103,8 @@ internal sealed class PhoneShell : IDisposable
         minimizedPhone = new MinimizedPhone(services.Playback, calls, notifications, router, navigation, configuration);
         var spotlightIndex = new Spotlight.SpotlightIndex(apps, services.Installer, bundle.Contacts,
             services.DmLauncher, services.ChatInbox, services.ChatLog, services.LinkpearlLauncher,
-            services.MarketIndex, services.MarketLauncher, configuration);
+            services.MarketIndex, services.MarketLauncher, services.Shortcuts, services.ShortcutRunner,
+            services.Maps, services.StratsManifest, services.Venues, themes, calls, configuration);
         home = new HomeScreen(apps, bundle.Widgets, services.Shortcuts, services.ShortcutRunner, configuration,
             services.Confirm, spotlightIndex);
         services.Installer.Bind(home.Layout);

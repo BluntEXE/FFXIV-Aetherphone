@@ -90,11 +90,12 @@ public sealed class Plugin : IDalamudPlugin
         try
         {
             Instance = this;
+            var freshInstall = !PluginInterface.ConfigFile.Exists;
             ConfigMigrations.Run(PluginInterface.ConfigFile);
             Cfg = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             Cfg.NormalizeAethernetBaseUrl();
             Cfg.MigrateSoundSettings();
-            Cfg.MigrateUiSoundChannels();
+            Cfg.MigrateUiSoundDefaults(freshInstall);
             Cfg.MigrateChangelogSeen();
             Cfg.MigrateMessage();
             Cfg.MigrateMessagesMerge();

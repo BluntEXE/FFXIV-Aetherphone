@@ -48,6 +48,7 @@ internal sealed partial class StratsApp : IPhoneApp
     private bool timelineOpen;
     private bool linksOpen;
     private bool selectionDirty;
+    private string pendingFightKey = string.Empty;
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
 
@@ -82,12 +83,15 @@ internal sealed partial class StratsApp : IPhoneApp
         zoom.Reset();
     }
 
+    public void RequestFight(string fightKey) => pendingFightKey = fightKey;
+
     public void Draw(in PhoneContext context)
     {
         theme = context.Theme;
         navigation = context.Navigation;
         ui.Theme = theme;
         manifestStore.EnsureFresh(false);
+        ConsumePendingFight();
         if (router.Current.Screen != StratsScreen.Viewer)
         {
             AppLandscape.Release(Id);
@@ -112,6 +116,21 @@ internal sealed partial class StratsApp : IPhoneApp
             default:
                 DrawIndex(area);
                 break;
+        }
+    }
+
+    private void ConsumePendingFight()
+    {
+        if (pendingFightKey.Length == 0 || manifestStore.Manifest is null)
+        {
+            return;
+        }
+
+        var wanted = pendingFightKey;
+        pendingFightKey = string.Empty;
+        if (manifestStore.TryFind(wanted, out var fight))
+        {
+            OpenFight(fight);
         }
     }
 

@@ -500,8 +500,8 @@ internal sealed partial class ChirperApp : IResumableApp
         var listRect = new Rect(new Vector2(area.Min.X, rowRect.Max.Y), area.Max);
         DrawFeedList(listRect, activeScope);
         if (ComposeFab.Draw(listRect, "##chirperComposeFab", ChirperInk.Accent,
-                IconGlyph.Of(FontAwesomeIcon.Feather), Loc.T(L.Chirper.NewChirp), "chirper.compose",
-                ChirperInk.AccentDeep, FabRadius, ChirperIcons.Feather))
+                PhoneIcons.Feather, Loc.T(L.Chirper.NewChirp), "chirper.compose",
+                ChirperInk.AccentDeep, FabRadius, true))
         {
             BeginCompose();
         }
@@ -570,20 +570,23 @@ internal sealed partial class ChirperApp : IResumableApp
             switch (tab)
             {
                 case HomeTab.Explore:
-                    ChirperIcons.Search(drawList, iconCenter, iconSize, iconInk, active ? 2.4f : 2.1f);
+                    PhoneIcon.Draw(drawList, iconCenter, PhoneIcons.Search, iconInk, iconSize);
                     label = Loc.T(L.Chirper.TabExplore);
                     break;
                 case HomeTab.Alerts:
-                    ChirperIcons.Bell.Stroke(drawList, iconCenter, iconSize, ImGui.GetColorU32(iconInk), active ? 2.3f : 2f);
+                    PhoneIcon.Draw(drawList, iconCenter, active ? PhoneIcons.BellFilled : PhoneIcons.Bell,
+                        iconInk, iconSize);
                     DrawBellBadge(iconCenter, social.UnseenCount(Id));
-                    label = Loc.T(L.Chirper.TabAlerts);
+                    label = Loc.T(L.Social.ActivityTitle);
                     break;
                 case HomeTab.Profile:
-                    ChirperIcons.Person(drawList, iconCenter, iconSize, iconInk, active);
+                    PhoneIcon.Draw(drawList, iconCenter, active ? PhoneIcons.UserFilled : PhoneIcons.User,
+                        iconInk, iconSize);
                     label = Loc.T(L.Chirper.TabProfile);
                     break;
                 default:
-                    ChirperIcons.Home(drawList, iconCenter, iconSize, iconInk, active);
+                    PhoneIcon.Draw(drawList, iconCenter, active ? PhoneIcons.HomeFilled : PhoneIcons.Home,
+                        iconInk, iconSize);
                     label = Loc.T(L.Chirper.TabHome);
                     break;
             }
@@ -984,7 +987,7 @@ internal sealed partial class ChirperApp : IResumableApp
         }
 
         var rawDisplayName = SocialIdentity.Name(post.AuthorDisplayName, post.AuthorHandle);
-        var drawnNameWidth = UserName.DrawPlain(drawList, "chirper.post.author." + post.Id, rawDisplayName,
+        var drawnNameWidth = UserName.DrawAuto(drawList, "chirper.post.author." + post.Id, rawDisplayName,
             post.AuthorBadges, post.AuthorBadgeIds, contentLeft, headerTop, headerWidth * 0.45f, NameStyle,
             ChirperInk.TitleInk, theme);
         var nameMin = new Vector2(contentLeft, headerTop);
@@ -1020,7 +1023,8 @@ internal sealed partial class ChirperApp : IResumableApp
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        ChirperIcons.Dots(drawList, moreCenter, 16f * scale, moreHovered ? ChirperInk.Accent : ChirperInk.MutedInk);
+        PhoneIcon.Draw(drawList, moreCenter, PhoneIcons.Dots,
+            moreHovered ? ChirperInk.Accent : ChirperInk.MutedInk, 16f * scale);
         HoverTooltip.Show(new Rect(moreCenter - moreExtent, moreCenter + moreExtent), Loc.T(L.Chirper.More),
             HoverLabelSide.Above);
         if (UiInteract.Click(moreCenter - moreExtent, moreCenter + moreExtent, moreHovered))
@@ -1101,12 +1105,12 @@ internal sealed partial class ChirperApp : IResumableApp
 
     private static void PaintEmojiIcon(ImDrawListPtr drawList, Vector2 center, float radius, Vector4 color)
     {
-        ChirperIcons.React(drawList, center, radius * 1.12f, color, false);
+        PhoneIcon.Draw(drawList, center, PhoneIcons.MoodSmile, color, radius * 1.12f);
     }
 
     private static void PaintPhotoIcon(ImDrawListPtr drawList, Vector2 center, float radius, Vector4 color)
     {
-        ChirperIcons.Image(drawList, center, radius * 1.12f, color);
+        PhoneIcon.Draw(drawList, center, PhoneIcons.Photo, color, radius * 1.12f);
     }
 
     private static void DrawHairline(ImDrawListPtr drawList, float left, float right, float y) =>
@@ -1126,8 +1130,8 @@ internal sealed partial class ChirperApp : IResumableApp
         var top = origin.Y + CellPadTop * scale;
         var iconLeft = origin.X + (CellPadX + 30f) * scale;
         var centerY = top + lineHeight * 0.5f;
-        ChirperIcons.Rechirp.Stroke(drawList, new Vector2(iconLeft + 6.5f * scale, centerY), 13f * scale,
-            ImGui.GetColorU32(ChirperInk.MutedInk), 2.4f);
+        PhoneIcon.Draw(drawList, new Vector2(iconLeft + 6.5f * scale, centerY), PhoneIcons.Repeat,
+            ChirperInk.MutedInk, 13f * scale);
         var mine = store.Me is { } me && me.Id == repostBy.AuthorId;
         var label = mine
             ? Loc.T(L.Chirper.YouReposted)
@@ -1224,13 +1228,13 @@ internal sealed partial class ChirperApp : IResumableApp
         switch (glyph)
         {
             case ActionGlyph.Reply:
-                ChirperIcons.Reply.Stroke(drawList, iconCenter, iconSize, packed, 1.9f);
+                PhoneIcon.Draw(drawList, iconCenter, PhoneIcons.MessageCircle, packed, iconSize);
                 break;
             case ActionGlyph.Rechirp:
-                ChirperIcons.Rechirp.Stroke(drawList, iconCenter, iconSize, packed, 2.1f);
+                PhoneIcon.Draw(drawList, iconCenter, PhoneIcons.Repeat, packed, iconSize);
                 break;
             default:
-                ChirperIcons.Share.Stroke(drawList, iconCenter, iconSize, packed, 1.9f);
+                PhoneIcon.Draw(drawList, iconCenter, PhoneIcons.Share, packed, iconSize);
                 break;
         }
 
@@ -1270,7 +1274,7 @@ internal sealed partial class ChirperApp : IResumableApp
         }
         else
         {
-            ChirperIcons.React(drawList, iconCenter, 18f * scale, ink, true);
+            PhoneIcon.Draw(drawList, iconCenter, PhoneIcons.MoodPlus, ink, 18f * scale);
         }
 
         if (hovered)
@@ -1667,11 +1671,11 @@ internal sealed partial class ChirperApp : IResumableApp
         var glyphCenter = new Vector2(min.X + 20f * scale, centerY);
         if (rechirpGlyph)
         {
-            ChirperIcons.Rechirp.Stroke(drawList, glyphCenter, 17f * scale, ImGui.GetColorU32(faded), 2.1f);
+            PhoneIcon.Draw(drawList, glyphCenter, PhoneIcons.Repeat, faded, 17f * scale);
         }
         else
         {
-            ChirperIcons.Quote(drawList, glyphCenter, 17f * scale, faded);
+            PhoneIcon.Draw(drawList, glyphCenter, PhoneIcons.Quote, faded, 17f * scale);
         }
 
         var textLeft = min.X + 39f * scale;
@@ -1784,7 +1788,7 @@ internal sealed partial class ChirperApp : IResumableApp
         var nameHeight = Typography.LineHeight(QuoteNameStyle);
         var nameTop = headerCenterY - nameHeight * 0.5f;
         var nameMaxWidth = MathF.Max(1f, (min.X + padX + innerWidth - nameLeft) * 0.6f);
-        var drawnNameWidth = UserName.DrawPlain(drawList, "chirper.quote.author." + hostId, rawName,
+        var drawnNameWidth = UserName.DrawAuto(drawList, "chirper.quote.author." + hostId, rawName,
             quoted.AuthorBadges, quoted.AuthorBadgeIds, nameLeft, nameTop, nameMaxWidth, QuoteNameStyle,
             ChirperInk.TitleInk, theme);
         var meta = SocialIdentity.FeedMeta(quoted.AuthorHandle, TimeText.Short(quoted.CreatedAtUnix));

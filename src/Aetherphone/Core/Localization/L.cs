@@ -20,6 +20,8 @@ internal static class L
         public static readonly LocString LoadFailedHint =
             new("common.loadFailedHint", "Check your connection and try again.");
         public static readonly LocString Close = new("common.close", "Close");
+        public static readonly LocString On = new("common.on", "On");
+        public static readonly LocString Off = new("common.off", "Off");
         public static readonly LocString Alerts = new("common.alerts", "Alerts");
         public static readonly LocString Live = new("common.live", "LIVE");
         public static readonly LocString Hq = new("common.hq", "HQ");
@@ -1637,7 +1639,7 @@ internal static class L
             new("changelog.r1013.1",
                 "Added profile pictures next to every post, reply and quote in Chirper, and a banner behind a framed avatar on profiles that opens full size when tapped"),
             new("changelog.r1013.2",
-                "Added sounds across the phone for taps, typing, app transitions, toggles, waking it, taking a photo, sending a message, connecting and ending a call and payouts, all of which can be turned off in Settings > Sounds"),
+                "Added sounds across the phone for taps, typing, app transitions, toggles, waking it, taking a photo, sending a message, connecting and ending a call and payouts, on by default on a new phone and off if you already had one, switchable in Settings > Sounds"),
             new("changelog.r1013.3",
                 "Added sound effects to the mini-games in Games, with their own volume under Game Sounds in Settings > Sounds"),
             new("changelog.r1013.4",
@@ -1645,7 +1647,7 @@ internal static class L
             new("changelog.r1013.5",
                 "Added keyboard controls to Beat: the four lanes bind to 1 to 4 with A, S, D and F as alternates, and each key is printed on a cap under its lane"),
             new("changelog.r1013.6",
-                "Added search to the home screen: pull down on the app grid or tap the Search pill where the page dots sit to find apps, contacts, settings pages, notes, conversations and market items in one list"),
+                "Added search to the home screen: pull down on the app grid or tap the Search pill to find apps, settings, messages, notes, shortcuts and more in one place, run a shortcut or flip a setting on the spot, and do quick math right in the search field"),
             new("changelog.r1013.7",
                 "Added MogCast, Music, News and Hunts to the Chinese game version, so that client gets the same apps as everyone else"),
             new("changelog.r1013.8",
@@ -3509,6 +3511,7 @@ internal static class L
         public static readonly LocString Regions = new("chirper.regions", "Regions");
         public static readonly LocString Done = new("chirper.done", "Done");
         public static readonly LocString ActivityAll = new("chirper.activityAll", "All");
+        public static readonly LocString ReactionsAll = new("chirper.reactionsAll", "All");
         public static readonly LocString ActivityMentions = new("chirper.activityMentions", "Mentions");
         public static readonly LocString HandleAvailable = new("chirper.handleAvailable", "Available");
         public static readonly LocString NameLabel = new("chirper.nameLabel", "Name");
@@ -3516,7 +3519,6 @@ internal static class L
         public static readonly LocString SuggestedPeople = new("chirper.suggestedPeople", "People");
         public static readonly LocString TabHome = new("chirper.tabHome", "Home");
         public static readonly LocString TabExplore = new("chirper.tabExplore", "Explore");
-        public static readonly LocString TabAlerts = new("chirper.tabAlerts", "Alerts");
         public static readonly LocString TabProfile = new("chirper.tabProfile", "Profile");
         public static readonly LocString LikesTab = new("chirper.likesTab", "Likes");
         public static readonly LocString LikesEmpty = new("chirper.likesEmpty", "Chirps you react to will show up here");
@@ -5581,12 +5583,18 @@ internal static class L
         public static readonly LocString Search = new("home.search", "Search");
         public static readonly LocString Hint = new("spotlight.hint", "Search your phone");
         public static readonly LocString NoResults = new("spotlight.noResults", "No results");
+        public static readonly LocString Result = new("spotlight.result", "Result");
         public static readonly LocString Apps = new("spotlight.apps", "Apps");
+        public static readonly LocString Actions = new("spotlight.actions", "Actions");
+        public static readonly LocString TakePhoto = new("spotlight.takePhoto", "Take Photo");
         public static readonly LocString Contacts = new("spotlight.contacts", "Contacts");
+        public static readonly LocString Messages = new("spotlight.messages", "Messages");
         public static readonly LocString Settings = new("spotlight.settings", "Settings");
+        public static readonly LocString Shortcuts = new("spotlight.shortcuts", "Shortcuts");
         public static readonly LocString Conversations = new("spotlight.conversations", "Conversations");
         public static readonly LocString Notes = new("spotlight.notes", "Notes");
         public static readonly LocString Items = new("spotlight.items", "Market Items");
+        public static readonly LocString Store = new("spotlight.store", "From the App Store");
     }
 
     internal static class Onboarding

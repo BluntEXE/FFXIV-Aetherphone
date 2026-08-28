@@ -56,6 +56,7 @@ internal sealed class FontService : IDisposable
     private const float MaxZoom = 1.5f;
     private const int LearnedGlyphCap = 2000;
     private const int LearnedIconCap = 512;
+    private const string TablerIconFile = "TablerIcons.ttf";
     private const int FirstIconCodepoint = 0xE000;
     private const int LastIconCodepoint = 0xF8FF;
     private const long LearnRebuildDebounceMs = 600;
@@ -390,9 +391,17 @@ internal sealed class FontService : IDisposable
     private IFontHandle BuildIconHandle(int sizeIndex)
     {
         var pixels = UiBuilder.DefaultFontSizePx * IconSizeMultipliers[sizeIndex];
+        var tablerPath = Path.Combine(fontDirectory, TablerIconFile);
         return atlas.NewDelegateFontHandle(e => e.OnPreBuild(tk =>
-            tk.AddDalamudAssetFont(Dalamud.DalamudAsset.FontAwesomeFreeSolid,
-                new SafeFontConfig { SizePx = pixels, GlyphRanges = iconRanges, })));
+        {
+            var primary = tk.AddDalamudAssetFont(Dalamud.DalamudAsset.FontAwesomeFreeSolid,
+                new SafeFontConfig { SizePx = pixels, GlyphRanges = iconRanges, });
+            if (File.Exists(tablerPath))
+            {
+                tk.AddFontFromFile(tablerPath,
+                    new SafeFontConfig { SizePx = pixels, GlyphRanges = iconRanges, MergeFont = primary, });
+            }
+        }));
     }
 
     private IFontHandle BuildTextHandle(string path, int weightIndex, int sizeIndex)
