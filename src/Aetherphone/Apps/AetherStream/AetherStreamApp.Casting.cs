@@ -106,7 +106,7 @@ internal sealed partial class AetherStreamApp
         var textLeft = avatarCenter.X + avatarRadius + Metrics.Space.Md * scale;
         var textWidth = approveCenter.X - circleRadius - Metrics.Space.Md * scale - textLeft;
         var nameHeight = Typography.LineHeight(TextStyles.Body);
-        Marquee.DrawLeft(drawList, "aetherstream.request." + request.UserId, request.DisplayName, textLeft,
+        Marquee.DrawLeft(drawList, new MarqueeId("aetherstream.request.", request.UserId), request.DisplayName, textLeft,
             row.Center.Y - nameHeight * 0.5f, textWidth, TextStyles.Body, ui.TitleInk,
             UiInteract.Hover(row.Min, row.Max));
 
@@ -276,7 +276,7 @@ internal sealed partial class AetherStreamApp
             }
 
             var nameHeight = Typography.LineHeight(TextStyles.BodyEmphasized);
-            Marquee.DrawLeft("aetherstream.preset." + preset.Name, preset.Name, row.Min.X,
+            Marquee.DrawLeft(new MarqueeId("aetherstream.preset.", preset.Name), preset.Name, row.Min.X,
                 row.Center.Y - nameHeight * 0.5f, applyMax.X - row.Min.X - Metrics.Space.Md * scale,
                 TextStyles.BodyEmphasized, accentedTheme.TextStrong, hovered);
 

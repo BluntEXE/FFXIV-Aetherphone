@@ -107,7 +107,7 @@ internal sealed partial class HuntsApp
 
         var textLeft = row.Min.X;
         var nameY = row.Center.Y - 16f * scale;
-        Marquee.DrawLeftAuto("hunts.markNotifications.row." + entry.MobId, entry.Label, textLeft, nameY,
+        Marquee.DrawLeftAuto(new MarqueeId("hunts.markNotifications.row.", entry.MobId), entry.Label, textLeft, nameY,
             row.Width * 0.75f, TextStyles.BodyEmphasized, ui.TitleInk);
         Typography.Draw(new Vector2(textLeft, row.Center.Y + 4f * scale), valueText, ui.MutedInk, TextStyles.Footnote);
 

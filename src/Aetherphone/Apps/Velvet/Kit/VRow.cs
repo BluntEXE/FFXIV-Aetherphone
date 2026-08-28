@@ -238,7 +238,7 @@ internal static class VRow
         var subtitleSize = Typography.Measure(subtitleText, TextStyles.Subheadline);
         var subtitleHovering = UiInteract.Hover(new Vector2(textLeft, subtitleY),
             new Vector2(textLeft + innerWidth, subtitleY + subtitleSize.Y));
-        Marquee.DrawLeft("vrow.subtitle." + subtitleText, subtitleText, textLeft, subtitleY,
+        Marquee.DrawLeft(new MarqueeId("vrow.subtitle.", subtitleText), subtitleText, textLeft, subtitleY,
             innerWidth, TextStyles.Subheadline, VelvetTheme.MutedInk, subtitleHovering);
         return hit;
     }

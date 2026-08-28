@@ -16,7 +16,7 @@ internal static class VHeader
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var midY = area.Min.Y + Height * scale * 0.5f;
-        Marquee.DrawLeftAuto("vheader.root." + title, title, area.Min.X + 4f * scale,
+        Marquee.DrawLeftAuto(new MarqueeId("vheader.root.", title), title, area.Min.X + 4f * scale,
             midY - Typography.Measure(title, TextStyles.Title3).Y * 0.5f, area.Width - 44f * scale, TextStyles.Title3,
             VelvetTheme.TitleInk);
         var bellCenter = new Vector2(area.Max.X - 20f * scale, midY);
@@ -40,7 +40,7 @@ internal static class VHeader
         var hovered = UiInteract.Hover(hitMin, hitMax);
         var back = BackButton.Draw("velvet.back", center, 15f * scale, VelvetTheme.TitleInk, hovered, scale,
             shadow: true);
-        Marquee.DrawCenteredAuto("vheader.push." + title, title, area.Center.X,
+        Marquee.DrawCenteredAuto(new MarqueeId("vheader.push.", title), title, area.Center.X,
             midY - Typography.Measure(title, TextStyles.Title3).Y * 0.5f, area.Width - 92f * scale, TextStyles.Title3,
             VelvetTheme.TitleInk);
         if (hovered)

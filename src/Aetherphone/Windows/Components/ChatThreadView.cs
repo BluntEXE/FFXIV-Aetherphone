@@ -1135,7 +1135,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         var rowHovering = UiInteract.Hover(origin, rowMax);
         if (mine)
         {
-            Marquee.DrawLeft("chatthread.reactor." + reactor.UserId, label, textLeft, origin.Y + 10f * scale,
+            Marquee.DrawLeft(new MarqueeId("chatthread.reactor.", reactor.UserId), label, textLeft, origin.Y + 10f * scale,
                 labelMaxWidth, new TextStyle(1f, FontWeight.SemiBold), Theme.TextStrong, rowHovering);
             Typography.Draw(new Vector2(textLeft, origin.Y + 31f * scale),
                 Typography.FitText(Loc.T(L.Message.TapToRemove), labelMaxWidth, TextStyles.Footnote), ui.MutedInk,
@@ -1143,7 +1143,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         }
         else
         {
-            Marquee.DrawLeft("chatthread.reactor." + reactor.UserId, label, textLeft,
+            Marquee.DrawLeft(new MarqueeId("chatthread.reactor.", reactor.UserId), label, textLeft,
                 origin.Y + rowHeight * 0.5f - 9f * scale, labelMaxWidth, new TextStyle(1f, FontWeight.SemiBold),
                 Theme.TextStrong, rowHovering);
         }

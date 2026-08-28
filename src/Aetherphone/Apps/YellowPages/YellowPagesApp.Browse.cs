@@ -149,7 +149,7 @@ internal sealed partial class YellowPagesApp
         var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
         var maxWidth = MathF.Max(1f, area.Width - inset * 2f - rightReserve);
         var titleY = rowCenterY - Typography.Measure(title, TextStyles.Title2).Y * 0.5f;
-        Marquee.DrawLeftAuto("yellowpages.tabtitle." + title, title, area.Min.X + inset, titleY, maxWidth,
+        Marquee.DrawLeftAuto(new MarqueeId("yellowpages.tabtitle.", title), title, area.Min.X + inset, titleY, maxWidth,
             TextStyles.Title2, AppPalettes.YellowPages.TitleInk);
     }
 
@@ -301,9 +301,9 @@ internal sealed partial class YellowPagesApp
 
         var pad = 10f * scale;
         var railTextWidth = max.X - min.X - pad * 2f;
-        Marquee.DrawLeftAuto(drawList, "yellowpages.rail.title." + ad.Id, ad.Title, min.X + pad, thumbMax.Y + 9f * scale,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("yellowpages.rail.title.", ad.Id), ad.Title, min.X + pad, thumbMax.Y + 9f * scale,
             railTextWidth, TextStyles.SubheadlineEmphasized, AppPalettes.YellowPages.TitleInk);
-        Marquee.DrawLeftAuto(drawList, "yellowpages.rail.place." + ad.Id, AdText.PlaceLine(ad), min.X + pad,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("yellowpages.rail.place.", ad.Id), AdText.PlaceLine(ad), min.X + pad,
             thumbMax.Y + 28f * scale, railTextWidth, TextStyles.Caption1, AppPalettes.YellowPages.MutedInk);
         var state = AdText.OpenState(ad, nowUnix);
         var statusTop = thumbMax.Y + 46f * scale;
@@ -407,7 +407,7 @@ internal sealed partial class YellowPagesApp
             new Vector2(glyphCenter.X, min.Y + 50f * scale), textWidth);
         var count = Loc.T(L.YellowPages.IntentCategories, AdCategories.ForIntent(intent).Length);
         var countSize = Typography.Measure(count, TextStyles.Footnote);
-        Marquee.DrawCenteredAuto(drawList, "yellowpages.intenttile.count." + intent, count, glyphCenter.X,
+        Marquee.DrawCenteredAuto(drawList, new MarqueeId("yellowpages.intenttile.count.", intent), count, glyphCenter.X,
             max.Y - 15f * scale - countSize.Y * 0.5f, textWidth, TextStyles.Footnote, AppPalettes.YellowPages.MutedInk);
         var hovered = UiInteract.Hover(min, max);
         if (hovered)

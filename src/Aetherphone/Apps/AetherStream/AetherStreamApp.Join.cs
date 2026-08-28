@@ -150,11 +150,11 @@ internal sealed partial class AetherStreamApp
 
         var textLeft = avatarCenter.X + avatarRadius + Metrics.Space.Md * scale;
         var textWidth = pillOrigin.X - Metrics.Space.Md * scale - textLeft;
-        Marquee.DrawLeft(drawList, "aetherstream.nearby.name." + row.HostId, row.DisplayName, textLeft,
+        Marquee.DrawLeft(drawList, new MarqueeId("aetherstream.nearby.name.", row.HostId), row.DisplayName, textLeft,
             rect.Center.Y - 16f * scale, textWidth, TextStyles.BodyEmphasized, ui.TitleInk, hovered);
         if (row.Handle.Length > 0)
         {
-            Marquee.DrawLeft(drawList, "aetherstream.nearby.handle." + row.HostId, "@" + row.Handle,
+            Marquee.DrawLeft(drawList, new MarqueeId("aetherstream.nearby.handle.", row.HostId), "@" + row.Handle,
                 textLeft, rect.Center.Y + 2f * scale, textWidth, TextStyles.Caption1, ui.MutedInk, hovered);
         }
 
@@ -200,9 +200,9 @@ internal sealed partial class AetherStreamApp
 
         var textLeft = avatarCenter.X + avatarRadius + Metrics.Space.Md * scale;
         var textWidth = rect.Max.X - Metrics.Space.Sm * scale - textLeft;
-        Marquee.DrawLeft(drawList, "aetherstream.result.name." + row.Id, title, textLeft,
+        Marquee.DrawLeft(drawList, new MarqueeId("aetherstream.result.name.", row.Id), title, textLeft,
             rect.Center.Y - 16f * scale, textWidth, TextStyles.BodyEmphasized, ui.TitleInk, hovered);
-        Marquee.DrawLeft(drawList, "aetherstream.result.handle." + row.Id, "@" + row.Handle, textLeft,
+        Marquee.DrawLeft(drawList, new MarqueeId("aetherstream.result.handle.", row.Id), "@" + row.Handle, textLeft,
             rect.Center.Y + 2f * scale, textWidth, TextStyles.Caption1, ui.MutedInk, hovered);
 
         ImGui.SetCursorScreenPos(origin);

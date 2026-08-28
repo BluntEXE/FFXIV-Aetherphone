@@ -116,14 +116,14 @@ internal sealed class MentionPopup
             var nameSize = Typography.Measure(name, 0.92f, FontWeight.SemiBold);
             var nameHovering = UiInteract.HoverWindowOnly(new Vector2(textLeft, nameY),
                 new Vector2(textLeft + textMaxWidth, nameY + nameSize.Y));
-            Marquee.DrawLeft(drawList, "mentionpopup.name." + row.Handle, name, textLeft, nameY, textMaxWidth,
+            Marquee.DrawLeft(drawList, new MarqueeId("mentionpopup.name.", row.Handle), name, textLeft, nameY, textMaxWidth,
                 new TextStyle(0.92f, FontWeight.SemiBold), Palette.WithAlpha(theme.TextStrong, alpha), nameHovering);
             var handleText = "@" + row.Handle;
             var handleY = nameY + nameSize.Y;
             var handleSize = Typography.Measure(handleText, 0.82f, FontWeight.Regular);
             var handleHovering = UiInteract.HoverWindowOnly(new Vector2(textLeft, handleY),
                 new Vector2(textLeft + textMaxWidth, handleY + handleSize.Y));
-            Marquee.DrawLeft(drawList, "mentionpopup.handle." + row.Handle, handleText,
+            Marquee.DrawLeft(drawList, new MarqueeId("mentionpopup.handle.", row.Handle), handleText,
                 textLeft, handleY, textMaxWidth, new TextStyle(0.82f, FontWeight.Regular),
                 Palette.WithAlpha(theme.TextMuted, alpha), handleHovering);
         }

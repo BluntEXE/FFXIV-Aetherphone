@@ -57,7 +57,7 @@ internal static class ChatBubble
             var headerMaxWidth = screenOrigin.X + available - padding - headerLeft;
             var headerHovering = UiInteract.Hover(new Vector2(headerLeft, screenOrigin.Y),
                 new Vector2(headerLeft + headerMaxWidth, screenOrigin.Y + headerHeight));
-            Marquee.DrawLeft("chatbubble.sender." + senderName, senderName, headerLeft, screenOrigin.Y,
+            Marquee.DrawLeft(new MarqueeId("chatbubble.sender.", senderName), senderName, headerLeft, screenOrigin.Y,
                 headerMaxWidth, TextStyles.Caption1, group.SenderColor, headerHovering);
             var avatarCenter = new Vector2(screenOrigin.X + avatarRadius,
                 screenOrigin.Y + headerHeight + bubbleHeight - avatarRadius);

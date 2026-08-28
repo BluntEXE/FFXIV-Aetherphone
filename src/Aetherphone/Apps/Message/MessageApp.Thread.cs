@@ -239,7 +239,7 @@ internal sealed partial class MessageApp
                 var subTop = stackTop + nameSize.Y + gapY;
                 var subHovering = UiInteract.Hover(new Vector2(nameLeft, subTop),
                     new Vector2(nameLeft + nameCap, subTop + subSize.Y));
-                Marquee.DrawLeft(titleId + ".sub", sub, nameLeft, subTop, nameCap,
+                Marquee.DrawLeft(new MarqueeId(titleId, ".sub"), sub, nameLeft, subTop, nameCap,
                     new TextStyle(0.72f, FontWeight.Regular), AppPalettes.Message.MutedInk, subHovering);
                 var hitMin = new Vector2(avatarCenter.X - avatarRadius, area.Min.Y);
                 var hitMax = new Vector2(nameLeft + MathF.Max(nameSize.X, subSize.X),
@@ -265,7 +265,7 @@ internal sealed partial class MessageApp
                     var subTop = stackTop + nameSize.Y + gapY;
                     var subHovering = UiInteract.Hover(new Vector2(nameLeft, subTop),
                         new Vector2(nameLeft + nameCap, subTop + subSize.Y));
-                    Marquee.DrawLeft(titleId + ".sub", presence, nameLeft, subTop, nameCap,
+                    Marquee.DrawLeft(new MarqueeId(titleId, ".sub"), presence, nameLeft, subTop, nameCap,
                         new TextStyle(0.72f, FontWeight.Regular),
                         conversation!.Presence == 1 ? ui.Accent : AppPalettes.Message.MutedInk, subHovering);
                 }

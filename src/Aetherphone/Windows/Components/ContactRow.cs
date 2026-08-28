@@ -31,13 +31,13 @@ internal static class ContactRow
         var nameSize = Typography.Measure(friend.Name, TextStyles.Headline);
         var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
             new Vector2(textLeft + textMaxWidth, nameY + nameSize.Y));
-        Marquee.DrawLeft("contactrow.name." + friend.Name, friend.Name, textLeft, nameY,
+        Marquee.DrawLeft(new MarqueeId("contactrow.name.", friend.Name), friend.Name, textLeft, nameY,
             textMaxWidth, TextStyles.Headline, nameColor, nameHovering);
         var subtitleY = row.Min.Y + 30f * scale;
         var subtitleSize = Typography.Measure(subtitle, TextStyles.Subheadline);
         var subtitleHovering = UiInteract.Hover(new Vector2(textLeft, subtitleY),
             new Vector2(textLeft + textMaxWidth, subtitleY + subtitleSize.Y));
-        Marquee.DrawLeft("contactrow.subtitle." + friend.Name, subtitle, textLeft, subtitleY,
+        Marquee.DrawLeft(new MarqueeId("contactrow.subtitle.", friend.Name), subtitle, textLeft, subtitleY,
             textMaxWidth, TextStyles.Subheadline, theme.TextMuted, subtitleHovering);
         if (friend.Online)
         {

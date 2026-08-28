@@ -106,7 +106,7 @@ internal sealed partial class VenuesApp
         {
             var metaSize = Typography.Measure(meta, TextStyles.Subheadline);
             var metaY = baseY - metaSize.Y;
-            Marquee.DrawLeftAuto("venue.detail.meta." + venue.Id, meta, textLeft, metaY, textWidth,
+            Marquee.DrawLeftAuto(new MarqueeId("venue.detail.meta.", venue.Id), meta, textLeft, metaY, textWidth,
                 TextStyles.Subheadline, HeroMutedInk);
             baseY -= metaSize.Y + 6f * scale;
         }
@@ -114,7 +114,7 @@ internal sealed partial class VenuesApp
         var titleFull = venue.Title;
         var titleSize = Typography.Measure(titleFull, TextStyles.Title1);
         var titleY = baseY - titleSize.Y;
-        Marquee.DrawLeftAuto("venue.detail.title." + venue.Id, titleFull, textLeft, titleY, textWidth,
+        Marquee.DrawLeftAuto(new MarqueeId("venue.detail.title.", venue.Id), titleFull, textLeft, titleY, textWidth,
             TextStyles.Title1, HeroInk);
         ImGui.SetCursorScreenPos(cursor);
         ImGui.Dummy(new Vector2(ImGui.GetContentRegionAvail().X, height - topPad + Metrics.Space.Lg * scale));
@@ -253,7 +253,7 @@ internal sealed partial class VenuesApp
         var displayWidth = MathF.Min(fullTextSize.X, textMaxWidth);
         var left = rect.Center.X - (iconAdvance + displayWidth) * 0.5f;
         AppSkin.Icon(drawList, new Vector2(left + 8f * scale, rect.Center.Y), IconGlyph.Of(icon), ink, 0.85f);
-        Marquee.DrawLeft("venue.detail.action." + label, label, left + iconAdvance,
+        Marquee.DrawLeft(new MarqueeId("venue.detail.action.", label), label, left + iconAdvance,
             rect.Center.Y - fullTextSize.Y * 0.5f, textMaxWidth, new TextStyle(0.95f, FontWeight.SemiBold), ink,
             hovered);
         if (hovered)
@@ -347,7 +347,7 @@ internal sealed partial class VenuesApp
         var valueWidth = MathF.Max(1f, valueRight - labelLeft - labelSize.X - 12f * scale);
         var valueFullSize = Typography.Measure(value, TextStyles.BodyEmphasized);
         var valueY = centerY - valueFullSize.Y * 0.5f;
-        Marquee.DrawRightAuto("venue.detail.row." + label, value, valueRight, valueY, valueWidth,
+        Marquee.DrawRightAuto(new MarqueeId("venue.detail.row.", label), value, valueRight, valueY, valueWidth,
             TextStyles.BodyEmphasized, AppPalettes.Venues.TitleInk);
         if (rowIndex >= rowCount - 1)
         {

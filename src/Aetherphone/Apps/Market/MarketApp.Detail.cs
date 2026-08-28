@@ -110,10 +110,10 @@ internal sealed partial class MarketApp
                 view.Name);
         }
         var priceMaxWidth = MathF.Max(1f, origin.X + width - 16f * scale - textX);
-        Marquee.DrawLeftAuto("market.detail.price." + view.ItemId, priceText, textX, priceY,
+        Marquee.DrawLeftAuto(new MarqueeId("market.detail.price.", view.ItemId), priceText, textX, priceY,
             priceMaxWidth, new TextStyle(1.4f, FontWeight.SemiBold), AppPalettes.Market.Accent);
         var labelMaxWidth = MathF.Max(1f, origin.X + width - 16f * scale - textX);
-        Marquee.DrawLeftAuto("market.detail.cheapest." + view.ItemId, cheapestLabel, textX, labelY, labelMaxWidth,
+        Marquee.DrawLeftAuto(new MarqueeId("market.detail.cheapest.", view.ItemId), cheapestLabel, textX, labelY, labelMaxWidth,
             new TextStyle(0.78f, FontWeight.Regular), frameTheme.TextMuted);
         if (hasHq)
         {

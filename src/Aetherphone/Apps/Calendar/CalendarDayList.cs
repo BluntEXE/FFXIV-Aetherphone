@@ -70,7 +70,7 @@ internal static class CalendarDayList
             var textStartY = cellMin.Y + (cellHeight - textHeight) * 0.5f;
             var trailing = (dayEvent.IsCustom ? 32f * scale : 0f) + FeedCell.PadX * scale;
             var textMaxWidth = MathF.Max(1f, cellMax.X - textStartX - trailing);
-            Marquee.DrawLeft("calendar.day." + dayEvent.Name + "." + index, dayEvent.Name, textStartX, textStartY,
+            Marquee.DrawLeft(new MarqueeId("calendar.day.", dayEvent.Name + "." + index), dayEvent.Name, textStartX, textStartY,
                 textMaxWidth, new TextStyle(hlScale, hlWeight), ui.TitleInk, cellHovered);
             var dateFitted = Typography.FitText(FormatDateRange(dayEvent), textMaxWidth, fnScale, fnWeight);
             Typography.Draw(drawList, new Vector2(textStartX, textStartY + nameSize.Y + 3f * scale),

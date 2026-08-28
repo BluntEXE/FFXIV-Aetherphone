@@ -126,7 +126,7 @@ internal sealed partial class MusterApp
             statusLeft += 14f * scale;
         }
 
-        Marquee.DrawLeftAuto(drawList, "muster.manage.status." + mine.Id, status, statusLeft,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("muster.manage.status.", mine.Id), status, statusLeft,
             origin.Y + 40f * scale, max.X - 16f * scale - statusLeft, TextStyles.SubheadlineEmphasized,
             live ? MusterCard.LiveGreen : AppPalettes.Muster.BodyInk);
         var capacity = mine.MaxAttendees > 0
@@ -134,7 +134,7 @@ internal sealed partial class MusterApp
             : Loc.T(L.Muster.GoingCount, mine.RsvpCount);
         var listed = mine.IsPublic ? Loc.T(L.Muster.ListedPublicly) : Loc.T(L.Muster.ListedPrivately);
         var meta = $"{capacity} · {listed}";
-        Marquee.DrawLeftAuto(drawList, "muster.manage.meta." + mine.Id, meta, textLeft, origin.Y + 64f * scale,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("muster.manage.meta.", mine.Id), meta, textLeft, origin.Y + 64f * scale,
             max.X - 16f * scale - textLeft, TextStyles.Subheadline, AppPalettes.Muster.MutedInk);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height + Metrics.Space.Md * scale));

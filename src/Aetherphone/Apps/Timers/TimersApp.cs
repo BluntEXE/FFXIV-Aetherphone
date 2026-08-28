@@ -228,7 +228,7 @@ internal sealed class TimersApp : IPhoneApp
         {
             Marquee.DrawLeftAuto(id, name, textLeft, row.Center.Y - 16f * scale, textMaxWidth,
                 TextStyles.Headline, AppPalettes.Timers.TitleInk);
-            Marquee.DrawLeftAuto(id + ".sub", sublabel, textLeft, row.Center.Y + 5f * scale, textMaxWidth,
+            Marquee.DrawLeftAuto(new MarqueeId(id, ".sub"), sublabel, textLeft, row.Center.Y + 5f * scale, textMaxWidth,
                 TextStyles.Footnote, AppPalettes.Timers.MutedInk);
         }
         else

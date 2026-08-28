@@ -121,7 +121,7 @@ internal sealed partial class MessageApp
         var titleSize = Typography.Measure(title, 1f, FontWeight.SemiBold);
         var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleTop),
             new Vector2(textLeft + textMaxWidth, titleTop + titleSize.Y));
-        Marquee.DrawLeft("picker.row." + item.Id, title, textLeft, titleTop, textMaxWidth,
+        Marquee.DrawLeft(new MarqueeId("picker.row.", item.Id), title, textLeft, titleTop, textMaxWidth,
             new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, titleHovering);
         AppSkin.Icon(new Vector2(iconCenterX, row.Center.Y),
             IconGlyph.Of(FontAwesomeIcon.Share), ui.MutedInk, 0.85f);

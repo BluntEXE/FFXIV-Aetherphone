@@ -1086,7 +1086,7 @@ internal sealed partial class AethergramApp : IResumableApp
         var sublineSize = Typography.Measure(subline, 0.85f);
         var sublineHovering = UiInteract.Hover(new Vector2(nameLeft, sublineTop),
             new Vector2(nameLeft + headerTextMaxWidth, sublineTop + sublineSize.Y));
-        Marquee.DrawLeft("aethergram.card.sub." + post.Id, subline, nameLeft, sublineTop, headerTextMaxWidth,
+        Marquee.DrawLeft(new MarqueeId("aethergram.card.sub.", post.Id), subline, nameLeft, sublineTop, headerTextMaxWidth,
             new TextStyle(0.85f, FontWeight.Regular), AppPalettes.Aethergram.MutedInk, sublineHovering);
         var overRing = hasStory &&
             (ImGui.GetMousePos() - avatarCenter).LengthSquared() <= ringRadius * ringRadius;

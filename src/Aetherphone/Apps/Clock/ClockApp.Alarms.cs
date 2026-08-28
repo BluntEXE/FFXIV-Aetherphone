@@ -67,7 +67,7 @@ internal sealed partial class ClockApp
 
         var subtitleLeft = row.Min.X + timeSize.X + 12f * scale;
         var subtitleMaxWidth = MathF.Max(1f, row.Max.X - Metrics.Size.ToggleWidth * scale - 8f * scale - subtitleLeft);
-        Marquee.DrawLeftAuto("clock.alarmrow.sub." + alarm.Id, subtitle, subtitleLeft, row.Center.Y - 8f * scale,
+        Marquee.DrawLeftAuto(new MarqueeId("clock.alarmrow.sub.", alarm.Id.ToString()), subtitle, subtitleLeft, row.Center.Y - 8f * scale,
             subtitleMaxWidth, TextStyles.Footnote, ui.MutedInk);
 
         var width = Metrics.Size.ToggleWidth * scale;

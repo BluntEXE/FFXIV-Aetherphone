@@ -321,15 +321,15 @@ internal sealed class DailiesApp : IPhoneApp
 
         if (sublabel.Length > 0)
         {
-            Marquee.DrawLeftAuto("dailies.row." + item.Id, name, textLeft, band.Center.Y - 17f * scale, textMaxWidth,
+            Marquee.DrawLeftAuto(new MarqueeId("dailies.row.", item.Id), name, textLeft, band.Center.Y - 17f * scale, textMaxWidth,
                 TextStyles.Headline, nameColor);
-            Marquee.DrawLeftAuto("dailies.row.sub." + item.Id, sublabel, textLeft, band.Center.Y + 4f * scale, textMaxWidth,
+            Marquee.DrawLeftAuto(new MarqueeId("dailies.row.sub.", item.Id), sublabel, textLeft, band.Center.Y + 4f * scale, textMaxWidth,
                 TextStyles.Subheadline, AppPalettes.Dailies.MutedInk);
         }
         else
         {
             var nameSize = Typography.Measure(name, TextStyles.Headline);
-            Marquee.DrawLeftAuto("dailies.row." + item.Id, name, textLeft, band.Center.Y - nameSize.Y * 0.5f, textMaxWidth,
+            Marquee.DrawLeftAuto(new MarqueeId("dailies.row.", item.Id), name, textLeft, band.Center.Y - nameSize.Y * 0.5f, textMaxWidth,
                 TextStyles.Headline, nameColor);
         }
 

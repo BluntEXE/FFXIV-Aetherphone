@@ -89,7 +89,7 @@ internal sealed partial class VelvetShell
             var ownerSubSize = Typography.Measure(ownerSub, TextStyles.Subheadline);
             var ownerSubHovering = UiInteract.Hover(new Vector2(nameLeft, ownerSubY),
                 new Vector2(nameLeft + nameMaxWidth, ownerSubY + ownerSubSize.Y));
-            Marquee.DrawLeft("velvet.detail.ownersub." + post.Id, ownerSub, nameLeft, ownerSubY,
+            Marquee.DrawLeft(new MarqueeId("velvet.detail.ownersub.", post.Id), ownerSub, nameLeft, ownerSubY,
                 nameMaxWidth, TextStyles.Subheadline, VelvetTheme.MutedInk, ownerSubHovering);
             if (UiInteract.HoverClick(headerRect.Min, headerRect.Max))
             {
@@ -291,7 +291,7 @@ internal sealed partial class VelvetShell
         if (time.Length > 0)
         {
             var timeMaxWidth = MathF.Max(1f, wrapWidth - nameWidth - 40f * scale);
-            var timeWidth = Marquee.DrawLeftAuto("velvet.comment.time." + comment.Id, time,
+            var timeWidth = Marquee.DrawLeftAuto(new MarqueeId("velvet.comment.time.", comment.Id), time,
                 textLeft + nameWidth + 8f * scale, origin.Y + 1f * scale, timeMaxWidth, TextStyles.Footnote,
                 VelvetTheme.MutedInk);
             CommentReviewTag.Draw(

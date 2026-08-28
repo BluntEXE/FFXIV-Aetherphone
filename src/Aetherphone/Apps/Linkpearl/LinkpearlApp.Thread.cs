@@ -62,7 +62,7 @@ internal sealed partial class LinkpearlApp
             : centerY - titleSize.Y * 0.5f;
         var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleTop),
             new Vector2(textLeft + textWidth, titleTop + titleSize.Y));
-        Marquee.DrawLeft(drawList, "linkpearl.thread.title." + row.Key, Title(row), textLeft, titleTop, textWidth,
+        Marquee.DrawLeft(drawList, new MarqueeId("linkpearl.thread.title.", row.Key), Title(row), textLeft, titleTop, textWidth,
             titleStyle, frameTheme.TextStrong, titleHovering);
         if (subtitle.Length > 0)
         {

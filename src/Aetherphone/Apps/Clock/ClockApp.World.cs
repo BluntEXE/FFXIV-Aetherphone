@@ -101,12 +101,12 @@ internal sealed partial class ClockApp
         var minTextWidth = availableWidth * 0.35f;
         var digitalNaturalSize = Typography.Measure(digital, TextStyles.Title1);
         var digitalMaxWidth = MathF.Max(1f, MathF.Min(digitalNaturalSize.X, availableWidth - minTextWidth - 8f * scale));
-        Marquee.DrawRightAuto("clock.worldrow.digital." + name, digital, row.Max.X,
+        Marquee.DrawRightAuto(new MarqueeId("clock.worldrow.digital.", name), digital, row.Max.X,
             row.Center.Y - digitalNaturalSize.Y * 0.5f, digitalMaxWidth, TextStyles.Title1, ui.TitleInk);
         var textMaxWidth = MathF.Max(1f, availableWidth - digitalMaxWidth - 8f * scale);
-        Marquee.DrawLeftAuto("clock.worldrow.name." + name, name, textLeft, row.Center.Y - 17f * scale, textMaxWidth,
+        Marquee.DrawLeftAuto(new MarqueeId("clock.worldrow.name.", name), name, textLeft, row.Center.Y - 17f * scale, textMaxWidth,
             TextStyles.Headline, ui.TitleInk);
-        Marquee.DrawLeftAuto("clock.worldrow.sub." + name, sublabel, textLeft, row.Center.Y + 4f * scale, textMaxWidth,
+        Marquee.DrawLeftAuto(new MarqueeId("clock.worldrow.sub.", name), sublabel, textLeft, row.Center.Y + 4f * scale, textMaxWidth,
             TextStyles.Footnote, ui.MutedInk);
     }
 
@@ -150,7 +150,7 @@ internal sealed partial class ClockApp
                                                               entry.City == city.City);
         var hovering = UiInteract.Hover(row.Min, row.Max);
         var textMaxWidth = MathF.Max(1f, row.Max.X - 34f * scale - row.Min.X);
-        Marquee.DrawLeft("clock.cityPicker.name." + city.City, city.City, row.Min.X, row.Center.Y - 16f * scale,
+        Marquee.DrawLeft(new MarqueeId("clock.cityPicker.name.", city.City), city.City, row.Min.X, row.Center.Y - 16f * scale,
             textMaxWidth, TextStyles.Headline, ui.TitleInk, hovering);
         if (WorldClockCatalog.TryResolve(city.TimeZoneId, out var zone))
         {

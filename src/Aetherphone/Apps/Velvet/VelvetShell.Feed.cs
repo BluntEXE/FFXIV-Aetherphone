@@ -201,7 +201,7 @@ internal sealed partial class VelvetShell
         var ownerSubSize = Typography.Measure(ownerSub, TextStyles.Subheadline);
         var ownerSubHovering = UiInteract.Hover(new Vector2(nameLeft, ownerSubY),
             new Vector2(nameLeft + headerTextMaxWidth, ownerSubY + ownerSubSize.Y));
-        Marquee.DrawLeft("velvet.feed.ownersub." + entry.Id, ownerSub, nameLeft, ownerSubY,
+        Marquee.DrawLeft(new MarqueeId("velvet.feed.ownersub.", entry.Id), ownerSub, nameLeft, ownerSubY,
             headerTextMaxWidth, TextStyles.Subheadline, VelvetTheme.MutedInk, ownerSubHovering);
         var overRing = hasStory &&
             (ImGui.GetMousePos() - avatarCenter).LengthSquared() <= ringRadius * ringRadius;

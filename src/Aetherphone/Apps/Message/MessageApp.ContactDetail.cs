@@ -256,7 +256,7 @@ internal sealed partial class MessageApp
         var valueMaxWidth = MathF.Max(1f, row.Width - labelSize.X - 10f * scale);
         var valueHovering = UiInteract.Hover(new Vector2(row.Max.X - valueMaxWidth, row.Min.Y),
             new Vector2(row.Max.X, row.Max.Y));
-        Marquee.DrawRight(label + ":value", value, row.Max.X,
+        Marquee.DrawRight(new MarqueeId(label, ":value"), value, row.Max.X,
             centerY - Typography.Measure(value, TextStyles.Subheadline).Y * 0.5f,
             valueMaxWidth, TextStyles.Subheadline, ui.BodyInk, valueHovering);
     }

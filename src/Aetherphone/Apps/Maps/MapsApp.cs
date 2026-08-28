@@ -313,7 +313,7 @@ internal sealed class MapsApp : IPhoneApp
         var textMaxWidth = MathF.Max(1f, textRight - textLeft);
         var labelSize = Typography.Measure(aetheryte.Name, TextStyles.Body);
         var textHovering = UiInteract.Hover(new Vector2(textLeft, row.Min.Y), new Vector2(textRight, row.Max.Y));
-        Marquee.DrawLeft("maps.destination." + aetheryte.RowId, aetheryte.Name, textLeft,
+        Marquee.DrawLeft(new MarqueeId("maps.destination.", aetheryte.RowId), aetheryte.Name, textLeft,
             row.Center.Y - labelSize.Y * 0.5f, textMaxWidth, TextStyles.Body, frameTheme.TextStrong, textHovering);
         var arrowTip = new Vector2(row.Max.X, row.Center.Y);
         MapGlyphs.ChevronRight(arrowTip, 6f * scale, 2.2f * scale,

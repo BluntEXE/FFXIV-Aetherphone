@@ -481,7 +481,7 @@ internal sealed partial class VelvetShell
         var metaSize = Typography.Measure(SocialIdentity.ProfileMeta(profile.Handle, region), TextStyles.Subheadline);
         var metaHovered = UiInteract.Hover(new Vector2(textLeft, metaY),
             new Vector2(textLeft + textWidth, metaY + metaSize.Y));
-        Marquee.DrawLeft("velvet.discover.meta." + profile.UserId, SocialIdentity.ProfileMeta(profile.Handle, region),
+        Marquee.DrawLeft(new MarqueeId("velvet.discover.meta.", profile.UserId), SocialIdentity.ProfileMeta(profile.Handle, region),
             textLeft, metaY, textWidth, TextStyles.Subheadline, VelvetTheme.BodyInk,
             metaHovered);
 
@@ -489,7 +489,7 @@ internal sealed partial class VelvetShell
         var summarySize = Typography.Measure(VelvetIntent.Summary(mask), TextStyles.SubheadlineEmphasized);
         var summaryHovered = UiInteract.Hover(new Vector2(textLeft, summaryY),
             new Vector2(textLeft + textWidth, summaryY + summarySize.Y));
-        Marquee.DrawLeft("velvet.discover.summary." + profile.UserId, VelvetIntent.Summary(mask), textLeft,
+        Marquee.DrawLeft(new MarqueeId("velvet.discover.summary.", profile.UserId), VelvetIntent.Summary(mask), textLeft,
             summaryY, textWidth, TextStyles.SubheadlineEmphasized, VelvetTheme.RoseInk,
             summaryHovered);
 

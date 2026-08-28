@@ -124,7 +124,7 @@ internal sealed partial class CollectionsApp
 
         var categoryLabel = CategoryLabel(category);
         var nameMaxWidth = rect.Width - pad * 2f;
-        Marquee.DrawLeft("collections.tile." + category, categoryLabel, rect.Min.X + pad, nameTop, nameMaxWidth,
+        Marquee.DrawLeft(new MarqueeId("collections.tile.", (int)category), categoryLabel, rect.Min.X + pad, nameTop, nameMaxWidth,
             TextStyles.Headline, ui.TitleInk, hovered);
         var countLabel = total > 0 ? total.ToString(Loc.Culture) : "-";
         Typography.Draw(new Vector2(rect.Min.X + pad, rect.Max.Y - pad - 15f * scale), countLabel, ui.MutedInk,
@@ -423,13 +423,13 @@ internal sealed partial class CollectionsApp
             var nameSize = Typography.Measure(item.Name, TextStyles.BodyEmphasized);
             var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
                 new Vector2(textLeft + textWidth, nameY + nameSize.Y));
-            Marquee.DrawLeft("collections.item." + item.Id, item.Name, textLeft, nameY,
+            Marquee.DrawLeft(new MarqueeId("collections.item.", item.Id), item.Name, textLeft, nameY,
                 textWidth, TextStyles.BodyEmphasized, ui.TitleInk, nameHovering);
             var subY = row.Center.Y + 4f * scale;
             var subSize = Typography.Measure(subtitle, TextStyles.Footnote);
             var subHovering = UiInteract.Hover(new Vector2(textLeft, subY),
                 new Vector2(textLeft + textWidth, subY + subSize.Y));
-            Marquee.DrawLeft("collections.item.sub." + item.Id, subtitle, textLeft, subY, textWidth,
+            Marquee.DrawLeft(new MarqueeId("collections.item.sub.", item.Id), subtitle, textLeft, subY, textWidth,
                 TextStyles.Footnote, ui.MutedInk, subHovering);
         }
         else
@@ -438,7 +438,7 @@ internal sealed partial class CollectionsApp
             var nameY = row.Center.Y - nameSize.Y * 0.5f;
             var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
                 new Vector2(textLeft + textWidth, nameY + nameSize.Y));
-            Marquee.DrawLeft("collections.item." + item.Id, item.Name, textLeft, nameY,
+            Marquee.DrawLeft(new MarqueeId("collections.item.", item.Id), item.Name, textLeft, nameY,
                 textWidth, TextStyles.BodyEmphasized, ui.TitleInk, nameHovering);
         }
 

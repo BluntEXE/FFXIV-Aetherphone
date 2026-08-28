@@ -168,7 +168,7 @@ internal sealed partial class LinkpearlApp
         var titleSize = Typography.Measure(title, 0.95f, FontWeight.Medium);
         var titleHovering = UiInteract.Hover(new Vector2(textX, titleY),
             new Vector2(textX + textMaxWidth, titleY + titleSize.Y));
-        Marquee.DrawLeft("linkpearl.result." + title + "." + subtitle, title, textX, titleY,
+        Marquee.DrawLeft(new MarqueeId("linkpearl.result.", title + "." + subtitle), title, textX, titleY,
             textMaxWidth, new TextStyle(0.95f, FontWeight.Medium), theme.TextStrong, titleHovering);
         if (subtitle.Length > 0)
         {
@@ -176,7 +176,7 @@ internal sealed partial class LinkpearlApp
             var subtitleSize = Typography.Measure(subtitle, 0.8f, FontWeight.Regular);
             var subtitleHovering = UiInteract.Hover(new Vector2(textX, subtitleY),
                 new Vector2(textX + textMaxWidth, subtitleY + subtitleSize.Y));
-            Marquee.DrawLeft("linkpearl.result.sub." + title + "." + subtitle, subtitle, textX,
+            Marquee.DrawLeft(new MarqueeId("linkpearl.result.sub.", title + "." + subtitle), subtitle, textX,
                 subtitleY, textMaxWidth, new TextStyle(0.8f, FontWeight.Regular), theme.TextMuted,
                 subtitleHovering);
         }
@@ -442,7 +442,7 @@ internal sealed partial class LinkpearlApp
         var style = new TextStyle(0.86f, FontWeight.Regular);
         var maxWidth = MathF.Max(1f, row.Width);
         var hovering = UiInteract.Hover(row.Min, row.Max);
-        Marquee.DrawLeft("linkpearl.slogan." + slogan, slogan, row.Min.X, row.Center.Y - Typography.Measure(slogan, style).Y * 0.5f,
+        Marquee.DrawLeft(new MarqueeId("linkpearl.slogan.", slogan), slogan, row.Min.X, row.Center.Y - Typography.Measure(slogan, style).Y * 0.5f,
             maxWidth, style, theme.TextMuted, hovering);
     }
 

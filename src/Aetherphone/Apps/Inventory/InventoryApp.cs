@@ -313,19 +313,19 @@ internal sealed class InventoryApp : IPhoneApp
             var titleSize = Typography.Measure(title, TextStyles.Headline);
             var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleY),
                 new Vector2(textLeft + textMaxWidth, titleY + titleSize.Y));
-            Marquee.DrawLeft("inventory.storage.title." + kind, title, textLeft, titleY,
+            Marquee.DrawLeft(new MarqueeId("inventory.storage.title.", (int)kind), title, textLeft, titleY,
                 textMaxWidth, TextStyles.Headline, ui.TitleInk, titleHovering);
             var subtitleY = row.Min.Y + 38f * scale;
             var subtitleSize = Typography.Measure(subtitle, TextStyles.Footnote);
             var subtitleHovering = UiInteract.Hover(new Vector2(textLeft, subtitleY),
                 new Vector2(textLeft + textMaxWidth, subtitleY + subtitleSize.Y));
-            Marquee.DrawLeft("inventory.storage.subtitle." + kind, subtitle, textLeft, subtitleY,
+            Marquee.DrawLeft(new MarqueeId("inventory.storage.subtitle.", (int)kind), subtitle, textLeft, subtitleY,
                 textMaxWidth, TextStyles.Footnote, ui.MutedInk, subtitleHovering);
         }
         else
         {
             var nameSize = Typography.Measure(title, TextStyles.Headline);
-            Marquee.DrawLeft("inventory.storage.title." + kind, title, textLeft, row.Center.Y - nameSize.Y * 0.5f,
+            Marquee.DrawLeft(new MarqueeId("inventory.storage.title.", (int)kind), title, textLeft, row.Center.Y - nameSize.Y * 0.5f,
                 textMaxWidth, TextStyles.Headline, ui.TitleInk, hovered);
         }
 
@@ -392,7 +392,7 @@ internal sealed class InventoryApp : IPhoneApp
         var valueHovering = UiInteract.Hover(
             new Vector2(columnTop.X - valueMaxWidth * 0.5f, valueY - valueSize.Y * 0.5f),
             new Vector2(columnTop.X + valueMaxWidth * 0.5f, valueY + valueSize.Y * 0.5f));
-        Marquee.DrawCentered("inventory.herostat." + label, value, columnTop.X, valueY - valueSize.Y * 0.5f,
+        Marquee.DrawCentered(new MarqueeId("inventory.herostat.", label), value, columnTop.X, valueY - valueSize.Y * 0.5f,
             valueMaxWidth, TextStyles.Title2, ui.TitleInk, valueHovering);
         Typography.DrawCentered(drawList, new Vector2(columnTop.X, columnTop.Y + 94f * scale),
             Loc.Culture.TextInfo.ToUpper(label), ui.MutedInk, TextStyles.Caption1);
@@ -512,7 +512,7 @@ internal sealed class InventoryApp : IPhoneApp
         }
 
         var nameSize = Typography.Measure(item.Name, TextStyles.Body);
-        Marquee.DrawLeft("inventory.item." + index, item.Name, textLeft, row.Center.Y - nameSize.Y * 0.5f,
+        Marquee.DrawLeft(new MarqueeId("inventory.item.", index), item.Name, textLeft, row.Center.Y - nameSize.Y * 0.5f,
             MathF.Max(1f, textRight - textLeft), TextStyles.Body, hovered ? ui.TitleInk : ui.BodyInk, hovered);
     }
 

@@ -157,12 +157,12 @@ internal sealed partial class VelvetShell
                 var stackTop = rowCenterY - (nameSize.Y + gapY + subSize.Y) * 0.5f;
                 var titleHovering = UiInteract.Hover(new Vector2(nameLeft, stackTop),
                     new Vector2(nameLeft + nameCap, stackTop + nameSize.Y));
-                Marquee.DrawLeft("velvet.thread.title." + threadId, name, nameLeft, stackTop, nameCap,
+                Marquee.DrawLeft(new MarqueeId("velvet.thread.title.", threadId), name, nameLeft, stackTop, nameCap,
                     new TextStyle(1f, FontWeight.SemiBold), Theme.TextStrong, titleHovering);
                 var subTop = stackTop + nameSize.Y + gapY;
                 var subHovering = UiInteract.Hover(new Vector2(nameLeft, subTop),
                     new Vector2(nameLeft + nameCap, subTop + subSize.Y));
-                Marquee.DrawLeft("velvet.thread.subtitle." + threadId, timeText, nameLeft, subTop, nameCap,
+                Marquee.DrawLeft(new MarqueeId("velvet.thread.subtitle.", threadId), timeText, nameLeft, subTop, nameCap,
                     new TextStyle(0.72f, FontWeight.Regular), VelvetTheme.MutedInk, subHovering);
                 textWidth = MathF.Max(nameSize.X, subSize.X);
             }
@@ -171,7 +171,7 @@ internal sealed partial class VelvetShell
                 var soloTop = rowCenterY - nameSize.Y * 0.5f;
                 var titleHovering = UiInteract.Hover(new Vector2(nameLeft, soloTop),
                     new Vector2(nameLeft + nameCap, soloTop + nameSize.Y));
-                Marquee.DrawLeft("velvet.thread.title." + threadId, name, nameLeft, soloTop,
+                Marquee.DrawLeft(new MarqueeId("velvet.thread.title.", threadId), name, nameLeft, soloTop,
                     nameCap, new TextStyle(1f, FontWeight.SemiBold), Theme.TextStrong, titleHovering);
             }
 

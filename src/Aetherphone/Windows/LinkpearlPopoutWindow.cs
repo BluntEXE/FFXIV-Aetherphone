@@ -405,7 +405,7 @@ internal sealed class LinkpearlPopoutWindow : Window
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        Marquee.DrawLeft(drawList, switchMenuId + ".title", title, textLeft, titleTop, titleWidth, titleStyle,
+        Marquee.DrawLeft(drawList, new MarqueeId(switchMenuId, ".title"), title, textLeft, titleTop, titleWidth, titleStyle,
             theme.TextStrong, titleHovered);
         AppSkin.Icon(drawList, new Vector2(textLeft + titleWidth + CaretGap * scale, centerY + 1f * scale),
             IconGlyph.Of(FontAwesomeIcon.ChevronDown), theme.TextMuted, 0.55f);

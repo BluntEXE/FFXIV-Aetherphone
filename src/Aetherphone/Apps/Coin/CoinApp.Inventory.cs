@@ -191,7 +191,7 @@ internal sealed partial class CoinApp
         var labelWidth = MathF.Max(1f, pill.Min.X - 10f * scale - labelLeft);
         var name = style?.Name ?? string.Empty;
         var labelSize = Typography.Measure(name, TextStyles.BodyEmphasized);
-        Marquee.DrawLeftAuto("inventory.badge." + index, name, labelLeft, row.Center.Y - labelSize.Y * 0.5f,
+        Marquee.DrawLeftAuto(new MarqueeId("inventory.badge.", index), name, labelLeft, row.Center.Y - labelSize.Y * 0.5f,
             labelWidth, TextStyles.BodyEmphasized, theme.TextStrong);
 
         var label = worn ? item.Slot.ToString(Loc.Culture) : Loc.T(L.Loadout.Wear);

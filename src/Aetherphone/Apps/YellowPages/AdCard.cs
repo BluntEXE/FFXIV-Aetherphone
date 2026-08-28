@@ -83,9 +83,9 @@ internal static class AdCard
         }
 
         var titleWidth = (status.Length > 0 ? statusLeft - (live ? 20f : 8f) * scale : right) - textLeft;
-        Marquee.DrawLeftAuto(drawList, "yellowpages.card.title." + ad.Id, ad.Title, textLeft, body.Min.Y + pad,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("yellowpages.card.title.", ad.Id), ad.Title, textLeft, body.Min.Y + pad,
             titleWidth, TextStyles.Headline, palette.TitleInk);
-        Marquee.DrawLeftAuto(drawList, "yellowpages.card.identity." + ad.Id, AdText.Identity(ad), textLeft,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("yellowpages.card.identity.", ad.Id), AdText.Identity(ad), textLeft,
             body.Min.Y + pad + 21f * scale, right - textLeft, TextStyles.Footnote, palette.MutedInk);
 
         var descriptionTop = body.Min.Y + (Pad + IdentityRowHeight) * scale;
@@ -230,7 +230,7 @@ internal static class AdCard
         var category = Loc.T(AdCategories.Label(ad.Category));
         var world = ad.WorldId > 0 ? LocationShare.WorldName((uint)ad.WorldId) : string.Empty;
         var meta = world.Length > 0 ? $"{category} · {world}" : category;
-        Marquee.DrawLeftAuto(drawList, "yellowpages.card.meta." + ad.Id, meta, left, top,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("yellowpages.card.meta.", ad.Id), meta, left, top,
             MathF.Max(1f, metaRight - left - 8f * scale), TextStyles.Footnote, palette.MutedInk);
     }
 

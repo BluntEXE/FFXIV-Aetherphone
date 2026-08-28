@@ -186,7 +186,7 @@ internal sealed class CalendarWidget : IHomeWidget
                 MathF.Min(3f * scale, rowHeight - nameGlyphHeight - whenGlyphHeight));
             var blockTop = rowTop + rowHeight * 0.5f - (nameGlyphHeight + rowGap + whenGlyphHeight) * 0.5f;
             var nameTop = blockTop;
-            Marquee.DrawLeftAuto("calendarwidget.medium.name." + index, entry.Name, textLeft, nameTop, maxWidth,
+            Marquee.DrawLeftAuto(new MarqueeId("calendarwidget.medium.name.", index), entry.Name, textLeft, nameTop, maxWidth,
                 TextStyles.FootnoteEmphasized, Palette.WithAlpha(context.Theme.TextStrong, opacity));
             Typography.Draw(drawList, new Vector2(textLeft, nameTop + nameGlyphHeight + rowGap),
                 WhenLabel(entry.Begin), Palette.WithAlpha(theme.TextMuted, opacity), TextStyles.Caption1);

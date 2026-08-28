@@ -221,7 +221,7 @@ internal sealed class NotesApp : IResumableApp
         var titleSize = Typography.Measure(titleText, TextStyles.Headline);
         var titleHovering = UiInteract.Hover(new Vector2(row.Min.X, titleY),
             new Vector2(row.Min.X + row.Width, titleY + titleSize.Y));
-        Marquee.DrawLeft("notes.noteRow.title." + note.Id, titleText, row.Min.X, titleY, row.Width,
+        Marquee.DrawLeft(new MarqueeId("notes.noteRow.title.", note.Id.ToString()), titleText, row.Min.X, titleY, row.Width,
             TextStyles.Headline, hasTitle ? ui.TitleInk : ui.MutedInk, titleHovering);
 
         var preview = note.Preview();
@@ -231,7 +231,7 @@ internal sealed class NotesApp : IResumableApp
         var subSize = Typography.Measure(secondLine, TextStyles.Footnote);
         var subHovering = UiInteract.Hover(new Vector2(row.Min.X, subY),
             new Vector2(row.Min.X + row.Width, subY + subSize.Y));
-        Marquee.DrawLeft("notes.noteRow.sub." + note.Id, secondLine, row.Min.X, subY, row.Width,
+        Marquee.DrawLeft(new MarqueeId("notes.noteRow.sub.", note.Id.ToString()), secondLine, row.Min.X, subY, row.Width,
             TextStyles.Footnote, ui.MutedInk, subHovering);
 
         if (UiInteract.HoverClick(row.Min, row.Max))
@@ -290,14 +290,14 @@ internal sealed class NotesApp : IResumableApp
         var hasDue = reminder.DueAt.HasValue;
         var titleY = hasDue ? row.Center.Y - 16f * scale : row.Center.Y - 9f * scale;
         var title = reminder.Title.Length > 0 ? reminder.Title : Loc.T(L.Notes.ReminderHint);
-        Marquee.DrawLeftAuto("notes.reminderRow.title." + reminder.Id, title, textLeft, titleY, textRect.Width,
+        Marquee.DrawLeftAuto(new MarqueeId("notes.reminderRow.title.", reminder.Id.ToString()), title, textLeft, titleY, textRect.Width,
             TextStyles.Body, titleInk);
         if (hasDue)
         {
             var due = reminder.DueAt!.Value;
             var overdue = !reminder.Done && due < DateTime.Now;
             var dueColor = overdue ? theme.Danger : ui.MutedInk;
-            Marquee.DrawLeftAuto("notes.reminderRow.due." + reminder.Id, DueLabel(due), textLeft,
+            Marquee.DrawLeftAuto(new MarqueeId("notes.reminderRow.due.", reminder.Id.ToString()), DueLabel(due), textLeft,
                 row.Center.Y + 4f * scale, textRect.Width, TextStyles.Footnote, dueColor);
         }
 

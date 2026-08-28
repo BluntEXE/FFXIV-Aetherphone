@@ -178,7 +178,7 @@ internal sealed partial class MessageApp
         var titleSize = Typography.Measure(title, TextStyles.Headline);
         var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleTop),
             new Vector2(textLeft + textWidth, titleTop + titleSize.Y));
-        Marquee.DrawLeft("messageapp.calls.title." + entry.UserId + entry.TimestampUnix, title, textLeft, titleTop,
+        Marquee.DrawLeft(new MarqueeId("messageapp.calls.title.", entry.UserId + entry.TimestampUnix), title, textLeft, titleTop,
             textWidth, TextStyles.Headline, missed ? theme.Danger : ui.TitleInk, titleHovering);
         var directionIcon = entry.Direction == CallDirection.Outgoing
             ? FontAwesomeIcon.ArrowUp

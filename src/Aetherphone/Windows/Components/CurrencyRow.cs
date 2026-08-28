@@ -86,7 +86,7 @@ internal static class CurrencyRow
                 palette.Accent, TextStyles.Title2);
             var nameMaxWidth = MathF.Max(1f, amountX - 12f * scale - textLeft);
             var nameSize = Typography.Measure(entry.Name, TextStyles.Headline);
-            Marquee.DrawLeftAuto("currencyRow." + entry.Name, entry.Name, textLeft, content.Center.Y - nameSize.Y * 0.5f,
+            Marquee.DrawLeftAuto(new MarqueeId("currencyRow.", entry.Name), entry.Name, textLeft, content.Center.Y - nameSize.Y * 0.5f,
                 nameMaxWidth, TextStyles.Headline, palette.TitleInk);
             return;
         }
@@ -106,7 +106,7 @@ internal static class CurrencyRow
 
         var labelMaxWidth = MathF.Max(1f, amountX2 - 12f * scale - textLeft);
         var labelSize = Typography.Measure(entry.Name, TextStyles.Headline);
-        Marquee.DrawLeftAuto("currencyRow." + entry.Name, entry.Name, textLeft, lineCenterY - labelSize.Y * 0.5f,
+        Marquee.DrawLeftAuto(new MarqueeId("currencyRow.", entry.Name), entry.Name, textLeft, lineCenterY - labelSize.Y * 0.5f,
             labelMaxWidth, TextStyles.Headline, palette.TitleInk);
 
         var barMin = new Vector2(textLeft, barTop);

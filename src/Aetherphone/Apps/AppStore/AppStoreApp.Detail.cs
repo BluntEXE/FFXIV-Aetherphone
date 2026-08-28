@@ -54,7 +54,7 @@ internal sealed partial class AppStoreApp
         var nameY = top + 6f * scale;
         var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
             new Vector2(textLeft + textWidth, nameY + Typography.Measure(app.DisplayName, TextStyles.Title2).Y));
-        Marquee.DrawLeft("appstore.detail.name." + app.Id, app.DisplayName, textLeft, nameY, textWidth,
+        Marquee.DrawLeft(new MarqueeId("appstore.detail.name.", app.Id), app.DisplayName, textLeft, nameY, textWidth,
             TextStyles.Title2, ui.TitleInk, nameHovering);
         Typography.DrawWrappedLeft(new Vector2(textLeft, top + 32f * scale), Loc.T(entry.Subtitle), ui.MutedInk,
             TextStyles.Footnote, textWidth);

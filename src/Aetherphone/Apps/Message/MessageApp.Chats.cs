@@ -279,7 +279,7 @@ internal sealed partial class MessageApp
         var titleSize = Typography.Measure(title, 1f, FontWeight.SemiBold);
         var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleTop),
             new Vector2(textLeft + textWidth, titleTop + titleSize.Y));
-        Marquee.DrawLeft("messageapp.chats.title." + item.Id, title, textLeft, titleTop, textWidth,
+        Marquee.DrawLeft(new MarqueeId("messageapp.chats.title.", item.Id), title, textLeft, titleTop, textWidth,
             new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, titleHovering);
         var previewColor = item.UnreadCount > 0 ? theme.TextStrong : ui.MutedInk;
         var previewRight = origin.X + width - (item.UnreadCount > 0 ? 40f * scale : pad);

@@ -260,7 +260,7 @@ internal sealed partial class AetherStreamApp
         }
 
         var nameHeight = Typography.LineHeight(TextStyles.Body);
-        Marquee.DrawLeft(drawList, "aetherstream.watcher." + participant.UserId, participant.DisplayName, textLeft,
+        Marquee.DrawLeft(drawList, new MarqueeId("aetherstream.watcher.", participant.UserId), participant.DisplayName, textLeft,
             row.Center.Y - nameHeight * 0.5f, textRight - textLeft, TextStyles.Body, ui.TitleInk,
             UiInteract.Hover(row.Min, row.Max));
 

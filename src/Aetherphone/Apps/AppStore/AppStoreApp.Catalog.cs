@@ -80,9 +80,9 @@ internal sealed partial class AppStoreApp
         var labelSize = Typography.Measure(label, TextStyles.Headline);
         var labelHovering = UiInteract.Hover(new Vector2(labelLeft, labelTop),
             new Vector2(labelLeft + MathF.Min(labelSize.X, maxLabelWidth), labelTop + labelSize.Y));
-        Marquee.DrawLeft("appstore.category.label.shadow." + category, label, labelLeft, labelTop + 1f * scale,
+        Marquee.DrawLeft(new MarqueeId("appstore.category.label.shadow.", (int)category), label, labelLeft, labelTop + 1f * scale,
             maxLabelWidth, TextStyles.Headline, CardInkShadow, labelHovering);
-        Marquee.DrawLeft("appstore.category.label." + category, label, labelLeft, labelTop, maxLabelWidth,
+        Marquee.DrawLeft(new MarqueeId("appstore.category.label.", (int)category), label, labelLeft, labelTop, maxLabelWidth,
             TextStyles.Headline, CardInk, labelHovering);
         if (hovered)
         {

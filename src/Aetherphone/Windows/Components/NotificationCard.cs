@@ -54,11 +54,11 @@ internal static class NotificationCard
             Palette.WithAlpha(theme.TextMuted, opacity), TextStyles.Caption1.Scale, TextStyles.Caption1.Weight);
         var titleMaxWidth = textRight - timeSize.X - 8f * scale - textLeft;
         var titleY = min.Y + 12f * scale;
-        Marquee.DrawLeftAuto(drawList, "notificationcard.title." + notification.Id, notification.Title, textLeft,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("notificationcard.title.", notification.Id), notification.Title, textLeft,
             titleY, titleMaxWidth, TextStyles.Headline, Palette.WithAlpha(theme.TextStrong, opacity));
         var bodyMaxWidth = textRight - textLeft;
         var bodyY = min.Y + 35f * scale;
-        Marquee.DrawLeftAuto(drawList, "notificationcard.body." + notification.Id, notification.SingleLineBody, textLeft,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("notificationcard.body.", notification.Id), notification.SingleLineBody, textLeft,
             bodyY, bodyMaxWidth, TextStyles.Subheadline, Palette.WithAlpha(theme.TextMuted, opacity));
     }
 

@@ -155,7 +155,7 @@ internal sealed partial class MessageApp
         var labelY = row.Center.Y - 9f * scale;
         var labelHover = UiInteract.Hover(new Vector2(textLeft, labelY),
             new Vector2(labelRight, labelY + Typography.Measure(label, 1f, FontWeight.SemiBold).Y));
-        Marquee.DrawLeft("compose.pick." + contact.UserId, label, textLeft, labelY, labelWidth,
+        Marquee.DrawLeft(new MarqueeId("compose.pick.", contact.UserId), label, textLeft, labelY, labelWidth,
             new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, labelHover);
         if (selected)
         {

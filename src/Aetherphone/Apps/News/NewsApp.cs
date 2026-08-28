@@ -320,7 +320,7 @@ internal sealed class NewsApp : IPhoneApp
     {
         var titleY = row.Min.Y + 10f * scale;
         var maxTitleWidth = row.Width - 24f * scale;
-        Marquee.DrawLeft("news.simpleRow." + item.Url, item.Title, row.Min.X, titleY, maxTitleWidth,
+        Marquee.DrawLeft(new MarqueeId("news.simpleRow.", item.Url), item.Title, row.Min.X, titleY, maxTitleWidth,
             new TextStyle(RowTitleScale, FontWeight.Medium), theme.TextStrong, hovered);
         Typography.Draw(new Vector2(row.Min.X, titleY + 23f * scale), TimeText.Ago(item.Time), theme.TextMuted,
             MetaScale, FontWeight.Regular);
@@ -339,7 +339,7 @@ internal sealed class NewsApp : IPhoneApp
         var rightPadding = 8f * scale;
         var pillReserved = pillInfo.hasPill ? pillInfo.width + 12f * scale + rightPadding : rightPadding + 4f * scale;
         var maxTitleWidth = row.Width - pillReserved;
-        Marquee.DrawLeft("news.maintenanceRow." + item.Url, item.Title, row.Min.X, titleY, maxTitleWidth,
+        Marquee.DrawLeft(new MarqueeId("news.maintenanceRow.", item.Url), item.Title, row.Min.X, titleY, maxTitleWidth,
             new TextStyle(RowTitleScale, FontWeight.Medium), theme.TextStrong, hovered);
         var sub = item.Start is { } start && item.End is { } end
             ? NewsFormat.Window(start, end)

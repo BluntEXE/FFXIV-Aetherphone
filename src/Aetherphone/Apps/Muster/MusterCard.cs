@@ -214,7 +214,7 @@ internal static class MusterCard
             Palette.WithAlpha(palette.MutedInk, 0.85f), 0.58f);
         var placeLeft = left + 15f * scale;
         var placeSize = Typography.Measure(place, TextStyles.Subheadline);
-        Marquee.DrawLeftAuto(drawList, "muster.card.place." + muster.Id, place, placeLeft,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("muster.card.place.", muster.Id), place, placeLeft,
             centerY - placeSize.Y * 0.5f, metaRight - placeLeft, TextStyles.Subheadline, palette.MutedInk);
     }
 

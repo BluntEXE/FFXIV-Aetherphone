@@ -249,7 +249,7 @@ internal sealed partial class MessageApp
         var labelMaxWidth = MathF.Max(1f, row.Max.X - 26f * scale - stampWidth - textLeft);
         var band = RowBand(row, scale);
         var rowHovering = UiInteract.Hover(band.Min, band.Max);
-        Marquee.DrawLeft("messageapp.messageinfo.member." + member.UserId, label, textLeft,
+        Marquee.DrawLeft(new MarqueeId("messageapp.messageinfo.member.", member.UserId), label, textLeft,
             row.Center.Y - 9f * scale, labelMaxWidth, new TextStyle(1f, FontWeight.SemiBold),
             theme.TextStrong, rowHovering);
         var right = row.Max.X;

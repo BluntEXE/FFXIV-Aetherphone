@@ -55,7 +55,7 @@ internal static class SettingsRow
         var valueY = row.Center.Y - valueFullSize.Y * 0.5f;
         var valueHovered = UiInteract.Hover(new Vector2(row.Max.X - valueMaxWidth, row.Min.Y),
             new Vector2(row.Max.X, row.Max.Y));
-        Marquee.DrawRight(rowId + ":infoValue", value, row.Max.X, valueY, valueMaxWidth, TextStyles.Body,
+        Marquee.DrawRight(new MarqueeId(rowId, ":infoValue"), value, row.Max.X, valueY, valueMaxWidth, TextStyles.Body,
             theme.TextMuted, valueHovered);
     }
 
@@ -212,7 +212,7 @@ internal static class SettingsRow
         var valueY = row.Center.Y - valueSize.Y * 0.5f;
         var valueHovered = UiInteract.Hover(new Vector2(valueBoxRight - valueMaxWidth, row.Min.Y),
             new Vector2(valueBoxRight, row.Max.Y));
-        Marquee.DrawRight(rowId + ":value", value, valueBoxRight, valueY, valueMaxWidth, TextStyles.Body,
+        Marquee.DrawRight(new MarqueeId(rowId, ":value"), value, valueBoxRight, valueY, valueMaxWidth, TextStyles.Body,
             theme.TextMuted, valueHovered);
     }
 

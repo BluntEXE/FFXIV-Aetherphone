@@ -249,7 +249,7 @@ internal sealed partial class MessageApp
         var nameSize = Typography.Measure(contactName, 1f, FontWeight.SemiBold);
         var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameTop),
             new Vector2(textLeft + textWidth, nameTop + nameSize.Y));
-        Marquee.DrawLeft("messageapp.contacts.name." + contact.UserId, contactName, textLeft, nameTop, textWidth,
+        Marquee.DrawLeft(new MarqueeId("messageapp.contacts.name.", contact.UserId), contactName, textLeft, nameTop, textWidth,
             new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, nameHovering);
         Typography.Draw(new Vector2(textLeft, origin.Y + 33f * scale),
             Typography.FitText(ContactBook.Format(contact.PhoneNumber), textWidth, 0.85f, FontWeight.Regular),

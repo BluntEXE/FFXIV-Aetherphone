@@ -237,7 +237,7 @@ internal sealed class SocialProfilePages
             textY += lineGap;
             var showFollowsYouChip = !user.IsMe && user.FollowsYou;
             var chipReserve = showFollowsYouChip ? FollowsYouChipWidth(scale) + Metrics.Space.Sm * scale : 0f;
-            var metaWidth = Marquee.DrawLeftAuto("socialprofile.meta." + user.Id, metaLine, identityLeft, textY,
+            var metaWidth = Marquee.DrawLeftAuto(new MarqueeId("socialprofile.meta.", user.Id), metaLine, identityLeft, textY,
                 MathF.Max(1f, identityWidth - chipReserve), TextStyles.Callout, style.Palette.MutedInk);
             if (showFollowsYouChip)
             {
@@ -251,7 +251,7 @@ internal sealed class SocialProfilePages
         if (timeHeight > 0f)
         {
             textY += lineGap;
-            Marquee.DrawLeftAuto("socialprofile.time." + user.Id, timeLine, identityLeft, textY, identityWidth,
+            Marquee.DrawLeftAuto(new MarqueeId("socialprofile.time.", user.Id), timeLine, identityLeft, textY, identityWidth,
                 TextStyles.Footnote, style.Palette.MutedInk);
         }
 
@@ -732,7 +732,7 @@ internal sealed class SocialProfilePages
         var subSize = Typography.Measure(sub, 0.85f);
         var subHovering = UiInteract.Hover(new Vector2(textLeft, subY),
             new Vector2(textLeft + textMaxWidth, subY + subSize.Y));
-        Marquee.DrawLeft("socialprofile.row.sub." + user.Id, sub, textLeft, subY,
+        Marquee.DrawLeft(new MarqueeId("socialprofile.row.sub.", user.Id), sub, textLeft, subY,
             textMaxWidth, new TextStyle(0.85f, FontWeight.Regular), style.Palette.MutedInk, subHovering);
         var buttonRect =
             new Rect(

@@ -70,7 +70,7 @@ internal static class InboxRowView
         var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleY),
             new Vector2(textLeft + titleWidth, titleY + Typography.LineHeight(TextStyles.Headline)));
         var titleInk = row.Muted ? Palette.WithAlpha(theme.TextStrong, 0.72f) : theme.TextStrong;
-        Marquee.DrawLeft("linkpearl.row." + row.Key, row.Title, textLeft, titleY, titleWidth, TextStyles.Headline,
+        Marquee.DrawLeft(new MarqueeId("linkpearl.row.", row.Key), row.Title, textLeft, titleY, titleWidth, TextStyles.Headline,
             titleInk, titleHovering);
         var previewRight = textRight;
         if (row.HasBadge && restAlpha > 0.01f)

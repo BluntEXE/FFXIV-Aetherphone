@@ -237,7 +237,7 @@ internal sealed partial class ShortcutsApp
                 ImGui.GetColorU32(ui.FieldSurface));
             var loaded = catalog.IsLoaded(step.Text);
             var label = catalog.DisplayName(step.Text);
-            Marquee.DrawLeftAuto("shortcuts.step.plugin." + index, label, rect.Min.X + Metrics.Space.Md * scale,
+            Marquee.DrawLeftAuto(new MarqueeId("shortcuts.step.plugin.", index), label, rect.Min.X + Metrics.Space.Md * scale,
                 rect.Center.Y - 9f * scale, rect.Width - Metrics.Space.Md * 2f * scale, TextStyles.Body,
                 loaded ? ui.TitleInk : theme.Danger);
             return;

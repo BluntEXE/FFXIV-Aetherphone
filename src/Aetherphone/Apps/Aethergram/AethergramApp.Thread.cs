@@ -252,7 +252,7 @@ internal sealed partial class AethergramApp
                 var subTop = stackTop + nameSize.Y + gapY;
                 var subHovering = UiInteract.Hover(new Vector2(nameLeft, subTop),
                     new Vector2(nameLeft + nameCap, subTop + subSize.Y));
-                Marquee.DrawLeft(titleId + ".sub", timeText, nameLeft, subTop, nameCap,
+                Marquee.DrawLeft(new MarqueeId(titleId, ".sub"), timeText, nameLeft, subTop, nameCap,
                     new TextStyle(0.72f, FontWeight.Regular), AppPalettes.Aethergram.MutedInk, subHovering);
                 textWidth = MathF.Max(nameSize.X, subSize.X);
             }

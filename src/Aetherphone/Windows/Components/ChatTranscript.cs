@@ -1703,7 +1703,7 @@ internal sealed class ChatTranscript
             var ink = mine ? new Vector4(1f, 1f, 1f, 1f) : model.Theme.TextStrong;
             var captionTop = imageMax.Y + 4f * scale * fx.Pop;
             var captionMaxWidth = imageMax.X - imageMin.X;
-            Marquee.DrawLeftAuto("chattranscript.caption." + message.Id, caption, imageMin.X, captionTop,
+            Marquee.DrawLeftAuto(new MarqueeId("chattranscript.caption.", message.Id), caption, imageMin.X, captionTop,
                 captionMaxWidth, new TextStyle(0.9f * fx.Pop, FontWeight.Regular),
                 Palette.WithAlpha(ink, fx.Alpha));
             var timeColor = mine

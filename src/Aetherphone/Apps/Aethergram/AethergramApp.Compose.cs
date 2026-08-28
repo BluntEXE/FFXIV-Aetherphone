@@ -522,7 +522,7 @@ internal sealed partial class AethergramApp
             var nameHeight = Typography.Measure(displayName, nameStyle).Y;
             var nameHovering = UiInteract.Hover(new Vector2(nameLeft, nameTop),
                 new Vector2(nameLeft + nameMaxWidth, nameTop + nameHeight));
-            Marquee.DrawLeft("aethergram.compose.author." + me.Handle, displayName, nameLeft, nameTop, nameMaxWidth,
+            Marquee.DrawLeft(new MarqueeId("aethergram.compose.author.", me.Handle), displayName, nameLeft, nameTop, nameMaxWidth,
                 nameStyle, theme.TextStrong, nameHovering);
             inputTop = avatarCenter.Y + radius + 6f * scale;
         }

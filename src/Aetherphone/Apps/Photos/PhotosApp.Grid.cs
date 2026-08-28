@@ -591,7 +591,7 @@ internal sealed partial class PhotosApp
         }
 
         var textTop = coverMax.Y + 7f * scale;
-        Marquee.DrawLeft("photos.albumCard." + title, title, rect.Min.X + 2f * scale, textTop,
+        Marquee.DrawLeft(new MarqueeId("photos.albumCard.", title), title, rect.Min.X + 2f * scale, textTop,
             rect.Width - 4f * scale, TextStyles.SubheadlineEmphasized, ui.TitleInk, hovered);
         var countLabel = Loc.Plural(L.Photos.Count, coverCount);
         Typography.Draw(drawList, new Vector2(rect.Min.X + 2f * scale, textTop + 19f * scale), countLabel, ui.MutedInk,
@@ -658,7 +658,7 @@ internal sealed partial class PhotosApp
         }
 
         var textTop = coverCoverMax.Y + 7f * scale;
-        Marquee.DrawLeft("photos.customAlbumCard." + album.Key, album.Name, rect.Min.X + 2f * scale, textTop,
+        Marquee.DrawLeft(new MarqueeId("photos.customAlbumCard.", album.Key), album.Name, rect.Min.X + 2f * scale, textTop,
             rect.Width - 4f * scale, TextStyles.SubheadlineEmphasized, ui.TitleInk, hovered);
         var countLabel = Loc.Plural(L.Photos.Count, album.Count);
         Typography.Draw(drawList, new Vector2(rect.Min.X + 2f * scale, textTop + 19f * scale), countLabel, ui.MutedInk,

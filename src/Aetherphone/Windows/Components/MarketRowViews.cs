@@ -73,7 +73,7 @@ internal static class MarketRowViews
         var subTop = row.Max.Y - 9f * scale - subSize.Y;
         var subHovered = UiInteract.Hover(new Vector2(textX, subTop),
             new Vector2(textX + textMaxWidth, subTop + subSize.Y));
-        Marquee.DrawLeft(rowId + ".sub", sub, textX, subTop,
+        Marquee.DrawLeft(new MarqueeId(rowId, ".sub"), sub, textX, subTop,
             textMaxWidth, new TextStyle(0.82f, FontWeight.Regular), theme.TextMuted, subHovered);
         if (deleteHovered)
         {

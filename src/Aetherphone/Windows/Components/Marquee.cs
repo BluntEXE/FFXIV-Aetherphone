@@ -2,22 +2,54 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Windows.Components;
 
+internal readonly struct MarqueeId : IEquatable<MarqueeId>
+{
+    private readonly string prefix;
+    private readonly string? suffix;
+    private readonly long ordinal;
+
+    public MarqueeId(string prefix, string suffix)
+    {
+        this.prefix = prefix;
+        this.suffix = suffix;
+        ordinal = 0L;
+    }
+
+    public MarqueeId(string prefix, long ordinal)
+    {
+        this.prefix = prefix;
+        suffix = null;
+        this.ordinal = ordinal;
+    }
+
+    public static implicit operator MarqueeId(string value) => new(value, string.Empty);
+
+    public bool Equals(MarqueeId other) =>
+        ordinal == other.ordinal
+        && string.Equals(prefix, other.prefix, StringComparison.Ordinal)
+        && string.Equals(suffix, other.suffix, StringComparison.Ordinal);
+
+    public override bool Equals(object? other) => other is MarqueeId id && Equals(id);
+
+    public override int GetHashCode() => HashCode.Combine(prefix, suffix, ordinal);
+}
+
 internal static class Marquee
 {
     private const float DwellSeconds = 0.6f;
     private const float Speed = 35f;
     private const float FitSlack = 0.5f;
-    private static readonly Dictionary<string, float> Elapsed = new(StringComparer.Ordinal);
+    private static readonly Dictionary<MarqueeId, float> Elapsed = new();
 
-    public static float DrawLeft(string id, string fullText, float boxLeft, float y, float maxWidth,
+    public static float DrawLeft(MarqueeId id, string fullText, float boxLeft, float y, float maxWidth,
         in TextStyle style, Vector4 color, bool hovering) =>
         DrawLeft(ImGui.GetWindowDrawList(), id, fullText, boxLeft, y, maxWidth, style, color, hovering);
 
-    public static float DrawLeft(ImDrawListPtr drawList, string id, string fullText, float boxLeft, float y,
+    public static float DrawLeft(ImDrawListPtr drawList, MarqueeId id, string fullText, float boxLeft, float y,
         float maxWidth, in TextStyle style, Vector4 color, bool hovering) =>
         DrawLeft(drawList, id, fullText, boxLeft, y, maxWidth, style, color, hovering, default);
 
-    public static float DrawLeft(ImDrawListPtr drawList, string id, string fullText, float boxLeft, float y,
+    public static float DrawLeft(ImDrawListPtr drawList, MarqueeId id, string fullText, float boxLeft, float y,
         float maxWidth, in TextStyle style, Vector4 color, bool hovering, in TextEffect effect)
     {
         var fullSize = Typography.Measure(fullText, style);
@@ -46,11 +78,11 @@ internal static class Marquee
         return clippedWidth;
     }
 
-    public static float DrawLeftAuto(string id, string fullText, float boxLeft, float y, float maxWidth,
+    public static float DrawLeftAuto(MarqueeId id, string fullText, float boxLeft, float y, float maxWidth,
         in TextStyle style, Vector4 color) =>
         DrawLeftAuto(ImGui.GetWindowDrawList(), id, fullText, boxLeft, y, maxWidth, style, color);
 
-    public static float DrawLeftAuto(ImDrawListPtr drawList, string id, string fullText, float boxLeft, float y,
+    public static float DrawLeftAuto(ImDrawListPtr drawList, MarqueeId id, string fullText, float boxLeft, float y,
         float maxWidth, in TextStyle style, Vector4 color)
     {
         var size = Typography.Measure(fullText, style);
@@ -59,11 +91,11 @@ internal static class Marquee
         return DrawLeft(drawList, id, fullText, boxLeft, y, maxWidth, style, color, hovering);
     }
 
-    public static void DrawRightAuto(string id, string fullText, float boxRight, float y, float maxWidth,
+    public static void DrawRightAuto(MarqueeId id, string fullText, float boxRight, float y, float maxWidth,
         in TextStyle style, Vector4 color) =>
         DrawRightAuto(ImGui.GetWindowDrawList(), id, fullText, boxRight, y, maxWidth, style, color);
 
-    public static void DrawRightAuto(ImDrawListPtr drawList, string id, string fullText, float boxRight, float y,
+    public static void DrawRightAuto(ImDrawListPtr drawList, MarqueeId id, string fullText, float boxRight, float y,
         float maxWidth, in TextStyle style, Vector4 color)
     {
         var size = Typography.Measure(fullText, style);
@@ -72,11 +104,11 @@ internal static class Marquee
         DrawRight(drawList, id, fullText, boxRight, y, maxWidth, style, color, hovering);
     }
 
-    public static void DrawCenteredAuto(string id, string fullText, float centerX, float y, float maxWidth,
+    public static void DrawCenteredAuto(MarqueeId id, string fullText, float centerX, float y, float maxWidth,
         in TextStyle style, Vector4 color) =>
         DrawCenteredAuto(ImGui.GetWindowDrawList(), id, fullText, centerX, y, maxWidth, style, color);
 
-    public static void DrawCenteredAuto(ImDrawListPtr drawList, string id, string fullText, float centerX, float y,
+    public static void DrawCenteredAuto(ImDrawListPtr drawList, MarqueeId id, string fullText, float centerX, float y,
         float maxWidth, in TextStyle style, Vector4 color)
     {
         var size = Typography.Measure(fullText, style);
@@ -86,11 +118,11 @@ internal static class Marquee
         DrawCentered(drawList, id, fullText, centerX, y, maxWidth, style, color, hovering);
     }
 
-    public static void DrawCentered(string id, string fullText, float centerX, float y, float maxWidth,
+    public static void DrawCentered(MarqueeId id, string fullText, float centerX, float y, float maxWidth,
         in TextStyle style, Vector4 color, bool hovering) =>
         DrawCentered(ImGui.GetWindowDrawList(), id, fullText, centerX, y, maxWidth, style, color, hovering);
 
-    public static void DrawCentered(ImDrawListPtr drawList, string id, string fullText, float centerX, float y,
+    public static void DrawCentered(ImDrawListPtr drawList, MarqueeId id, string fullText, float centerX, float y,
         float maxWidth, in TextStyle style, Vector4 color, bool hovering)
     {
         var fullSize = Typography.Measure(fullText, style);
@@ -104,11 +136,11 @@ internal static class Marquee
         DrawLeft(drawList, id, fullText, centerX - maxWidth * 0.5f, y, maxWidth, style, color, hovering);
     }
 
-    public static void DrawRight(string id, string fullText, float boxRight, float y, float maxWidth,
+    public static void DrawRight(MarqueeId id, string fullText, float boxRight, float y, float maxWidth,
         in TextStyle style, Vector4 color, bool hovering) =>
         DrawRight(ImGui.GetWindowDrawList(), id, fullText, boxRight, y, maxWidth, style, color, hovering);
 
-    public static void DrawRight(ImDrawListPtr drawList, string id, string fullText, float boxRight, float y,
+    public static void DrawRight(ImDrawListPtr drawList, MarqueeId id, string fullText, float boxRight, float y,
         float maxWidth, in TextStyle style, Vector4 color, bool hovering)
     {
         var fullSize = Typography.Measure(fullText, style);
@@ -136,7 +168,7 @@ internal static class Marquee
         drawList.PopClipRect();
     }
 
-    internal static float Offset(string id, float overflow)
+    internal static float Offset(MarqueeId id, float overflow)
     {
         var scale = UiScale.Current;
         var travelSeconds = overflow / (Speed * scale);

@@ -282,10 +282,10 @@ internal sealed partial class ShortcutsApp : IPhoneApp
 
         var running = run.IsRunning && run.Id == entry.Id;
         var name = ShortcutRunText.Name(entry.Name);
-        Marquee.DrawLeftAuto("shortcuts.row." + entry.Id, name, textLeft, row.Center.Y - 16f * scale, textWidth,
+        Marquee.DrawLeftAuto(new MarqueeId("shortcuts.row.", entry.Id.ToString()), name, textLeft, row.Center.Y - 16f * scale, textWidth,
             TextStyles.Headline, ui.TitleInk);
         var subtitle = running ? ShortcutRunText.Status(run) : Summarise(entry);
-        Marquee.DrawLeftAuto("shortcuts.row.sub." + entry.Id, subtitle, textLeft, row.Center.Y + 5f * scale, textWidth,
+        Marquee.DrawLeftAuto(new MarqueeId("shortcuts.row.sub.", entry.Id.ToString()), subtitle, textLeft, row.Center.Y + 5f * scale, textWidth,
             TextStyles.Footnote, running ? ui.Accent : ui.MutedInk);
 
         if (ui.IconButton(editCenter, editRadius, IconGlyph.Of(FontAwesomeIcon.SlidersH), ui.MutedInk,

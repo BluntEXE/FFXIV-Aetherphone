@@ -245,7 +245,7 @@ internal sealed partial class MusterApp
 
         var statusText = $"{status} · {Loc.T(L.Muster.GoingCount, mine.RsvpCount)}";
         var statusMaxWidth = card.Max.X - 32f * scale - statusLeft;
-        Marquee.DrawLeftAuto(drawList, "muster.pinned.status." + mine.Id, statusText, statusLeft,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("muster.pinned.status.", mine.Id), statusText, statusLeft,
             card.Min.Y + 38f * scale, statusMaxWidth, TextStyles.SubheadlineEmphasized,
             live ? MusterCard.LiveGreen : AppPalettes.Muster.BodyInk);
         AppSkin.Icon(drawList, new Vector2(card.Max.X - 20f * scale, card.Center.Y),

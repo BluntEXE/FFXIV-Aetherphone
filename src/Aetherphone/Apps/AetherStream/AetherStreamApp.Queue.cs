@@ -237,10 +237,10 @@ internal sealed partial class AetherStreamApp
         var textRight = approveCenter.X - circleRadius - Metrics.Space.Md * scale;
         var textWidth = textRight - textLeft;
         var hovered = UiInteract.Hover(row.Min, row.Max);
-        Marquee.DrawLeft(drawList, "aetherstream.suggestion.name." + suggestion.SuggestionId,
+        Marquee.DrawLeft(drawList, new MarqueeId("aetherstream.suggestion.name.", suggestion.SuggestionId),
             suggestion.DisplayName, textLeft, row.Center.Y - 16f * scale, textWidth, TextStyles.Body, ui.TitleInk,
             hovered);
-        Marquee.DrawLeft(drawList, "aetherstream.suggestion.url." + suggestion.SuggestionId, suggestion.Url,
+        Marquee.DrawLeft(drawList, new MarqueeId("aetherstream.suggestion.url.", suggestion.SuggestionId), suggestion.Url,
             textLeft, row.Center.Y + 2f * scale, textWidth, TextStyles.Caption1, ui.MutedInk, hovered);
 
         if (HoverButton.Circle(drawList, "aetherstream.suggestion.approve." + suggestion.SuggestionId,

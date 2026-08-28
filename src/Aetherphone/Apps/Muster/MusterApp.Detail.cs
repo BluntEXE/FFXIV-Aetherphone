@@ -173,7 +173,7 @@ internal sealed partial class MusterApp
         UserName.DrawAuto(drawList, "muster.detail.hero.name." + muster.Id, MusterText.HostLabel(muster),
             muster.HostBadges, muster.HostBadgeIds, textLeft, card.Min.Y + pad + 1f * scale, textRight - textLeft,
             TextStyles.Title2, AppPalettes.Muster.TitleInk, theme);
-        Marquee.DrawLeftAuto(drawList, "muster.detail.hero.world." + muster.Id, muster.HostWorld, textLeft,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("muster.detail.hero.world.", muster.Id), muster.HostWorld, textLeft,
             card.Min.Y + pad + 28f * scale, textRight - textLeft, TextStyles.Subheadline,
             AppPalettes.Muster.BodyInk);
 
@@ -383,7 +383,7 @@ internal sealed partial class MusterApp
                     ink = MusterCard.LiveGreen;
                 }
 
-                Marquee.DrawLeftAuto(drawList, "muster.detail.location." + muster.Id + "." + index,
+                Marquee.DrawLeftAuto(drawList, new MarqueeId("muster.detail.location.", muster.Id + "." + index),
                     locationLines[index], textLeft, lineTop, origin.X + width - pad - textLeft, style, ink);
             }
 
