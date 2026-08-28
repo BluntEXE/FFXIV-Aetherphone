@@ -1,5 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
+using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
@@ -43,6 +44,7 @@ internal sealed partial class MessageApp : IResumableApp
     public string DisplayName => Loc.T(L.Apps.Message);
     public string Glyph => "Me";
     public int BadgeCount => store.UnreadTotal + calls.UnseenMissed;
+    public ConversationDto[] SearchableConversations => store.Conversations;
 
     private readonly DirectMessagesStore store;
     private readonly FailureSlot threadListFailure = new();

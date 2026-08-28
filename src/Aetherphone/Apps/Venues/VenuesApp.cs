@@ -52,6 +52,7 @@ internal sealed partial class VenuesApp : IPhoneApp
     private bool chipsPressed;
     private bool lifestreamAvailable;
     private float detailScrollY;
+    private string pendingVenueId = string.Empty;
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
 
@@ -86,15 +87,39 @@ internal sealed partial class VenuesApp : IPhoneApp
         search = string.Empty;
     }
 
+    public void RequestVenue(string venueId) => pendingVenueId = venueId;
+
     public void Draw(in PhoneContext context)
     {
         theme = context.Theme;
         navigation = context.Navigation;
         ui.Theme = theme;
         venues.EnsureFresh(false);
+        ConsumePendingVenue();
         var screen = SceneChrome.ScreenFrom(context.Content, theme, UiScale.Current);
         ui.Backdrop(screen);
         router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
+    }
+
+    private void ConsumePendingVenue()
+    {
+        if (pendingVenueId.Length == 0)
+        {
+            return;
+        }
+
+        var wanted = pendingVenueId;
+        pendingVenueId = string.Empty;
+        var events = venues.Events;
+        for (var index = 0; index < events.Count; index++)
+        {
+            if (string.Equals(events[index].Id, wanted, StringComparison.Ordinal))
+            {
+                detailScrollY = 0f;
+                router.Push(VenueRoute.Detail(events[index]), false);
+                return;
+            }
+        }
     }
 
     private void DrawView(VenueRoute route, Rect area, int depth)

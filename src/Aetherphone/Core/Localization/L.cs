@@ -20,6 +20,8 @@ internal static class L
         public static readonly LocString LoadFailedHint =
             new("common.loadFailedHint", "Check your connection and try again.");
         public static readonly LocString Close = new("common.close", "Close");
+        public static readonly LocString On = new("common.on", "On");
+        public static readonly LocString Off = new("common.off", "Off");
         public static readonly LocString Alerts = new("common.alerts", "Alerts");
         public static readonly LocString Live = new("common.live", "LIVE");
         public static readonly LocString Hq = new("common.hq", "HQ");
@@ -5581,12 +5583,18 @@ internal static class L
         public static readonly LocString Search = new("home.search", "Search");
         public static readonly LocString Hint = new("spotlight.hint", "Search your phone");
         public static readonly LocString NoResults = new("spotlight.noResults", "No results");
+        public static readonly LocString Result = new("spotlight.result", "Result");
         public static readonly LocString Apps = new("spotlight.apps", "Apps");
+        public static readonly LocString Actions = new("spotlight.actions", "Actions");
+        public static readonly LocString TakePhoto = new("spotlight.takePhoto", "Take Photo");
         public static readonly LocString Contacts = new("spotlight.contacts", "Contacts");
+        public static readonly LocString Messages = new("spotlight.messages", "Messages");
         public static readonly LocString Settings = new("spotlight.settings", "Settings");
+        public static readonly LocString Shortcuts = new("spotlight.shortcuts", "Shortcuts");
         public static readonly LocString Conversations = new("spotlight.conversations", "Conversations");
         public static readonly LocString Notes = new("spotlight.notes", "Notes");
         public static readonly LocString Items = new("spotlight.items", "Market Items");
+        public static readonly LocString Store = new("spotlight.store", "From the App Store");
     }
 
     internal static class Onboarding
