@@ -271,6 +271,8 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     public DmDecryptedBody DecryptionState(string messageId) => cipher.DecryptionState(messageId);
 
+    public bool HasOlderKeyMessages(string scope) => cipher.HasOlderKeyMessages(scope);
+
     public string? CurrentThreadId => currentThreadId;
 
     protected PollCadence InboxCadence => inboxCadence;

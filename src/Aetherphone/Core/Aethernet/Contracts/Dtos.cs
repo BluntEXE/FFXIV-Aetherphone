@@ -1,4 +1,4 @@
-namespace Aetherphone.Core.Aethernet.Contracts;
+﻿namespace Aetherphone.Core.Aethernet.Contracts;
 
 internal sealed record ChallengeRequest(string Name, string World);
 
@@ -798,3 +798,15 @@ internal sealed record MyConversationKeysDto(ConversationWrapsDto[] Items);
 internal sealed record ArchivedKeyEscrowDto(int KeyVersion, string PublicKey, WrappedPrivateKeyDto Escrow, long CreatedAtUnix);
 
 internal sealed record ArchivedEscrowsDto(ArchivedKeyEscrowDto[] Items);
+
+internal sealed record StartDeviceLinkRequest(string EphemeralPublicKey);
+
+internal sealed record DeviceLinkTicketDto(string Id, string VerificationCode, long ExpiresAtUnix);
+
+internal sealed record PendingDeviceLinkDto(string Id, string VerificationCode, string EphemeralPublicKey, long CreatedAtUnix, long ExpiresAtUnix);
+
+internal sealed record PendingDeviceLinksDto(PendingDeviceLinkDto[] Items);
+
+internal sealed record DeviceLinkStatusDto(string Status, string? WrappedIdentityKey);
+
+internal sealed record ApproveDeviceLinkRequest(string WrappedIdentityKey);

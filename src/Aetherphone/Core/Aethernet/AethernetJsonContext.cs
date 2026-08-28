@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using Aetherphone.Core.Aethernet.Contracts;
 
 namespace Aetherphone.Core.Aethernet;
@@ -178,6 +178,11 @@ namespace Aetherphone.Core.Aethernet;
 [JsonSerializable(typeof(MyConversationKeysDto))]
 [JsonSerializable(typeof(ArchivedKeyEscrowDto))]
 [JsonSerializable(typeof(ArchivedEscrowsDto))]
+[JsonSerializable(typeof(StartDeviceLinkRequest))]
+[JsonSerializable(typeof(DeviceLinkTicketDto))]
+[JsonSerializable(typeof(PendingDeviceLinksDto))]
+[JsonSerializable(typeof(DeviceLinkStatusDto))]
+[JsonSerializable(typeof(ApproveDeviceLinkRequest))]
 [JsonSerializable(typeof(CommunityStationDto))]
 [JsonSerializable(typeof(CommunityStationPage))]
 [JsonSerializable(typeof(UpdateCommunityStationRequest))]

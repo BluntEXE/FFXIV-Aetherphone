@@ -293,10 +293,15 @@ internal sealed class AethernetSession
 
     public void PersistActiveKeyCache()
     {
-        _ = framework.RunOnFrameworkThread(() =>
+        _ = PersistActiveKeyCacheAsync();
+    }
+
+    public Task PersistActiveKeyCacheAsync()
+    {
+        return framework.RunOnFrameworkThread(() =>
         {
             StashActive();
-            configuration.Save();
+            configuration.SaveNow();
         });
     }
 
@@ -357,7 +362,7 @@ internal sealed class AethernetSession
         }
 
         snapshot!.Token = token;
-        if (configuration.EncryptionKeyCache.Length > 0)
+        if (configuration.EncryptionKeyCache.Length > 0 && KeyBelongsToSnapshot(snapshot))
         {
             snapshot.EncryptionKeyCache = configuration.EncryptionKeyCache;
             snapshot.EncryptionKeyCacheUserId = configuration.EncryptionKeyCacheUserId;
@@ -373,6 +378,18 @@ internal sealed class AethernetSession
             snapshot.World = user.World;
             snapshot.AvatarUrl = user.AvatarUrl ?? string.Empty;
         }
+    }
+
+    private bool KeyBelongsToSnapshot(CharacterSession snapshot)
+    {
+        var incomingUserId = configuration.EncryptionKeyCacheUserId;
+        if (incomingUserId.Length == 0 || snapshot.EncryptionKeyCache.Length == 0)
+        {
+            return true;
+        }
+
+        var storedUserId = snapshot.EncryptionKeyCacheUserId;
+        return storedUserId.Length == 0 || string.Equals(storedUserId, incomingUserId, StringComparison.Ordinal);
     }
 
     private void LoadFlat(CharacterSession snapshot)

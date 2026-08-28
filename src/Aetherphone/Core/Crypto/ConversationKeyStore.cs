@@ -22,6 +22,7 @@ internal sealed class ConversationKeyStore
     private readonly UnwrapFailureCache failedUnwraps = new();
     private readonly ConcurrentDictionary<(string ScopeId, int Generation), byte> scheduledSelfRepairs = new();
     private readonly ConcurrentDictionary<string, DateTime> previewHydrateRequests = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, byte> hydratedScopes = new(StringComparer.Ordinal);
     private static readonly TimeSpan PreviewHydrateCooldown = TimeSpan.FromSeconds(30);
 
     private readonly KeySurface chatSurface;
@@ -113,6 +114,12 @@ internal sealed class ConversationKeyStore
         currentGenerations.Clear();
         failedUnwraps.Clear();
         scheduledSelfRepairs.Clear();
+        hydratedScopes.Clear();
+    }
+
+    public bool IsScopeHydrated(string scopeId)
+    {
+        return hydratedScopes.ContainsKey(scopeId);
     }
 
     public async Task HydrateAsync(CancellationToken token)
@@ -397,6 +404,7 @@ internal sealed class ConversationKeyStore
 
     private void CacheWraps(string scopeId, int currentGeneration, KeyWrapDto[] wraps)
     {
+        hydratedScopes[scopeId] = 1;
         if (currentGeneration > 0)
         {
             currentGenerations[scopeId] = currentGeneration;

@@ -159,7 +159,9 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         ImGui.Dummy(new Vector2(0f, 8f * scale));
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
         {
-            Typography.Wrapped(Loc.T(L.Encryption.LockedNoRecoveryBody));
+            Typography.Wrapped(vault.LocalKeyUnreadable
+                ? Loc.T(L.Encryption.UnreadableKeyBody)
+                : Loc.T(L.Encryption.LockedNoRecoveryBody));
         }
 
         ImGui.Dummy(new Vector2(0f, 12f * scale));
@@ -264,6 +266,13 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
     private void DrawRecoverySection(PhoneTheme theme)
     {
         var scale = UiScale.Current;
+        var unsaved = vault.UnsavedRecoveryCode;
+        if (unsaved is not null)
+        {
+            DrawUnsavedCodeSection(theme, unsaved, scale);
+            return;
+        }
+
         ImGui.Dummy(new Vector2(0f, 14f * scale));
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextStrong))
         {
@@ -319,6 +328,39 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         if (ThemeButton.Draw(Loc.T(L.Encryption.ResetButton), theme) && !actions.Busy)
         {
             actions.AskReset();
+        }
+    }
+
+    private void DrawUnsavedCodeSection(PhoneTheme theme, string code, float scale)
+    {
+        ImGui.Dummy(new Vector2(0f, 14f * scale));
+        using (ImRaii.PushColor(ImGuiCol.Text, theme.TextStrong))
+        {
+            Typography.Plain(Loc.T(L.Encryption.RecoverySaveTitle));
+        }
+
+        ImGui.Dummy(new Vector2(0f, 4f * scale));
+        using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
+        {
+            Typography.Wrapped(Loc.T(L.Encryption.SaveCodeIntro));
+        }
+
+        ImGui.Dummy(new Vector2(0f, 8f * scale));
+        using (ImRaii.PushColor(ImGuiCol.Text, theme.TextStrong))
+        {
+            Typography.Plain(code);
+        }
+
+        ImGui.Dummy(new Vector2(0f, 10f * scale));
+        if (ThemeButton.Draw(Loc.T(L.Encryption.RecoveryCopy), theme))
+        {
+            ImGui.SetClipboardText(code);
+        }
+
+        ImGui.Dummy(new Vector2(0f, 6f * scale));
+        if (ThemeButton.Draw(Loc.T(L.Encryption.RecoverySavedButton), theme))
+        {
+            vault.AcknowledgeRecoveryCode();
         }
     }
 

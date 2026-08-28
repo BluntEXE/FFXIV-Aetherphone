@@ -1,4 +1,4 @@
-using Aetherphone.Core;
+﻿using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Config;
 using Aetherphone.Core.Device;
@@ -104,6 +104,7 @@ public sealed class Plugin : IDalamudPlugin
             Cfg.MigratePhoneWidth();
             Cfg.MigrateControlPanelRepack();
             Cfg.MigrateCharacterSessions();
+            Cfg.MigrateEncryptionKeyStore();
             Cfg.MigrateHousingRefreshFloor();
             InitializeLocalization();
             InstallSource.Initialize(PluginInterface);
@@ -124,6 +125,7 @@ public sealed class Plugin : IDalamudPlugin
                 videoQueue, services.StreamSignals, screenController);
             streamSuggestions = new StreamSuggestionNotifier(watchAlong, services.Notifications);
             Framework.Update += OnVideoFrameworkUpdate;
+            Framework.Update += OnDeviceLinkTick;
             videoDebugWindow = new VideoDebugWindow(video, screenController);
             screenWindow = new AetherStreamScreenWindow(screenController, video);
             linkpearlPopouts = new LinkpearlPopouts(Cfg, services.ChatInbox, services.ChatLog, services.ChatSend,
@@ -215,6 +217,7 @@ public sealed class Plugin : IDalamudPlugin
         ClientState.Login -= OnLogin;
         Framework.Update -= OnAutoOpenTick;
         Framework.Update -= OnVideoFrameworkUpdate;
+        Framework.Update -= OnDeviceLinkTick;
         ContextMenu.OnMenuOpened -= OnMenuOpened;
         CommandManager.RemoveHandler(AepConstants.PrimaryCommand);
         CommandManager.RemoveHandler(AepConstants.AliasCommand);
@@ -299,6 +302,11 @@ public sealed class Plugin : IDalamudPlugin
         watchAlong.OnFrameworkUpdate((float)framework.UpdateDelta.TotalSeconds);
     }
 
+    private void OnDeviceLinkTick(IFramework framework)
+    {
+        services.DeviceLinks.Tick((float)framework.UpdateDelta.TotalSeconds);
+    }
+
     private void OnAutoOpenTick(IFramework framework)
     {
         if (!autoOpenPending)
@@ -368,6 +376,7 @@ public sealed class Plugin : IDalamudPlugin
         Fonts.Dispose();
         CommandManager.RemoveHandler(AepConstants.PrimaryCommand);
         CommandManager.RemoveHandler(AepConstants.AliasCommand);
+        Cfg.SaveNow();
     }
 
     public static void OnLanguageChanged()

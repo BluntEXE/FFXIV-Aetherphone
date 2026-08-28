@@ -19,6 +19,7 @@ internal sealed class EncryptionInfoPane : IDisposable
 
     public void DrawBody(AppSkin ui, PhoneTheme theme, bool signedIn, bool encrypted)
     {
+        actions.TickDeviceLink(ImGui.GetIO().DeltaTime);
         if (actions.GeneratedCode.Length > 0)
         {
             DrawGeneratedCode(ui, theme);
@@ -105,9 +106,11 @@ internal sealed class EncryptionInfoPane : IDisposable
 
         return vault.State switch
         {
-            KeyVaultState.Locked => vault.RecoveryConfigured
-                ? Loc.T(L.Encryption.LockedRecoverBody)
-                : Loc.T(L.Encryption.LockedNoRecoveryBody),
+            KeyVaultState.Locked => vault.LocalKeyUnreadable
+                ? Loc.T(L.Encryption.UnreadableKeyBody)
+                : vault.RecoveryConfigured
+                    ? Loc.T(L.Encryption.LockedRecoverBody)
+                    : Loc.T(L.Encryption.LockedNoRecoveryBody),
             KeyVaultState.Provisioning => Loc.T(L.Encryption.SettingUp),
             KeyVaultState.Unsupported => Loc.T(L.Encryption.UnsupportedSummary),
             _ => encrypted ? Loc.T(L.Encryption.Intro) : Loc.T(L.Encryption.SettingUp),
@@ -130,6 +133,29 @@ internal sealed class EncryptionInfoPane : IDisposable
     private void DrawLockedSection(AppSkin ui, PhoneTheme theme)
     {
         var scale = UiScale.Current;
+        if (actions.LinkWaiting)
+        {
+            DrawSectionLabel(ui, Loc.T(L.Encryption.LinkWaitingTitle));
+            DrawWrapped(ui, Loc.T(L.Encryption.LinkWaitingBody));
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
+            DrawSectionLabel(ui, actions.LinkCode);
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
+            if (DrawButton(ui, Loc.T(L.Common.Cancel), false))
+            {
+                actions.CancelDeviceLink();
+            }
+
+            return;
+        }
+
+        DrawWrapped(ui, Loc.T(L.Encryption.LinkBody));
+        ImGui.Dummy(new Vector2(0f, 10f * scale));
+        if (DrawButton(ui, Loc.T(L.Encryption.LinkButton), true) && !actions.Busy)
+        {
+            actions.BeginDeviceLink();
+        }
+
+        ImGui.Dummy(new Vector2(0f, 14f * scale));
         var recoveryConfigured = actions.Vault.RecoveryConfigured;
         if (recoveryConfigured)
         {
@@ -159,6 +185,27 @@ internal sealed class EncryptionInfoPane : IDisposable
     private void DrawRecoverySection(AppSkin ui)
     {
         var scale = UiScale.Current;
+        var unsaved = actions.Vault.UnsavedRecoveryCode;
+        if (unsaved is not null)
+        {
+            DrawSectionLabel(ui, Loc.T(L.Encryption.RecoverySaveTitle));
+            DrawWrapped(ui, Loc.T(L.Encryption.SaveCodeIntro));
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
+            DrawSectionLabel(ui, unsaved);
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
+            if (DrawButton(ui, Loc.T(L.Encryption.RecoveryCopy), false))
+            {
+                ImGui.SetClipboardText(unsaved);
+            }
+
+            if (DrawButton(ui, Loc.T(L.Encryption.RecoverySavedButton), true))
+            {
+                actions.Vault.AcknowledgeRecoveryCode();
+            }
+
+            return;
+        }
+
         var configured = actions.Vault.RecoveryConfigured;
         DrawSectionLabel(ui, Loc.T(L.Encryption.RecoverySectionTitle));
         DrawWrapped(ui, configured

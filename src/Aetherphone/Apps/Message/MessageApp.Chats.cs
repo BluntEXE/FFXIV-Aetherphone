@@ -1,4 +1,4 @@
-using Aetherphone.Core;
+﻿using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
@@ -113,8 +113,24 @@ internal sealed partial class MessageApp
 
     private void DrawRecoveryNudge(ref Rect listRect)
     {
-        if (recoveryNudgeDismissed || configuration.EncryptionRecoveryNudgeDismissed
-            || store.VaultState != KeyVaultState.Unlocked || store.Vault.RecoveryConfigured)
+        if (store.VaultState != KeyVaultState.Unlocked)
+        {
+            return;
+        }
+
+        if (store.Vault.UnsavedRecoveryCode is not null)
+        {
+            ChatHeaderControls.DrawBanner(ui, ref listRect, Loc.T(L.Encryption.SaveCodeBanner), ui.Accent,
+                () =>
+                {
+                    encryptionSetup.Request();
+                    navigation.Open("settings");
+                });
+            return;
+        }
+
+        if (recoveryNudgeDismissed || store.Vault.RecoveryConfigured
+            || !configuration.RecoveryNudgeDue())
         {
             return;
         }
@@ -126,7 +142,11 @@ internal sealed partial class MessageApp
                 encryptionSetup.Request();
                 navigation.Open("settings");
             },
-            () => recoveryNudgeDismissed = true);
+            () =>
+            {
+                recoveryNudgeDismissed = true;
+                configuration.SnoozeRecoveryNudge();
+            });
     }
 
     private void DrawChatFilterChips(Rect area, float scale)

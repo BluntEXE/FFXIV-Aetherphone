@@ -14,6 +14,12 @@ internal sealed class EncryptionVaultActions : IDisposable
     private volatile bool busy;
     private volatile string generatedCode = string.Empty;
     private volatile bool hasArchivedEscrows;
+    private volatile string linkRequestId = string.Empty;
+    private volatile string linkCode = string.Empty;
+    private volatile bool linkPolling;
+    private float sinceLinkPoll;
+
+    private const float LinkPollSeconds = 2f;
 
     public string CodeEntry = string.Empty;
 
@@ -43,9 +49,105 @@ internal sealed class EncryptionVaultActions : IDisposable
         status = string.Empty;
     }
 
+    public string LinkCode => linkCode;
+
+    public bool LinkWaiting => linkRequestId.Length > 0;
+
+    public void BeginDeviceLink()
+    {
+        if (busy || linkRequestId.Length > 0)
+        {
+            return;
+        }
+
+        busy = true;
+        status = Loc.T(L.Encryption.Working);
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var ticket = await vault.StartDeviceLinkAsync(cancellation.Token).ConfigureAwait(false);
+                if (ticket is null)
+                {
+                    status = Loc.T(L.Encryption.Failed);
+                    return;
+                }
+
+                linkRequestId = ticket.Id;
+                linkCode = ticket.VerificationCode;
+                status = string.Empty;
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                AepLog.Warning(exception, "Starting a device link failed");
+                status = Loc.T(L.Encryption.Failed);
+            }
+            finally
+            {
+                busy = false;
+            }
+        });
+    }
+
+    public void CancelDeviceLink()
+    {
+        var requestId = linkRequestId;
+        linkRequestId = string.Empty;
+        linkCode = string.Empty;
+        if (requestId.Length > 0)
+        {
+            vault.CancelDeviceLink(requestId);
+        }
+    }
+
+    public void TickDeviceLink(float deltaSeconds)
+    {
+        var requestId = linkRequestId;
+        if (requestId.Length == 0 || linkPolling)
+        {
+            return;
+        }
+
+        sinceLinkPoll += deltaSeconds;
+        if (sinceLinkPoll < LinkPollSeconds)
+        {
+            return;
+        }
+
+        sinceLinkPoll = 0f;
+        linkPolling = true;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                if (await vault.TryCompleteDeviceLinkAsync(requestId, cancellation.Token).ConfigureAwait(false))
+                {
+                    linkRequestId = string.Empty;
+                    linkCode = string.Empty;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                AepLog.Warning(exception, "Completing a device link failed");
+            }
+            finally
+            {
+                linkPolling = false;
+            }
+        });
+    }
+
     public void AskReset()
     {
-        AskReset(Loc.T(L.Encryption.ForgotBody));
+        AskReset(vault.RecoveryConfigured
+            ? Loc.T(L.Encryption.ForgotBody)
+            : Loc.T(L.Encryption.ForgotNoRecoveryBody));
     }
 
     public void AskResetWithoutRecovery()

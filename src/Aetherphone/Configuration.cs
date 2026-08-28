@@ -170,6 +170,15 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public string AethernetToken { get; set; } = string.Empty;
     public string EncryptionKeyCache { get; set; } = string.Empty;
     public string EncryptionKeyCacheUserId { get; set; } = string.Empty;
+    public string EncryptionKeyCachePending { get; set; } = string.Empty;
+    public string EncryptionKeyCachePendingUserId { get; set; } = string.Empty;
+    public string EncryptionKeyCachePrevious { get; set; } = string.Empty;
+    public string EncryptionKeyCachePreviousUserId { get; set; } = string.Empty;
+    public Dictionary<string, string> EncryptionKeysByUserId { get; set; } = new();
+    public bool EncryptionKeyStoreMigrated { get; set; }
+    public string PendingRecoveryCode { get; set; } = string.Empty;
+    public string PendingRecoveryCodeUserId { get; set; } = string.Empty;
+    public long EncryptionRecoveryNudgeSnoozedUntilUnix { get; set; }
     public string HuntsSessionCache { get; set; } = string.Empty;
     public bool HuntsAuthenticated { get; set; }
     public bool HuntsAppOpened { get; set; }
@@ -418,6 +427,69 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
         }
 
         Save();
+    }
+
+    public void MigrateEncryptionKeyStore()
+    {
+        if (!SeedEncryptionKeyStore())
+        {
+            return;
+        }
+
+        Save();
+    }
+
+    private const long RecoveryNudgeSnoozeSeconds = 3 * 24 * 60 * 60;
+
+    public bool RecoveryNudgeDue()
+    {
+        if (EncryptionRecoveryNudgeSnoozedUntilUnix > 0)
+        {
+            return DateTimeOffset.UtcNow.ToUnixTimeSeconds() >= EncryptionRecoveryNudgeSnoozedUntilUnix;
+        }
+
+        return !EncryptionRecoveryNudgeDismissed;
+    }
+
+    public void SnoozeRecoveryNudge()
+    {
+        MarkRecoveryNudgeSnoozed();
+        Save();
+    }
+
+    public void MarkRecoveryNudgeSnoozed()
+    {
+        EncryptionRecoveryNudgeDismissed = false;
+        EncryptionRecoveryNudgeSnoozedUntilUnix =
+            DateTimeOffset.UtcNow.ToUnixTimeSeconds() + RecoveryNudgeSnoozeSeconds;
+    }
+
+    public bool SeedEncryptionKeyStore()
+    {
+        if (EncryptionKeyStoreMigrated)
+        {
+            return false;
+        }
+
+        EncryptionKeyStoreMigrated = true;
+        AdoptEncryptionKey(EncryptionKeyCacheUserId, EncryptionKeyCache);
+        AdoptEncryptionKey(LegacyUnclaimedEncryptionUserId, LegacyUnclaimedEncryptionKey);
+        foreach (var entry in CharacterSessions)
+        {
+            AdoptEncryptionKey(entry.Value.EncryptionKeyCacheUserId, entry.Value.EncryptionKeyCache);
+        }
+
+        return true;
+    }
+
+    private void AdoptEncryptionKey(string userId, string protectedKey)
+    {
+        if (userId.Length == 0 || protectedKey.Length == 0 || EncryptionKeysByUserId.ContainsKey(userId))
+        {
+            return;
+        }
+
+        EncryptionKeysByUserId[userId] = protectedKey;
     }
 
     public void MigrateMessage()
@@ -715,6 +787,17 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
         }
 
         _ = Plugin.Framework.RunOnFrameworkThread(SaveNow);
+    }
+
+    public Task SaveNowAsync()
+    {
+        if (Plugin.Framework.IsInFrameworkUpdateThread)
+        {
+            SaveNow();
+            return Task.CompletedTask;
+        }
+
+        return Plugin.Framework.RunOnFrameworkThread(SaveNow);
     }
 
     public void SaveNow()

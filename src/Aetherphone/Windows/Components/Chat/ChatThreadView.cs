@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
@@ -360,24 +360,41 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         var state = store.VaultState;
         if (state == KeyVaultState.Locked)
         {
-            ChatHeaderControls.DrawBanner(ui, ref listRect, Loc.T(L.Encryption.LockedBanner), ui.MutedInk,
+            var banner = store.Vault.RecoveryConfigured
+                ? L.Encryption.LockedBanner
+                : L.Encryption.LockedNoRecoveryBanner;
+            ChatHeaderControls.DrawBanner(ui, ref listRect, Loc.T(banner), ui.MutedInk,
                 () => OpenEncryptionInfo(threadId));
             return;
         }
 
-        if (state != KeyVaultState.Unlocked || store.Vault.RecoveryConfigured
-            || configuration.EncryptionRecoveryNudgeDismissed)
+        if (state != KeyVaultState.Unlocked)
+        {
+            return;
+        }
+
+        if (store.Vault.UnsavedRecoveryCode is not null)
+        {
+            ChatHeaderControls.DrawBanner(ui, ref listRect, Loc.T(L.Encryption.SaveCodeBanner), ui.Accent,
+                () => OpenEncryptionInfo(threadId));
+            return;
+        }
+
+        if (store.HasOlderKeyMessages(ConversationScope(threadId)))
+        {
+            ChatHeaderControls.DrawBanner(ui, ref listRect, Loc.T(L.Encryption.OlderKeyBanner), ui.MutedInk,
+                () => OpenEncryptionInfo(threadId));
+            return;
+        }
+
+        if (store.Vault.RecoveryConfigured || !configuration.RecoveryNudgeDue())
         {
             return;
         }
 
         ChatHeaderControls.DrawPromptBanner(ui, ref listRect, Loc.T(L.Encryption.RecoveryNudgeBanner), ui.MutedInk,
             () => OpenEncryptionInfo(threadId),
-            () =>
-            {
-                configuration.EncryptionRecoveryNudgeDismissed = true;
-                configuration.Save();
-            });
+            configuration.SnoozeRecoveryNudge);
     }
 
     public void DrawEncryptionScreen(Rect area)

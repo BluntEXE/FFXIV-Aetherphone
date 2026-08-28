@@ -1,4 +1,4 @@
-using Aetherphone.Core.Activity;
+﻿using Aetherphone.Core.Activity;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Announcements;
 using Aetherphone.Core.Apps;
@@ -121,6 +121,8 @@ internal sealed class PhoneServices : IDisposable
     public required CharacterSessionManager CharacterSwitcher { get; init; }
     public required AethernetApi Aethernet { get; init; }
     public required KeyVault KeyVault { get; init; }
+
+    public required DeviceLinkWatcher DeviceLinks { get; init; }
     public required PeerKeyDirectory PeerKeys { get; init; }
     public required ConversationKeyStore ConversationKeys { get; init; }
     public required EncryptionSetupLauncher EncryptionSetup { get; init; }
@@ -300,6 +302,7 @@ internal sealed class PhoneServices : IDisposable
         var housingReminders = new HousingReminderService(configuration, framework, notifications, housing.Watch,
             housingGate);
         var confirm = new ConfirmService();
+        var deviceLinks = new DeviceLinkWatcher(keyVault, aethernetSession, confirm);
         Windows.UrlActions.Configure(confirm);
         var calls = new CallHub(configuration, aethernetSession, notifications, sound, playback, realtimeSignals,
             confirm, installer.Gate("message"));
@@ -416,6 +419,7 @@ internal sealed class PhoneServices : IDisposable
             CharacterSwitcher = characterSwitcher,
             Aethernet = aethernet,
             KeyVault = keyVault,
+            DeviceLinks = deviceLinks,
             PeerKeys = peerKeys,
             ConversationKeys = conversationKeys,
             EncryptionSetup = new EncryptionSetupLauncher(),
@@ -478,6 +482,7 @@ internal sealed class PhoneServices : IDisposable
         ModerationPresenter.Dispose();
         ModerationNotices.Dispose();
         AccountState.Dispose();
+        DeviceLinks.Dispose();
         KeyVault.Dispose();
         StreamSignals.Dispose();
         Calls.Dispose();

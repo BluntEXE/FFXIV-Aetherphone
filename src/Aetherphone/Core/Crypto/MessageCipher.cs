@@ -34,6 +34,7 @@ internal sealed class MessageCipher
     private readonly ConcurrentDictionary<string, DmDecryptedBody> decryptedBodies = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, (long AtUnix, string Text)> previewCache = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, int> generationByMessage = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, byte> olderKeyScopes = new(StringComparer.Ordinal);
 
     public MessageCipher(KeyVault vault, ConversationKeyStore keys)
     {
@@ -55,6 +56,12 @@ internal sealed class MessageCipher
         decryptedBodies.Clear();
         previewCache.Clear();
         generationByMessage.Clear();
+        olderKeyScopes.Clear();
+    }
+
+    public bool HasOlderKeyMessages(string scope)
+    {
+        return olderKeyScopes.ContainsKey(scope);
     }
 
     public void RecordGeneration(string messageId, int generation)
@@ -127,6 +134,30 @@ internal sealed class MessageCipher
         return null;
     }
 
+    private DmBodyState MissingKeyState(string scope)
+    {
+        return vault.State switch
+        {
+            KeyVaultState.Locked => DmBodyState.NoKey,
+            KeyVaultState.Unlocked => keys.IsScopeHydrated(scope) ? DmBodyState.NoKey : DmBodyState.Pending,
+            _ => DmBodyState.Pending,
+        };
+    }
+
+    private LocString MissingKeyText(string scope)
+    {
+        return vault.State switch
+        {
+            KeyVaultState.Locked => L.Encryption.LockedPlaceholder,
+            KeyVaultState.Unlocked => keys.IsScopeHydrated(scope)
+                ? L.Encryption.OlderKeyPlaceholder
+                : L.Encryption.DecryptingPlaceholder,
+            KeyVaultState.Provisioning => L.Encryption.SettingUp,
+            KeyVaultState.Unsupported => L.Encryption.UnsupportedSummary,
+            _ => L.Encryption.EncryptedPlaceholder,
+        };
+    }
+
     public DmDecryptedBody ResolveBody(string scope, string messageId, string body, string senderId, string? commitmentTag)
     {
         if (decryptedBodies.TryGetValue(messageId, out var cached)
@@ -138,13 +169,11 @@ internal sealed class MessageCipher
         DmDecryptedBody resolved;
         if (!EnvelopeCodec.TryParseGeneration(body, out var generation))
         {
-            resolved = new DmDecryptedBody(DmBodyState.Malformed, Loc.T(L.Encryption.NoKeyPlaceholder), null, false);
+            resolved = new DmDecryptedBody(DmBodyState.Malformed, Loc.T(L.Encryption.DamagedPlaceholder), null, false);
         }
         else if (!keys.TryGetCek(scope, generation, out var cek))
         {
-            resolved = vault.State is KeyVaultState.Unlocked or KeyVaultState.Locked
-                ? new DmDecryptedBody(DmBodyState.NoKey, Loc.T(L.Encryption.NoKeyPlaceholder), null, false)
-                : new DmDecryptedBody(DmBodyState.Pending, Loc.T(L.Encryption.EncryptedPlaceholder), null, false);
+            resolved = new DmDecryptedBody(MissingKeyState(scope), Loc.T(MissingKeyText(scope)), null, false);
         }
         else
         {
@@ -154,17 +183,22 @@ internal sealed class MessageCipher
                 EnvelopeDecodeStatus.Success => new DmDecryptedBody(DmBodyState.Decrypted, decoded.Body,
                     decoded.FrankingKeyBase64, decoded.CommitmentVerified),
                 EnvelopeDecodeStatus.WrongKey => new DmDecryptedBody(DmBodyState.NoKey,
-                    Loc.T(L.Encryption.NoKeyPlaceholder), null, false),
-                _ => new DmDecryptedBody(DmBodyState.Malformed, Loc.T(L.Encryption.NoKeyPlaceholder), null, false),
+                    Loc.T(L.Encryption.OlderKeyPlaceholder), null, false),
+                _ => new DmDecryptedBody(DmBodyState.Malformed, Loc.T(L.Encryption.DamagedPlaceholder), null, false),
             };
         }
 
         RecordGeneration(messageId, generation);
+        if (resolved.State == DmBodyState.NoKey && vault.State == KeyVaultState.Unlocked)
+        {
+            olderKeyScopes[scope] = 1;
+        }
+
         if (resolved.State is DmBodyState.NoKey or DmBodyState.Malformed
             && (!decryptedBodies.TryGetValue(messageId, out var previous) || previous.State != resolved.State))
         {
             AepLog.Warning(
-                $"[Crypto] message {messageId} in {scope} generation {generation} resolved as {resolved.State}; enable debug logging for the cause");
+                $"[Crypto] message {messageId} in {scope} generation {generation} resolved as {resolved.State} (vault {vault.State}, scope hydrated {keys.IsScopeHydrated(scope)}, current generation {keys.CurrentGeneration(scope)}).");
         }
 
         decryptedBodies[messageId] = resolved;
@@ -175,7 +209,7 @@ internal sealed class MessageCipher
     {
         if (replyToId is null || string.IsNullOrEmpty(replyBody))
         {
-            return Loc.T(L.Encryption.NoKeyPlaceholder);
+            return Loc.T(L.Encryption.EncryptedPlaceholder);
         }
 
         if (decryptedBodies.TryGetValue(replyToId, out var cached) && cached.State == DmBodyState.Decrypted)
@@ -190,13 +224,11 @@ internal sealed class MessageCipher
 
         if (!keys.TryGetCek(scope, generation, out var cek))
         {
-            return vault.State is KeyVaultState.Unlocked or KeyVaultState.Locked
-                ? Loc.T(L.Encryption.NoKeyPlaceholder)
-                : Loc.T(L.Encryption.EncryptedPlaceholder);
+            return Loc.T(MissingKeyText(scope));
         }
 
         var decoded = EnvelopeCodec.Decode(replyBody, cek, scope, replySenderId ?? string.Empty, null);
-        return decoded.Status == EnvelopeDecodeStatus.Success ? decoded.Body : Loc.T(L.Encryption.NoKeyPlaceholder);
+        return decoded.Status == EnvelopeDecodeStatus.Success ? decoded.Body : Loc.T(L.Encryption.OlderKeyPlaceholder);
     }
 
     public string ResolvePreview(string cacheKey, string scope, long atUnix, string preview, string senderId)
@@ -209,13 +241,13 @@ internal sealed class MessageCipher
         var text = Loc.T(L.Encryption.EncryptedPlaceholder);
         if (!EnvelopeCodec.TryParseGeneration(preview, out var generation))
         {
-            return text;
+            return Loc.T(L.Encryption.DamagedPlaceholder);
         }
 
         if (!keys.TryGetCek(scope, generation, out var cek))
         {
             keys.RequestPreviewHydrate(scope);
-            return text;
+            return Loc.T(MissingKeyText(scope));
         }
 
         var decoded = EnvelopeCodec.Decode(preview, cek, scope, senderId, null);
