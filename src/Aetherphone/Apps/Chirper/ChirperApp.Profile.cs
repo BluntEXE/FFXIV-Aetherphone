@@ -1,4 +1,4 @@
-﻿using Aetherphone.Core;
+using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
@@ -685,18 +685,10 @@ internal sealed partial class ChirperApp
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        if (!UiInteract.Click(min, max, hovered))
+        if (UiInteract.Click(min, max, hovered))
         {
-            return;
+            OpenThread(post);
         }
-
-        if (veiled)
-        {
-            SensitiveReveals.Reveal(post.Id);
-            return;
-        }
-
-        photoViewer.Open(this, () => MediaTexture(url));
     }
 
     private void OpenProfileSheet(UserDto user)
