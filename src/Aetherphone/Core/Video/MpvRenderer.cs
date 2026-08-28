@@ -89,7 +89,7 @@ internal sealed class MpvRenderer : IDisposable
     [DllImport(Library, EntryPoint = "mpv_command", CallingConvention = CallingConvention.Cdecl)]
     private static extern int mpv_command_native(IntPtr ctx, IntPtr[] args);
 
-    private static int mpv_command(IntPtr ctx, string?[] args)
+    private static int MpvCommand(IntPtr ctx, string?[] args)
     {
         var pointers = new IntPtr[args.Length];
         try
@@ -368,8 +368,8 @@ internal sealed class MpvRenderer : IDisposable
             lastErrorFromResolver = false;
             Interlocked.Exchange(ref httpForbiddenHits, 0);
             Interlocked.Exchange(ref streamErrorHits, 0);
-            _ = mpv_command(mpvContext, ["set", "speed", "1", null]);
-            var result = mpv_command(mpvContext, ["loadfile", url, "replace", "0", options, null]);
+            _ = MpvCommand(mpvContext, ["set", "speed", "1", null]);
+            var result = MpvCommand(mpvContext, ["loadfile", url, "replace", "0", options, null]);
             if (result < 0)
             {
                 AepLog.Warning($"[MPV] Could not load {url}: {ErrorText(result)}");
@@ -394,7 +394,7 @@ internal sealed class MpvRenderer : IDisposable
         {
             if (mpvContext != IntPtr.Zero)
             {
-                _ = mpv_command(mpvContext, ["stop", null]);
+                _ = MpvCommand(mpvContext, ["stop", null]);
             }
         }
 
@@ -427,7 +427,7 @@ internal sealed class MpvRenderer : IDisposable
                 return;
             }
 
-            var result = mpv_command(mpvContext, ["seek", target, "absolute", null]);
+            var result = MpvCommand(mpvContext, ["seek", target, "absolute", null]);
             if (result < 0)
             {
                 AepLog.Warning($"[MPV] Could not seek to {target}s: {ErrorText(result)}");
@@ -446,7 +446,7 @@ internal sealed class MpvRenderer : IDisposable
         {
             if (mpvContext != IntPtr.Zero)
             {
-                _ = mpv_command(mpvContext, ["set", name, value, null]);
+                _ = MpvCommand(mpvContext, ["set", name, value, null]);
             }
         }
     }

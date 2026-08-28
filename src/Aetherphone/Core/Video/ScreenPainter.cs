@@ -24,22 +24,22 @@ internal sealed unsafe class ScreenPainter : IDisposable
 	internal float Scale = 1.0f;
 	internal bool Visible { get; set; } = true;
 
-	private readonly VertexShader _vs;
-	private readonly PixelShader _ps;
-	private readonly SamplerState _sampler;
-	private readonly RasterizerState _rasterState;
-	private readonly DepthStencilState _depthTestState;
-	private readonly DepthStencilState _depthOffState;
-	private readonly Buffer _cbuf;
+	private readonly VertexShader vertexShader;
+	private readonly PixelShader pixelShader;
+	private readonly SamplerState samplerState;
+	private readonly RasterizerState rasterizerState;
+	private readonly DepthStencilState depthTestState;
+	private readonly DepthStencilState depthOffState;
+	private readonly Buffer constantBuffer;
 
-	private Texture2D? _texture;
-	private ShaderResourceView? _srv;
+	private Texture2D? screenTexture;
+	private ShaderResourceView? shaderResourceView;
 
-	private nint _cachedDepthTexture;
-	private ShaderResourceView? _cachedDepthView;
-	private DepthStencilView? _cachedDsv;
-	private bool _depthViewUnavailable;
-	private bool _scaledDepthSkipLogged;
+	private nint cachedDepthTexture;
+	private ShaderResourceView? cachedDepthView;
+	private DepthStencilView? cachedDepthStencilView;
+	private bool depthViewUnavailable;
+	private bool scaledDepthSkipLogged;
 
 	private const int MaxUiRects = 64;
 
@@ -123,11 +123,11 @@ internal sealed unsafe class ScreenPainter : IDisposable
 		using (var vsb = ShaderBytecode.Compile(hlsl, "VS", "vs_4_0"))
 		using (var psb = ShaderBytecode.Compile(hlsl, "PS", "ps_4_0"))
 		{
-			_vs = new VertexShader(DxHandler.Device, vsb);
-			_ps = new PixelShader(DxHandler.Device, psb);
+			vertexShader = new VertexShader(DxHandler.Device, vsb);
+			pixelShader = new PixelShader(DxHandler.Device, psb);
 		}
 
-		_sampler = new SamplerState(DxHandler.Device, new SamplerStateDescription
+		samplerState = new SamplerState(DxHandler.Device, new SamplerStateDescription
 		{
 			Filter = Filter.MinMagMipLinear,
 			AddressU = TextureAddressMode.Clamp,
@@ -138,27 +138,27 @@ internal sealed unsafe class ScreenPainter : IDisposable
 			MaximumLod = float.MaxValue
 		});
 
-		_rasterState = new RasterizerState(DxHandler.Device, new RasterizerStateDescription
+		rasterizerState = new RasterizerState(DxHandler.Device, new RasterizerStateDescription
 		{
 			FillMode = FillMode.Solid,
 			CullMode = SharpDX.Direct3D11.CullMode.None
 		});
 
-		_depthTestState = new DepthStencilState(DxHandler.Device, new DepthStencilStateDescription
+		depthTestState = new DepthStencilState(DxHandler.Device, new DepthStencilStateDescription
 		{
 			IsDepthEnabled = true,
 			DepthWriteMask = DepthWriteMask.Zero,
 			DepthComparison = Comparison.GreaterEqual
 		});
 
-		_depthOffState = new DepthStencilState(DxHandler.Device, new DepthStencilStateDescription
+		depthOffState = new DepthStencilState(DxHandler.Device, new DepthStencilStateDescription
 		{
 			IsDepthEnabled = false,
 			DepthWriteMask = DepthWriteMask.Zero,
 			DepthComparison = Comparison.Always
 		});
 
-		_cbuf = new Buffer(DxHandler.Device, sizeof(ScreenParams), ResourceUsage.Default,
+		constantBuffer = new Buffer(DxHandler.Device, sizeof(ScreenParams), ResourceUsage.Default,
 			BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 		DxHandler.OnPresent += DrawIfReady;
@@ -166,18 +166,18 @@ internal sealed unsafe class ScreenPainter : IDisposable
 
 	internal void SetTarget(Texture2D? texture)
 	{
-		if (ReferenceEquals(texture, _texture))
+		if (ReferenceEquals(texture, screenTexture))
 		{
 			return;
 		}
 
-		_srv?.Dispose();
-		_srv = null;
-		_texture = texture;
+		shaderResourceView?.Dispose();
+		shaderResourceView = null;
+		screenTexture = texture;
 
 		if (texture != null)
 		{
-			_srv = new ShaderResourceView(DxHandler.Device, texture, new ShaderResourceViewDescription
+			shaderResourceView = new ShaderResourceView(DxHandler.Device, texture, new ShaderResourceViewDescription
 			{
 				Format = texture.Description.Format,
 				Dimension = ShaderResourceViewDimension.Texture2D,
@@ -200,7 +200,7 @@ internal sealed unsafe class ScreenPainter : IDisposable
 			return;
 		}
 
-		if (!TryGetSceneTargets(out var targets) || _srv == null)
+		if (!TryGetSceneTargets(out var targets) || shaderResourceView == null)
 		{
 			return;
 		}
@@ -211,38 +211,38 @@ internal sealed unsafe class ScreenPainter : IDisposable
 			return;
 		}
 
-		if (targets.DepthTexture != _cachedDepthTexture)
+		if (targets.DepthTexture != cachedDepthTexture)
 		{
-			_cachedDepthView?.Dispose();
-			_cachedDepthView = null;
-			_cachedDsv?.Dispose();
-			_cachedDsv = null;
-			_depthViewUnavailable = false;
-			_cachedDepthTexture = targets.DepthTexture;
+			cachedDepthView?.Dispose();
+			cachedDepthView = null;
+			cachedDepthStencilView?.Dispose();
+			cachedDepthStencilView = null;
+			depthViewUnavailable = false;
+			cachedDepthTexture = targets.DepthTexture;
 		}
 
-		if (_cachedDepthView == null && !_depthViewUnavailable)
+		if (cachedDepthView == null && !depthViewUnavailable)
 		{
-			_cachedDepthView = CreateDepthShaderView(targets.DepthTexture);
-			_depthViewUnavailable = _cachedDepthView == null;
+			cachedDepthView = CreateDepthShaderView(targets.DepthTexture);
+			depthViewUnavailable = cachedDepthView == null;
 		}
 
 		var depthMatchesTarget = targets.RenderWidth == targets.Width && targets.RenderHeight == targets.Height;
-		if (_cachedDepthView == null)
+		if (cachedDepthView == null)
 		{
 			if (!depthMatchesTarget)
 			{
-				if (!_scaledDepthSkipLogged)
+				if (!scaledDepthSkipLogged)
 				{
-					_scaledDepthSkipLogged = true;
+					scaledDepthSkipLogged = true;
 					AepLog.Warning($"[ScreenPainter] The scene depth cannot be sampled and renders at {targets.RenderWidth}x{targets.RenderHeight} against a {targets.Width}x{targets.Height} swap chain; the world screen stays hidden while the render resolution is scaled.");
 				}
 
 				return;
 			}
 
-			_cachedDsv ??= CreateDepthStencilView(targets.DepthTexture);
-			if (_cachedDsv == null)
+			cachedDepthStencilView ??= CreateDepthStencilView(targets.DepthTexture);
+			if (cachedDepthStencilView == null)
 			{
 				return;
 			}
@@ -270,7 +270,7 @@ internal sealed unsafe class ScreenPainter : IDisposable
 		try
 		{
 			var p = new ScreenParams { WorldViewProj = worldViewProj.Value, Curvature = Curvature };
-			if (_cachedDepthView != null)
+			if (cachedDepthView != null)
 			{
 				p.DepthTexelScaleX = (float)targets.RenderWidth / targets.Width;
 				p.DepthTexelScaleY = (float)targets.RenderHeight / targets.Height;
@@ -278,31 +278,31 @@ internal sealed unsafe class ScreenPainter : IDisposable
 
 			p.UiRectCount = CollectUiRects(ref p);
 			var pp = &p;
-			ctx.UpdateSubresource(new SharpDX.DataBox((nint)pp), _cbuf);
+			ctx.UpdateSubresource(new SharpDX.DataBox((nint)pp), constantBuffer);
 
-			if (_cachedDepthView != null)
+			if (cachedDepthView != null)
 			{
 				ctx.OutputMerger.SetRenderTargets((DepthStencilView?)null, rtv);
-				ctx.OutputMerger.DepthStencilState = _depthOffState;
+				ctx.OutputMerger.DepthStencilState = depthOffState;
 			}
 			else
 			{
-				ctx.OutputMerger.SetRenderTargets(_cachedDsv, rtv);
-				ctx.OutputMerger.DepthStencilState = _depthTestState;
+				ctx.OutputMerger.SetRenderTargets(cachedDepthStencilView, rtv);
+				ctx.OutputMerger.DepthStencilState = depthTestState;
 			}
 
 			ctx.Rasterizer.SetViewport(0, 0, targets.Width, targets.Height, 0, 1);
 			ctx.InputAssembler.InputLayout = null;
 			ctx.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleStrip;
-			ctx.Rasterizer.State = _rasterState;
+			ctx.Rasterizer.State = rasterizerState;
 			ctx.OutputMerger.BlendState = null;
-			ctx.VertexShader.Set(_vs);
-			ctx.VertexShader.SetConstantBuffer(0, _cbuf);
-			ctx.PixelShader.Set(_ps);
-			ctx.PixelShader.SetConstantBuffer(0, _cbuf);
-			ctx.PixelShader.SetShaderResource(0, _srv);
-			ctx.PixelShader.SetShaderResource(1, _cachedDepthView);
-			ctx.PixelShader.SetSampler(0, _sampler);
+			ctx.VertexShader.Set(vertexShader);
+			ctx.VertexShader.SetConstantBuffer(0, constantBuffer);
+			ctx.PixelShader.Set(pixelShader);
+			ctx.PixelShader.SetConstantBuffer(0, constantBuffer);
+			ctx.PixelShader.SetShaderResource(0, shaderResourceView);
+			ctx.PixelShader.SetShaderResource(1, cachedDepthView);
+			ctx.PixelShader.SetSampler(0, samplerState);
 			ctx.Draw(VertexCount, 0);
 			ctx.PixelShader.SetShaderResource(0, null);
 			ctx.PixelShader.SetShaderResource(1, null);
@@ -573,15 +573,15 @@ internal sealed unsafe class ScreenPainter : IDisposable
 	{
 		DxHandler.OnPresent -= DrawIfReady;
 
-		_srv?.Dispose();
-		_cachedDepthView?.Dispose();
-		_cachedDsv?.Dispose();
-		_cbuf.Dispose();
-		_depthOffState.Dispose();
-		_depthTestState.Dispose();
-		_rasterState.Dispose();
-		_sampler.Dispose();
-		_ps.Dispose();
-		_vs.Dispose();
+		shaderResourceView?.Dispose();
+		cachedDepthView?.Dispose();
+		cachedDepthStencilView?.Dispose();
+		constantBuffer.Dispose();
+		depthOffState.Dispose();
+		depthTestState.Dispose();
+		rasterizerState.Dispose();
+		samplerState.Dispose();
+		pixelShader.Dispose();
+		vertexShader.Dispose();
 	}
 }
