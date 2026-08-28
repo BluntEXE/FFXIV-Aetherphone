@@ -2,7 +2,7 @@ name: Announce commits on Discord
 
 on:
   push:
-    branches: [master]
+    branches: [dev]
 
 jobs:
   announce:
@@ -12,7 +12,7 @@ jobs:
       - name: Post commits to Discord
         env:
           WEBHOOK_URL: ${{ secrets.COMMITS_WEBHOOK_URL }}
-          ICON: https://raw.githubusercontent.com/XeldarAlz/FFXIV-Aetherphone/master/src/Aetherphone/Images/Icon.png
+          ICON: https://raw.githubusercontent.com/XeldarAlz/FFXIV-Aetherphone/dev/src/Aetherphone/Images/Icon.png
         run: |
           set -euo pipefail
           if [ -z "${WEBHOOK_URL:-}" ]; then
