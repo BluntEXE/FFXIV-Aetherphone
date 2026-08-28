@@ -136,6 +136,20 @@ jobs:
             exit 1
           fi
 
+      # A marker on the first line hides the namespace from the check below, so
+      # a correct file gets reported as having no namespace at all and the error
+      # sends you looking in the wrong place. Catch the marker itself and name
+      # it. .editorconfig asks for utf-8, not utf-8-bom.
+      - name: Verify no byte order marks
+        shell: bash
+        run: |
+          offenders=$(grep -rlI $'^\xef\xbb\xbf' src/Aetherphone src/Aetherphone.Tests --include=*.cs || true)
+          if [ -n "$offenders" ]; then
+            echo "$offenders"
+            echo "::error::Files carry no byte order mark. Save as utf-8 without one, the way .editorconfig asks."
+            exit 1
+          fi
+
       # ManagedDoom is a vendored port and keeps its own layout.
       #
       # Windows/Components is the one deliberate exception. Its folders group 182
