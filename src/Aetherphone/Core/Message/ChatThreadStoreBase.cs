@@ -41,7 +41,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     private readonly AppGate gate;
     private readonly PollCadence inboxCadence;
     private readonly object messagesLock = new();
-    private readonly Dictionary<string, InboxMark> inboxMarks = new();
+    private readonly ConcurrentDictionary<string, InboxMark> inboxMarks = new();
     private static readonly TimeSpan MediaUrlFailureRetryFor = TimeSpan.FromMinutes(2);
     private readonly ConcurrentDictionary<string, string> dmMediaUrls = new();
     private readonly ConcurrentDictionary<string, byte> dmMediaLoading = new();
@@ -543,7 +543,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     private readonly record struct InboxMark(long LastMessageAt, int Unread);
 
     private static readonly TimeSpan InboxNotifyDeferralLimit = TimeSpan.FromSeconds(30);
-    private readonly Dictionary<string, DateTime> inboxNotifyDeferrals = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, DateTime> inboxNotifyDeferrals = new(StringComparer.Ordinal);
 
     protected virtual bool IsInboxPreviewReady(TThread item)
     {
@@ -571,7 +571,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
                 || (lastMessageAt == previous.LastMessageAt && unread > previous.Unread);
             if (!isNew || unread <= 0)
             {
-                inboxNotifyDeferrals.Remove(key);
+                inboxNotifyDeferrals.TryRemove(key, out _);
                 continue;
             }
 
@@ -589,7 +589,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
                 }
             }
 
-            inboxNotifyDeferrals.Remove(key);
+            inboxNotifyDeferrals.TryRemove(key, out _);
             inboxMarks[key] = new InboxMark(lastMessageAt, unread);
             if (IsBeingViewed(key))
             {
