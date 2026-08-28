@@ -116,7 +116,9 @@ internal sealed class PhotoLibrary
         try
         {
             var encoded = PngWriter.Encode(pixels, width, height);
-            File.WriteAllBytes(path, encoded);
+            var temp = path + ".tmp";
+            File.WriteAllBytes(temp, encoded);
+            File.Move(temp, path, true);
         }
         catch (Exception exception)
         {
