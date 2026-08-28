@@ -1,5 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Animation;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 
@@ -162,6 +163,7 @@ internal sealed class ActionSheet
                 if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
                 {
                     picked = index;
+                    UiFeedback.Play(UiSound.Tap);
                 }
             }
 
@@ -222,6 +224,7 @@ internal sealed class ActionSheet
 
         if (cancelHovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
+            UiFeedback.Play(UiSound.Tap);
             Close();
             return -1;
         }

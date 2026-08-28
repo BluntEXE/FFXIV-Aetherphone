@@ -1,6 +1,7 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
@@ -172,6 +173,7 @@ internal sealed class ChirperFilterSheet
                 if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
                 {
                     picked = FirstRegion + regionIndex;
+                    UiFeedback.Play(UiSound.Tap);
                 }
             }
         }
@@ -189,6 +191,7 @@ internal sealed class ChirperFilterSheet
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
             {
+                UiFeedback.Play(UiSound.Tap);
                 Close();
             }
         }
@@ -236,6 +239,12 @@ internal sealed class ChirperFilterSheet
         }
 
         ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        return ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+        if (!ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        {
+            return false;
+        }
+
+        UiFeedback.Play(value ? UiSound.ToggleOff : UiSound.ToggleOn);
+        return true;
     }
 }
