@@ -101,6 +101,12 @@ internal static class RunText
             }
 
             var position = origin + piece.Offset;
+            if (run.IsEmoji)
+            {
+                EmojiRender.Draw(drawList, run.EmojiFile, position, fontSize, alpha);
+                continue;
+            }
+
             drawList.AddText(font, fontSize, position,
                 ImGui.GetColorU32(Palette.WithAlpha(ink, ink.W * alpha)), piece.Text);
             if (!run.Interactive)
@@ -136,6 +142,21 @@ internal static class RunText
         var widest = 0f;
         for (var index = 0; index < runs.Length; index++)
         {
+            if (runs[index].IsEmoji)
+            {
+                var advance = EmojiRender.Advance(fontSize);
+                if (cursorX > 0f && cursorX + advance > wrapWidth)
+                {
+                    cursorX = 0f;
+                    cursorY += lineHeight;
+                }
+
+                layout.Pieces.Add(new RunPiece(string.Empty, new Vector2(cursorX, cursorY), advance, index));
+                cursorX += advance;
+                widest = MathF.Max(widest, cursorX);
+                continue;
+            }
+
             var text = runs[index].Text;
             if (text.Length == 0)
             {

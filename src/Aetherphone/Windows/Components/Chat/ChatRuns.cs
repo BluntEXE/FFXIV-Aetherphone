@@ -1,3 +1,4 @@
+using Aetherphone.Core.Emoji;
 using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Theme;
 
@@ -8,6 +9,7 @@ internal sealed class ChatRunSet
     public TextRun[] Runs = Array.Empty<TextRun>();
     public ChatChunk[] Targets = Array.Empty<ChatChunk>();
     public bool HasLinks;
+    public bool HasEmoji;
 }
 
 internal static class ChatRuns
@@ -17,6 +19,7 @@ internal static class ChatRuns
     private static readonly Dictionary<string, ChatRunSet> Cache = new(StringComparer.Ordinal);
     private static readonly List<TextRun> RunScratch = new(16);
     private static readonly List<ChatChunk> TargetScratch = new(8);
+    private static readonly List<EmojiSpan> EmojiScratch = new(8);
 
     public static void Reset() => Cache.Clear();
 
@@ -73,11 +76,8 @@ internal static class ChatRuns
         };
         for (var index = 0; index < set.Runs.Length; index++)
         {
-            if (set.Runs[index].Interactive)
-            {
-                set.HasLinks = true;
-                break;
-            }
+            set.HasLinks |= set.Runs[index].Interactive;
+            set.HasEmoji |= set.Runs[index].IsEmoji;
         }
 
         return set;
@@ -97,17 +97,57 @@ internal static class ChatRuns
             var start = FindUrl(text, cursor, out var length);
             if (start < 0)
             {
-                RunScratch.Add(TextRun.Plain(text[cursor..]));
+                AddPlain(text[cursor..]);
                 return;
             }
 
             if (start > cursor)
             {
-                RunScratch.Add(TextRun.Plain(text[cursor..start]));
+                AddPlain(text[cursor..start]);
             }
 
             AddLink(ChatChunk.Url(text.Substring(start, length)));
             cursor = start + length;
+        }
+    }
+
+    private static void AddPlain(string text)
+    {
+        if (text.Length == 0)
+        {
+            return;
+        }
+
+        if (!EmojiShortcodes.MightContain(text))
+        {
+            RunScratch.Add(TextRun.Plain(text));
+            return;
+        }
+
+        EmojiScratch.Clear();
+        EmojiShortcodes.Collect(text, EmojiScratch);
+        if (EmojiScratch.Count == 0)
+        {
+            RunScratch.Add(TextRun.Plain(text));
+            return;
+        }
+
+        var cursor = 0;
+        for (var index = 0; index < EmojiScratch.Count; index++)
+        {
+            var span = EmojiScratch[index];
+            if (span.Start > cursor)
+            {
+                RunScratch.Add(TextRun.Plain(text[cursor..span.Start]));
+            }
+
+            RunScratch.Add(TextRun.Emoji(span.File));
+            cursor = span.Start + span.Length;
+        }
+
+        if (cursor < text.Length)
+        {
+            RunScratch.Add(TextRun.Plain(text[cursor..]));
         }
     }
 
