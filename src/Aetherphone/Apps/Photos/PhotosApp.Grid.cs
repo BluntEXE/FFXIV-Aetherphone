@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using Aetherphone.Core;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;

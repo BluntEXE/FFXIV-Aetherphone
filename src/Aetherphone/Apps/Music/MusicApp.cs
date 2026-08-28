@@ -1,3 +1,4 @@
+using System.Linq;
 using Aetherphone.Apps.Music.Rolladeck;
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;

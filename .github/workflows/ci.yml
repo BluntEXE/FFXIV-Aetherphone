@@ -72,16 +72,26 @@ jobs:
             exit 1
           fi
 
+      # System.Linq is removed from the implicit usings in Aetherphone.csproj, so
+      # LINQ cannot be reached without the using line below appearing in a file.
+      # That makes this list the whole LINQ surface of the plugin rather than a
+      # sample of operator names, which is what the previous grep checked: it
+      # named three files while four others were using operators it never listed.
       - name: Verify no new LINQ
         shell: bash
         run: |
-          offenders=$(grep -rnE '\.(FirstOrDefault|LastOrDefault|SingleOrDefault|SelectMany|OrderBy|OrderByDescending|ThenBy|ToDictionary|ToLookup|GroupBy|Distinct|Aggregate|Zip)\(' src/Aetherphone --include=*.cs \
-            | grep -v 'src/Aetherphone/Apps/Photos/PhotosApp.Grid.cs' \
-            | grep -v 'src/Aetherphone/Core/Radio/RadioPlayer.cs' \
-            | grep -v 'src/Aetherphone/Core/Video/VideoUrlResolver.cs' || true)
+          offenders=$(grep -rln 'using System\.Linq;' src/Aetherphone --include=*.cs \
+            | grep -v '^src/Aetherphone/Apps/Calendar/CalendarEvents.cs$' \
+            | grep -v '^src/Aetherphone/Apps/Music/MusicApp.cs$' \
+            | grep -v '^src/Aetherphone/Apps/Photos/PhotosApp.Grid.cs$' \
+            | grep -v '^src/Aetherphone/Apps/Velvet/VelvetFilterSelection.cs$' \
+            | grep -v '^src/Aetherphone/Apps/Velvet/VelvetNotInterestedArchive.cs$' \
+            | grep -v '^src/Aetherphone/Apps/Velvet/VelvetStore.cs$' \
+            | grep -v '^src/Aetherphone/Core/Radio/RadioPlayer.cs$' \
+            | grep -v '^src/Aetherphone/Core/Songs/SongPlayer.cs$' || true)
           if [ -n "$offenders" ]; then
             echo "$offenders"
-            echo "::error::No LINQ in this tree: it allocates iterators and delegates on every call and the whole UI redraws every frame. Write a for loop."
+            echo "::error::No LINQ in this tree: it allocates iterators and delegates on every call and the whole UI redraws every frame. Write a for loop, or add the file here if the path is genuinely cold."
             exit 1
           fi
 

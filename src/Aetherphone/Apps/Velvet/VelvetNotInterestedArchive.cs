@@ -1,3 +1,4 @@
+using System.Linq;
 using Aetherphone.Core;
 using Newtonsoft.Json;
 using System.Security.Cryptography;

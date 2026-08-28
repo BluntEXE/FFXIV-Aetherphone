@@ -60,9 +60,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Using Remove="System.Linq" />
     <Using Include="System" />
     <Using Include="System.Collections.Generic" />
-    <Using Include="System.Linq" />
     <Using Include="System.Numerics" />
   </ItemGroup>
 
