@@ -408,7 +408,7 @@ internal sealed class LinkpearlPopoutWindow : Window
         Marquee.DrawLeft(drawList, switchMenuId + ".title", title, textLeft, titleTop, titleWidth, titleStyle,
             theme.TextStrong, titleHovered);
         AppSkin.Icon(drawList, new Vector2(textLeft + titleWidth + CaretGap * scale, centerY + 1f * scale),
-            FontAwesomeIcon.ChevronDown.ToIconString(), theme.TextMuted, 0.55f);
+            IconGlyph.Of(FontAwesomeIcon.ChevronDown), theme.TextMuted, 0.55f);
         if (unread > 0)
         {
             DrawBadge(drawList, unread, textLeft + titleWidth + caretWidth + Metrics.Space.Xs * scale, centerY,
@@ -510,7 +510,7 @@ internal sealed class LinkpearlPopoutWindow : Window
             var label = row.HasBadge
                 ? string.Concat(row.Title, " · ", row.Unread.ToString(Loc.Culture))
                 : row.Title;
-            var glyph = row.IsTell ? FontAwesomeIcon.User.ToIconString() : FontAwesomeIcon.Hashtag.ToIconString();
+            var glyph = row.IsTell ? IconGlyph.Of(FontAwesomeIcon.User) : IconGlyph.Of(FontAwesomeIcon.Hashtag);
             switchItems.Add(new DropdownMenu.Item(label, glyph, false,
                 string.Equals(row.Key, key, StringComparison.Ordinal)));
             switchKeys.Add(row.Key);

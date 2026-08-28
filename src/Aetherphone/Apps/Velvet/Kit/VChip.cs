@@ -80,7 +80,7 @@ internal static class VChip
         var cursorX = min.X + Metrics.Space.Md * scale;
         if (chip.Icon.HasValue)
         {
-            AppSkin.Icon(new Vector2(cursorX + 6f * scale, centerY), chip.Icon.Value.ToIconString(), ink, 0.7f);
+            AppSkin.Icon(new Vector2(cursorX + 6f * scale, centerY), IconGlyph.Of(chip.Icon.Value), ink, 0.7f);
             cursorX += 20f * scale;
         }
 
@@ -90,7 +90,7 @@ internal static class VChip
 
         if (chip.Removable)
         {
-            AppSkin.Icon(new Vector2(max.X - 12f * scale, centerY), FontAwesomeIcon.Times.ToIconString(), ink, 0.62f);
+            AppSkin.Icon(new Vector2(max.X - 12f * scale, centerY), IconGlyph.Of(FontAwesomeIcon.Times), ink, 0.62f);
         }
 
         if (hovered)

@@ -257,7 +257,7 @@ internal sealed class ChessRenderer
     public static void DrawPiece(ImDrawListPtr drawList, Vector2 center, byte piece, float targetHeight, float scale,
         float alpha)
     {
-        var glyph = IconFor(ChessPiece.Type(piece)).ToIconString();
+        var glyph = IconGlyph.Of(IconFor(ChessPiece.Type(piece)));
         using (Plugin.Fonts.PushIcon(targetHeight, glyph))
         {
             DrawPieceGlyph(drawList, glyph, center, piece, targetHeight, scale, alpha);

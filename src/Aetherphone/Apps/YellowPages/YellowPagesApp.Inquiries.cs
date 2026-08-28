@@ -316,7 +316,7 @@ internal sealed partial class YellowPagesApp
         }
 
         AppSkin.Icon(drawList, new Vector2(max.X - 18f * scale, (min.Y + max.Y) * 0.5f),
-            FontAwesomeIcon.ChevronRight.ToIconString(), AppPalettes.YellowPages.MutedInk, 0.7f);
+            IconGlyph.Of(FontAwesomeIcon.ChevronRight), AppPalettes.YellowPages.MutedInk, 0.7f);
         var hovered = UiInteract.Hover(min, max);
         if (hovered)
         {
@@ -357,7 +357,7 @@ internal sealed partial class YellowPagesApp
             return;
         }
 
-        var tapped = ui.IconButton(sendCenter, sendSide * 0.5f, FontAwesomeIcon.PaperPlane.ToIconString(),
+        var tapped = ui.IconButton(sendCenter, sendSide * 0.5f, IconGlyph.Of(FontAwesomeIcon.PaperPlane),
             canSend ? ui.Accent : AppPalettes.YellowPages.MutedInk, AppSkin.Transparent, 0.9f);
         if (!canSend || (!tapped && !submitted))
         {
@@ -442,7 +442,7 @@ internal sealed partial class YellowPagesApp
         }
 
         var canSend = TrimmedLength(inquiryDraft) > 0;
-        var tapped = ui.IconButton(sendCenter, sendSide * 0.5f, FontAwesomeIcon.PaperPlane.ToIconString(),
+        var tapped = ui.IconButton(sendCenter, sendSide * 0.5f, IconGlyph.Of(FontAwesomeIcon.PaperPlane),
             canSend ? ui.Accent : AppPalettes.YellowPages.MutedInk, AppSkin.Transparent, 0.9f);
         if (!canSend || (!tapped && !submitted))
         {

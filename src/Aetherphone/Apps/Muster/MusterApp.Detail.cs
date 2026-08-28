@@ -259,7 +259,7 @@ internal sealed partial class MusterApp
             1f * scale);
         var centerY = origin.Y + height * 0.5f;
         AppSkin.Icon(drawList, new Vector2(origin.X + 22f * scale, centerY),
-            FontAwesomeIcon.Bullhorn.ToIconString(), ui.Accent, 0.8f);
+            IconGlyph.Of(FontAwesomeIcon.Bullhorn), ui.Accent, 0.8f);
         var ago = Loc.T(L.Muster.NoticeAgo, MusterText.Span(nowUnix - muster.HostNoticeAtUnix));
         var agoSize = Typography.Measure(ago, TextStyles.Footnote);
         Typography.Draw(drawList, new Vector2(max.X - 16f * scale - agoSize.X, centerY - agoSize.Y * 0.5f), ago,
@@ -366,7 +366,7 @@ internal sealed partial class MusterApp
             ui.Card(drawList, origin, new Vector2(origin.X + width, origin.Y + cardHeight), rounding,
                 elevated: true);
             AppSkin.Icon(drawList, new Vector2(iconLeft, origin.Y + pad + 9f * scale),
-                FontAwesomeIcon.MapMarkerAlt.ToIconString(), ui.Accent, 0.78f);
+                IconGlyph.Of(FontAwesomeIcon.MapMarkerAlt), ui.Accent, 0.78f);
             for (var index = 0; index < lineCount; index++)
             {
                 var lineTop = origin.Y + pad + index * LocationRowHeight * scale;

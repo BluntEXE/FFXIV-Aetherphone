@@ -205,7 +205,7 @@ internal sealed class PhotoCarousel
         if (active > 0)
         {
             var center = new Vector2(rect.Min.X + inset + radius, rect.Center.Y);
-            if (DrawChevron(drawList, center, radius, FontAwesomeIcon.ChevronLeft.ToIconString(), out var pressed))
+            if (DrawChevron(drawList, center, radius, IconGlyph.Of(FontAwesomeIcon.ChevronLeft), out var pressed))
             {
                 hot = true;
                 if (pressed)
@@ -219,7 +219,7 @@ internal sealed class PhotoCarousel
         if (active < count - 1)
         {
             var center = new Vector2(rect.Max.X - inset - radius, rect.Center.Y);
-            if (DrawChevron(drawList, center, radius, FontAwesomeIcon.ChevronRight.ToIconString(), out var pressed))
+            if (DrawChevron(drawList, center, radius, IconGlyph.Of(FontAwesomeIcon.ChevronRight), out var pressed))
             {
                 hot = true;
                 if (pressed)

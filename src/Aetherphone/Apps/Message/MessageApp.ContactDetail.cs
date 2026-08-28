@@ -76,7 +76,7 @@ internal sealed partial class MessageApp
                 Typography.DrawCentered(new Vector2(centerX, nameY), label, ui.TitleInk, TextStyles.Title2);
                 var labelSize = Typography.Measure(label, TextStyles.Title2);
                 var pencilCenter = new Vector2(centerX + labelSize.X * 0.5f + 18f * scale, nameY);
-                if (ui.IconButton(pencilCenter, 13f * scale, FontAwesomeIcon.Pen.ToIconString(), ui.MutedInk,
+                if (ui.IconButton(pencilCenter, 13f * scale, IconGlyph.Of(FontAwesomeIcon.Pen), ui.MutedInk,
                         Transparent, 0.85f, Loc.T(L.Friends.EditName), HoverLabelSide.Below))
                 {
                     editingContactName = true;
@@ -128,14 +128,14 @@ internal sealed partial class MessageApp
         var canSave = !renameBusy && !string.Equals(contactNameDraft.Trim(), contact.Alias, StringComparison.Ordinal);
         var saveBackground = canSave ? ui.Accent : ui.FieldSurface;
         var saveInk = canSave ? White : ui.MutedInk;
-        if ((ui.IconButton(saveCenter, iconRadius, FontAwesomeIcon.Check.ToIconString(), saveInk, saveBackground,
+        if ((ui.IconButton(saveCenter, iconRadius, IconGlyph.Of(FontAwesomeIcon.Check), saveInk, saveBackground,
                 0.95f, Loc.T(L.DirectMessages.Save), HoverLabelSide.Below) || submitted) && canSave)
         {
             SubmitRename(contact.UserId);
         }
 
         var cancelCenter = new Vector2(saveCenter.X + iconRadius + gap + iconRadius, centerY);
-        if (ui.IconButton(cancelCenter, iconRadius, FontAwesomeIcon.Times.ToIconString(), ui.MutedInk,
+        if (ui.IconButton(cancelCenter, iconRadius, IconGlyph.Of(FontAwesomeIcon.Times), ui.MutedInk,
                 ui.FieldSurface, 0.95f, Loc.T(L.Common.Cancel), HoverLabelSide.Below))
         {
             editingContactName = false;
@@ -187,7 +187,7 @@ internal sealed partial class MessageApp
         var starCenter = new Vector2(area.Max.X - 24f * scale, area.Min.Y + AppHeader.Height * scale * 0.5f);
         var tooltip = Loc.T(favorite ? L.Message.RemoveFavorite : L.Message.AddFavorite);
         var color = favorite ? new Vector4(0.98f, 0.78f, 0.22f, 1f) : ui.MutedInk;
-        if (ui.IconButton(starCenter, 16f * scale, FontAwesomeIcon.Star.ToIconString(), color, Transparent,
+        if (ui.IconButton(starCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.Star), color, Transparent,
                 favorite ? 1.15f : 1.05f, tooltip, HoverLabelSide.Below))
         {
             if (!configuration.MessageFavoriteContacts.Remove(userId))
@@ -208,7 +208,7 @@ internal sealed partial class MessageApp
         var messageCenter = new Vector2(centerX - gap, centerY);
         var messageBackground = canMessage ? ui.Accent : ui.FieldSurface;
         var messageInk = canMessage ? White : ui.MutedInk;
-        if (ui.IconButton(messageCenter, buttonRadius, FontAwesomeIcon.Comment.ToIconString(), messageInk,
+        if (ui.IconButton(messageCenter, buttonRadius, IconGlyph.Of(FontAwesomeIcon.Comment), messageInk,
                 messageBackground, 1.1f, Loc.T(L.DirectMessages.StartChat), HoverLabelSide.Below) && canMessage)
         {
             StartMessage(contact);
@@ -217,7 +217,7 @@ internal sealed partial class MessageApp
         var callCenter = new Vector2(centerX + gap, centerY);
         var callBackground = canCall ? CallGreen : ui.FieldSurface;
         var callInk = canCall ? White : ui.MutedInk;
-        if (ui.IconButton(callCenter, buttonRadius, FontAwesomeIcon.Phone.ToIconString(), callInk,
+        if (ui.IconButton(callCenter, buttonRadius, IconGlyph.Of(FontAwesomeIcon.Phone), callInk,
                 callBackground, 1.1f, Loc.T(L.Friends.Call), HoverLabelSide.Below) && canCall)
         {
             StartCall(contact);

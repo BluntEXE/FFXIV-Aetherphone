@@ -57,7 +57,7 @@ internal static class LinkButton
         Vector2 iconSize;
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {
-            iconSize = ImGui.CalcTextSize(icon.ToIconString());
+            iconSize = ImGui.CalcTextSize(IconGlyph.Of(icon));
         }
 
         var labelSize = Typography.Measure(label, TextStyles.Headline);

@@ -124,7 +124,7 @@ internal sealed partial class LinkpearlApp
         var iconRadius = QuickIconRadius * scale;
         var iconCenter = new Vector2(tile.Min.X + inset + iconRadius, tile.Min.Y + inset + iconRadius);
         drawList.AddCircleFilled(iconCenter, iconRadius, ImGui.GetColorU32(Palette.WithAlpha(quick.Tint, 0.28f)), 28);
-        AppSkin.Icon(drawList, iconCenter, quick.Icon.ToIconString(), quick.Tint, 0.95f);
+        AppSkin.Icon(drawList, iconCenter, IconGlyph.Of(quick.Icon), quick.Tint, 0.95f);
         var textLeft = tile.Min.X + inset;
         var textWidth = tile.Width - inset * 2f;
         var name = Loc.T(TabStore.PresetLabel(quick.Preset));
@@ -137,7 +137,7 @@ internal sealed partial class LinkpearlApp
         if (added)
         {
             AppSkin.Icon(drawList, new Vector2(tile.Max.X - inset - 6f * scale, iconCenter.Y),
-                FontAwesomeIcon.Check.ToIconString(), quick.Tint, 0.7f);
+                IconGlyph.Of(FontAwesomeIcon.Check), quick.Tint, 0.7f);
         }
 
         if (hovered)
@@ -197,7 +197,7 @@ internal sealed partial class LinkpearlApp
         var iconRadius = 14f * scale;
         var iconCenter = new Vector2(row.Min.X + Metrics.Space.Lg * scale + iconRadius, row.Center.Y);
         drawList.AddCircleFilled(iconCenter, iconRadius, ImGui.GetColorU32(Palette.WithAlpha(tint, 0.2f)), 24);
-        AppSkin.Icon(drawList, iconCenter, icon.ToIconString(), tint, 0.78f);
+        AppSkin.Icon(drawList, iconCenter, IconGlyph.Of(icon), tint, 0.78f);
         var textLeft = iconCenter.X + iconRadius + Metrics.Space.Md * scale;
         var textWidth = row.Max.X - Metrics.Space.Xl * scale - textLeft;
         var titleSize = Typography.Measure(title, TextStyles.BodyEmphasized);

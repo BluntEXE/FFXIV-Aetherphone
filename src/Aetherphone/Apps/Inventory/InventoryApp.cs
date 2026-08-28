@@ -591,7 +591,7 @@ internal sealed class InventoryApp : IPhoneApp
         var width = ImGui.GetContentRegionAvail().X;
         var origin = ImGui.GetCursorScreenPos();
         var centerX = origin.X + width * 0.5f;
-        AppSkin.Icon(new Vector2(centerX, origin.Y + 4f * scale), FontAwesomeIcon.BoxOpen.ToIconString(), ui.MutedInk,
+        AppSkin.Icon(new Vector2(centerX, origin.Y + 4f * scale), IconGlyph.Of(FontAwesomeIcon.BoxOpen), ui.MutedInk,
             1.5f);
         Typography.DrawCentered(new Vector2(centerX, origin.Y + 42f * scale), message, ui.MutedInk,
             TextStyles.Subheadline);

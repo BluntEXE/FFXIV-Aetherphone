@@ -15,7 +15,7 @@ internal static class CommentHeart
     {
         var scale = UiScale.Current;
         bottom = center.Y + 10f * scale;
-        var clicked = ui.IconButton(center, 9f * scale, FontAwesomeIcon.Heart.ToIconString(),
+        var clicked = ui.IconButton(center, 9f * scale, IconGlyph.Of(FontAwesomeIcon.Heart),
             liked ? LikeRed : idleColor, AppSkin.Transparent, 0.8f, tooltip);
         if (likeCount > 0)
         {

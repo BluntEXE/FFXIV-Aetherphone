@@ -168,7 +168,7 @@ internal sealed class ChatComposer : IDisposable
         var emojiMax = emojiCenter + new Vector2(iconRadius, iconRadius);
         var emojiHovered = UiInteract.Hover(emojiMin, emojiMax);
         var emojiColor = emojiOpen ? ui.Accent : emojiHovered ? theme.TextStrong : ui.MutedInk;
-        AppSkin.Icon(emojiCenter, FontAwesomeIcon.Smile.ToIconString(), emojiColor, 0.95f);
+        AppSkin.Icon(emojiCenter, IconGlyph.Of(FontAwesomeIcon.Smile), emojiColor, 0.95f);
         HoverTooltip.Show(new Rect(emojiMin, emojiMax), Loc.T(L.Common.Emoji), HoverLabelSide.Above);
         if (emojiHovered)
         {
@@ -187,7 +187,7 @@ internal sealed class ChatComposer : IDisposable
             var pictureMin = pictureCenter - new Vector2(iconRadius, iconRadius);
             var pictureMax = pictureCenter + new Vector2(iconRadius, iconRadius);
             var pictureHovered = UiInteract.Hover(pictureMin, pictureMax);
-            AppSkin.Icon(pictureCenter, FontAwesomeIcon.Image.ToIconString(),
+            AppSkin.Icon(pictureCenter, IconGlyph.Of(FontAwesomeIcon.Image),
                 pictureHovered ? theme.TextStrong : ui.MutedInk, 0.95f);
             HoverTooltip.Show(new Rect(pictureMin, pictureMax), Loc.T(L.Velvet.SendPicture), HoverLabelSide.Above);
             if (pictureHovered)
@@ -209,7 +209,7 @@ internal sealed class ChatComposer : IDisposable
             var locationMin = locationCenter - new Vector2(iconRadius, iconRadius);
             var locationMax = locationCenter + new Vector2(iconRadius, iconRadius);
             var locationHovered = UiInteract.Hover(locationMin, locationMax);
-            AppSkin.Icon(locationCenter, FontAwesomeIcon.MapMarkerAlt.ToIconString(),
+            AppSkin.Icon(locationCenter, IconGlyph.Of(FontAwesomeIcon.MapMarkerAlt),
                 locationHovered ? theme.TextStrong : ui.MutedInk, 0.95f);
             HoverTooltip.Show(new Rect(locationMin, locationMax), Loc.T(L.Message.ShareLocation),
                 HoverLabelSide.Above);
@@ -255,7 +255,7 @@ internal sealed class ChatComposer : IDisposable
         {
             drawList.AddCircleFilled(sendCenter, buttonRadius,
                 ImGui.GetColorU32(canSend ? ui.Accent : theme.SurfaceMuted), 24);
-            AppSkin.Icon(sendCenter, FontAwesomeIcon.PaperPlane.ToIconString(), White, 0.9f);
+            AppSkin.Icon(sendCenter, IconGlyph.Of(FontAwesomeIcon.PaperPlane), White, 0.9f);
             HoverTooltip.Show(sendRect, Loc.T(L.Velvet.Send), HoverLabelSide.Above);
             if (UiInteract.Hover(sendRect.Min, sendRect.Max))
             {
@@ -269,7 +269,7 @@ internal sealed class ChatComposer : IDisposable
         else if (model.CanVoice)
         {
             drawList.AddCircleFilled(sendCenter, buttonRadius, ImGui.GetColorU32(ui.Accent), 24);
-            AppSkin.Icon(sendCenter, FontAwesomeIcon.Microphone.ToIconString(), White, 0.9f);
+            AppSkin.Icon(sendCenter, IconGlyph.Of(FontAwesomeIcon.Microphone), White, 0.9f);
             HoverTooltip.Show(sendRect, Loc.T(L.Message.RecordVoiceHint), HoverLabelSide.Above);
             if (UiInteract.Hover(sendRect.Min, sendRect.Max))
             {
@@ -284,7 +284,7 @@ internal sealed class ChatComposer : IDisposable
         else
         {
             drawList.AddCircleFilled(sendCenter, buttonRadius, ImGui.GetColorU32(theme.SurfaceMuted), 24);
-            AppSkin.Icon(sendCenter, FontAwesomeIcon.PaperPlane.ToIconString(), White, 0.9f);
+            AppSkin.Icon(sendCenter, IconGlyph.Of(FontAwesomeIcon.PaperPlane), White, 0.9f);
         }
 
         if (submitted && canSend)
@@ -340,7 +340,7 @@ internal sealed class ChatComposer : IDisposable
         var drawList = ImGui.GetWindowDrawList();
         drawList.AddLine(area.Min, new Vector2(area.Max.X, area.Min.Y), ImGui.GetColorU32(theme.Separator), 1f);
         var cancelCenter = new Vector2(area.Min.X + 28f * scale, area.Center.Y);
-        if (ui.IconButton(cancelCenter, 16f * scale, FontAwesomeIcon.TrashAlt.ToIconString(), theme.Danger,
+        if (ui.IconButton(cancelCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.TrashAlt), theme.Danger,
                 AppSkin.Transparent, 1f, Loc.T(L.Common.Cancel), HoverLabelSide.Above))
         {
             recorder.Cancel();
@@ -371,7 +371,7 @@ internal sealed class ChatComposer : IDisposable
 
         var sendCenter = new Vector2(area.Max.X - 28f * scale, area.Center.Y);
         drawList.AddCircleFilled(sendCenter, 16f * scale, ImGui.GetColorU32(ui.Accent), 24);
-        AppSkin.Icon(sendCenter, FontAwesomeIcon.PaperPlane.ToIconString(), White, 0.9f);
+        AppSkin.Icon(sendCenter, IconGlyph.Of(FontAwesomeIcon.PaperPlane), White, 0.9f);
         var sendRect = new Rect(sendCenter - new Vector2(16f * scale, 16f * scale),
             sendCenter + new Vector2(16f * scale, 16f * scale));
         HoverTooltip.Show(sendRect, Loc.T(L.Velvet.Send), HoverLabelSide.Above);
@@ -406,7 +406,7 @@ internal sealed class ChatComposer : IDisposable
         Typography.Draw(new Vector2(textLeft, area.Min.Y + 24f * scale),
             Typography.FitText(replyBarPreview, textWidth, 0.82f, FontWeight.Regular), ui.MutedInk, 0.82f);
         var closeCenter = new Vector2(area.Max.X - 14f * scale - closeRadius, area.Center.Y);
-        if (ui.IconButton(closeCenter, closeRadius, FontAwesomeIcon.Times.ToIconString(), ui.MutedInk,
+        if (ui.IconButton(closeCenter, closeRadius, IconGlyph.Of(FontAwesomeIcon.Times), ui.MutedInk,
                 AppSkin.Transparent, 0.9f, Loc.T(L.Common.Cancel))
             || (model.CanHandleEscape && ImGui.IsKeyPressed(ImGuiKey.Escape)))
         {
@@ -423,7 +423,7 @@ internal sealed class ChatComposer : IDisposable
         drawList.AddRectFilled(area.Min, area.Max, ImGui.GetColorU32(BarFill));
         drawList.AddLine(area.Min, new Vector2(area.Max.X, area.Min.Y), ImGui.GetColorU32(theme.Separator), 1f);
         var iconCenter = new Vector2(area.Min.X + 22f * scale, area.Center.Y);
-        AppSkin.Icon(iconCenter, FontAwesomeIcon.Pen.ToIconString(), ui.Accent, 0.9f);
+        AppSkin.Icon(iconCenter, IconGlyph.Of(FontAwesomeIcon.Pen), ui.Accent, 0.9f);
         var textLeft = iconCenter.X + 16f * scale;
         var closeRadius = 13f * scale;
         var textWidth = area.Max.X - 20f * scale - closeRadius * 2f - textLeft;
@@ -433,7 +433,7 @@ internal sealed class ChatComposer : IDisposable
         Typography.Draw(new Vector2(textLeft, area.Min.Y + 24f * scale),
             Typography.FitText(editBarPreview, textWidth, 0.82f, FontWeight.Regular), ui.MutedInk, 0.82f);
         var closeCenter = new Vector2(area.Max.X - 14f * scale - closeRadius, area.Center.Y);
-        if (ui.IconButton(closeCenter, closeRadius, FontAwesomeIcon.Times.ToIconString(), ui.MutedInk,
+        if (ui.IconButton(closeCenter, closeRadius, IconGlyph.Of(FontAwesomeIcon.Times), ui.MutedInk,
                 AppSkin.Transparent, 0.9f, Loc.T(L.Common.Cancel))
             || (model.CanHandleEscape && ImGui.IsKeyPressed(ImGuiKey.Escape)))
         {

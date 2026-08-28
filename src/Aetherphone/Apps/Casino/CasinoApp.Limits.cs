@@ -123,7 +123,7 @@ internal sealed partial class CasinoApp
         var iconCenter = new Vector2(min.X + width * 0.5f, min.Y + 16f * scale + iconArea * 0.5f);
         drawList.AddCircleFilled(iconCenter, 20f * scale,
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.16f)), 40);
-        AppSkin.Icon(drawList, iconCenter, FontAwesomeIcon.HandHoldingHeart.ToIconString(), ui.Accent, 1.1f);
+        AppSkin.Icon(drawList, iconCenter, IconGlyph.Of(FontAwesomeIcon.HandHoldingHeart), ui.Accent, 1.1f);
 
         Typography.DrawCentered(drawList, new Vector2(min.X + width * 0.5f,
             min.Y + 22f * scale + iconArea + titleSize.Y * 0.5f), title, ui.TitleInk, TextStyles.Headline);

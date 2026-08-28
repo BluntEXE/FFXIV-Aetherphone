@@ -105,21 +105,21 @@ internal sealed class ChatSearchController
         Typography.Draw(new Vector2(upCenter.X - buttonRadius - 4f * scale - countSize.X,
             area.Center.Y - countSize.Y * 0.5f), countText, ui.MutedInk, TextStyles.Footnote);
         var hasMatches = matches.Count > 0;
-        if ((ui.IconButton(upCenter, buttonRadius, FontAwesomeIcon.ChevronUp.ToIconString(),
+        if ((ui.IconButton(upCenter, buttonRadius, IconGlyph.Of(FontAwesomeIcon.ChevronUp),
                 hasMatches ? ui.BodyInk : ui.MutedInk, AppSkin.Transparent, 0.85f) || submitted) && hasMatches)
         {
             index = (index - 1 + matches.Count) % matches.Count;
             model.ScrollTo(matches[index]);
         }
 
-        if (ui.IconButton(downCenter, buttonRadius, FontAwesomeIcon.ChevronDown.ToIconString(),
+        if (ui.IconButton(downCenter, buttonRadius, IconGlyph.Of(FontAwesomeIcon.ChevronDown),
                 hasMatches ? ui.BodyInk : ui.MutedInk, AppSkin.Transparent, 0.85f) && hasMatches)
         {
             index = (index + 1) % matches.Count;
             model.ScrollTo(matches[index]);
         }
 
-        if (ui.IconButton(closeCenter, buttonRadius, FontAwesomeIcon.Times.ToIconString(), ui.MutedInk,
+        if (ui.IconButton(closeCenter, buttonRadius, IconGlyph.Of(FontAwesomeIcon.Times), ui.MutedInk,
                 AppSkin.Transparent, 0.85f)
             || ImGui.IsKeyPressed(ImGuiKey.Escape))
         {

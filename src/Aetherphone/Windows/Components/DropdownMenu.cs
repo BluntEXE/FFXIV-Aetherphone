@@ -219,7 +219,7 @@ internal sealed class DropdownMenu
             if (item.CanEdit && editRect is { } editIconRect)
             {
                 var tint = editHovered ? theme.Accent : Palette.WithAlpha(theme.TextMuted, theme.TextMuted.W * alpha);
-                AppSkin.Icon(drawList, editIconRect.Center, FontAwesomeIcon.Pen.ToIconString(), tint, 0.7f);
+                AppSkin.Icon(drawList, editIconRect.Center, IconGlyph.Of(FontAwesomeIcon.Pen), tint, 0.7f);
             }
         }
 

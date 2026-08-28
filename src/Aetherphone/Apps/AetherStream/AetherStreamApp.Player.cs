@@ -105,7 +105,7 @@ internal sealed partial class AetherStreamApp
 
         if (current is not null)
         {
-            AppSkin.Icon((min + max) * 0.5f, FontAwesomeIcon.Tv.ToIconString(), ui.MutedInk, 1.8f);
+            AppSkin.Icon((min + max) * 0.5f, IconGlyph.Of(FontAwesomeIcon.Tv), ui.MutedInk, 1.8f);
             return;
         }
 

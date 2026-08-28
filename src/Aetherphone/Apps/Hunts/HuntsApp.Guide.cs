@@ -114,7 +114,7 @@ internal sealed partial class HuntsApp
         var chevron = expanded ? FontAwesomeIcon.ChevronUp : FontAwesomeIcon.ChevronDown;
         var chevronCenter = new Vector2(max.X - inset - 6f * scale,
             titleTop + Typography.LineHeight(titleStyle) * 0.5f);
-        AppSkin.Icon(drawList, chevronCenter, chevron.ToIconString(), ui.MutedInk, 0.55f);
+        AppSkin.Icon(drawList, chevronCenter, IconGlyph.Of(chevron), ui.MutedInk, 0.55f);
 
         if (expanded)
         {

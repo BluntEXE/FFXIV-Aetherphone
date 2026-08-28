@@ -200,20 +200,20 @@ internal sealed partial class ShortcutsApp
         var deleteCenter = new Vector2(card.Max.X - padding - buttonRadius, headerY);
         var downCenter = new Vector2(deleteCenter.X - buttonRadius * 2.4f, headerY);
         var upCenter = new Vector2(downCenter.X - buttonRadius * 2.4f, headerY);
-        if (index > 0 && ui.IconButton(upCenter, buttonRadius, FontAwesomeIcon.ChevronUp.ToIconString(), ui.MutedInk,
+        if (index > 0 && ui.IconButton(upCenter, buttonRadius, IconGlyph.Of(FontAwesomeIcon.ChevronUp), ui.MutedInk,
                 AppSkin.Transparent, 0.5f, Loc.T(L.Shortcuts.MoveUp)))
         {
             Swap(steps, index, index - 1);
         }
 
         if (index < steps.Count - 1 && ui.IconButton(downCenter, buttonRadius,
-                FontAwesomeIcon.ChevronDown.ToIconString(), ui.MutedInk, AppSkin.Transparent, 0.5f,
+                IconGlyph.Of(FontAwesomeIcon.ChevronDown), ui.MutedInk, AppSkin.Transparent, 0.5f,
                 Loc.T(L.Shortcuts.MoveDown)))
         {
             Swap(steps, index, index + 1);
         }
 
-        if (ui.IconButton(deleteCenter, buttonRadius, FontAwesomeIcon.TrashAlt.ToIconString(), theme.Danger,
+        if (ui.IconButton(deleteCenter, buttonRadius, IconGlyph.Of(FontAwesomeIcon.TrashAlt), theme.Danger,
                 AppSkin.Transparent, 0.5f, Loc.T(L.Shortcuts.RemoveStep)))
         {
             pendingStepRemoval = index;

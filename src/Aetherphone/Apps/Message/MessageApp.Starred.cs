@@ -59,7 +59,7 @@ internal sealed partial class MessageApp
                 ChatText.MusterKind => FontAwesomeIcon.Bullhorn,
                 _ => FontAwesomeIcon.Camera,
             };
-            AppSkin.Icon(new Vector2(previewLeft + 6f * scale, row.Min.Y + 38f * scale), glyph.ToIconString(),
+            AppSkin.Icon(new Vector2(previewLeft + 6f * scale, row.Min.Y + 38f * scale), IconGlyph.Of(glyph),
                 ui.MutedInk, 0.62f);
             previewLeft += 16f * scale;
         }
@@ -71,7 +71,7 @@ internal sealed partial class MessageApp
                 FontWeight.Regular), ui.MutedInk, 0.82f);
         var unstarHit = new Vector2(unstarRadius, unstarRadius);
         var overUnstar = UiInteract.Hover(unstarCenter - unstarHit, unstarCenter + unstarHit);
-        var unstarClicked = ui.IconButton(unstarCenter, unstarRadius, FontAwesomeIcon.Star.ToIconString(),
+        var unstarClicked = ui.IconButton(unstarCenter, unstarRadius, IconGlyph.Of(FontAwesomeIcon.Star),
             ui.Accent, AppSkin.Transparent, 0.8f, Loc.T(L.Message.UnstarAction));
         var band = RowBand(row, scale);
         if (unstarClicked)

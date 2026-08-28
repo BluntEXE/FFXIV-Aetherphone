@@ -136,21 +136,21 @@ internal static class SocialActivityList
     {
         var (glyph, color) = type switch
         {
-            SocialActivity.TypeLike => (FontAwesomeIcon.Heart.ToIconString(), theme.Danger),
-            SocialActivity.TypeComment => (FontAwesomeIcon.Comment.ToIconString(), theme.Accent),
-            SocialActivity.TypeFollow => (FontAwesomeIcon.UserPlus.ToIconString(), theme.Accent),
-            SocialActivity.TypeConnectRequest => (FontAwesomeIcon.UserPlus.ToIconString(), theme.Accent),
-            SocialActivity.TypeConnectAccept => (FontAwesomeIcon.UserCheck.ToIconString(), theme.Accent),
-            SocialActivity.TypeCommentLike => (FontAwesomeIcon.Heart.ToIconString(), theme.Danger),
-            SocialActivity.TypeMention => (FontAwesomeIcon.At.ToIconString(), theme.Accent),
-            SocialActivity.TypeCommentMention => (FontAwesomeIcon.At.ToIconString(), theme.Accent),
-            SocialActivity.TypePhotoTag => (FontAwesomeIcon.UserTag.ToIconString(), theme.Accent),
-            SocialActivity.TypeRepost => (FontAwesomeIcon.Retweet.ToIconString(), theme.Accent),
-            SocialActivity.TypeQuote => (FontAwesomeIcon.QuoteRight.ToIconString(), theme.Accent),
-            SocialActivity.TypeFollowRequest => (FontAwesomeIcon.UserClock.ToIconString(), theme.Accent),
-            SocialActivity.TypeFollowAccept => (FontAwesomeIcon.UserCheck.ToIconString(), theme.Accent),
-            SocialActivity.TypeRadioLive => (FontAwesomeIcon.BroadcastTower.ToIconString(), theme.Accent),
-            _ => (FontAwesomeIcon.Bell.ToIconString(), theme.Accent),
+            SocialActivity.TypeLike => (IconGlyph.Of(FontAwesomeIcon.Heart), theme.Danger),
+            SocialActivity.TypeComment => (IconGlyph.Of(FontAwesomeIcon.Comment), theme.Accent),
+            SocialActivity.TypeFollow => (IconGlyph.Of(FontAwesomeIcon.UserPlus), theme.Accent),
+            SocialActivity.TypeConnectRequest => (IconGlyph.Of(FontAwesomeIcon.UserPlus), theme.Accent),
+            SocialActivity.TypeConnectAccept => (IconGlyph.Of(FontAwesomeIcon.UserCheck), theme.Accent),
+            SocialActivity.TypeCommentLike => (IconGlyph.Of(FontAwesomeIcon.Heart), theme.Danger),
+            SocialActivity.TypeMention => (IconGlyph.Of(FontAwesomeIcon.At), theme.Accent),
+            SocialActivity.TypeCommentMention => (IconGlyph.Of(FontAwesomeIcon.At), theme.Accent),
+            SocialActivity.TypePhotoTag => (IconGlyph.Of(FontAwesomeIcon.UserTag), theme.Accent),
+            SocialActivity.TypeRepost => (IconGlyph.Of(FontAwesomeIcon.Retweet), theme.Accent),
+            SocialActivity.TypeQuote => (IconGlyph.Of(FontAwesomeIcon.QuoteRight), theme.Accent),
+            SocialActivity.TypeFollowRequest => (IconGlyph.Of(FontAwesomeIcon.UserClock), theme.Accent),
+            SocialActivity.TypeFollowAccept => (IconGlyph.Of(FontAwesomeIcon.UserCheck), theme.Accent),
+            SocialActivity.TypeRadioLive => (IconGlyph.Of(FontAwesomeIcon.BroadcastTower), theme.Accent),
+            _ => (IconGlyph.Of(FontAwesomeIcon.Bell), theme.Accent),
         };
         var badgeRadius = 8f * scale;
         drawList.AddCircleFilled(center, badgeRadius + 2f * scale, ImGui.GetColorU32(theme.AppBackground), 20);

@@ -70,7 +70,7 @@ internal static class VSectionHeader
         var min = origin;
         var max = new Vector2(origin.X + tile, origin.Y + tile);
         Squircle.Fill(drawList, min, max, Metrics.Radius.Sm * scale, VelvetTheme.Alpha(VelvetTheme.Rose, 0.20f).Packed());
-        AppSkin.Icon(new Vector2((min.X + max.X) * 0.5f, (min.Y + max.Y) * 0.5f), icon.ToIconString(),
+        AppSkin.Icon(new Vector2((min.X + max.X) * 0.5f, (min.Y + max.Y) * 0.5f), IconGlyph.Of(icon),
             VelvetTheme.RoseInk, 0.72f);
         var cardLabelLeft = max.X + 10f * scale;
         var cardLabelMaxWidth = origin.X + width - cardLabelLeft;

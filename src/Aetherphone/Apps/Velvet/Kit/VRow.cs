@@ -149,7 +149,7 @@ internal static class VRow
             var tileMax = new Vector2(tileMin.X + tile, centerY + tile * 0.5f);
             Squircle.Fill(drawList, tileMin, tileMax, Metrics.Radius.Sm * scale,
                 VelvetTheme.Alpha(model.TileTint, 0.20f).Packed());
-            AppSkin.Icon(new Vector2((tileMin.X + tileMax.X) * 0.5f, centerY), model.TileIcon.ToIconString(),
+            AppSkin.Icon(new Vector2((tileMin.X + tileMax.X) * 0.5f, centerY), IconGlyph.Of(model.TileIcon),
                 model.TileTint, 0.8f);
             textLeft = tileMax.X + Metrics.Space.Md * scale;
         }
@@ -161,7 +161,7 @@ internal static class VRow
         var rightEdge = max.X - leftPad;
         if (model.Chevron)
         {
-            AppSkin.Icon(new Vector2(rightEdge - 8f * scale, centerY), FontAwesomeIcon.ChevronRight.ToIconString(),
+            AppSkin.Icon(new Vector2(rightEdge - 8f * scale, centerY), IconGlyph.Of(FontAwesomeIcon.ChevronRight),
                 VelvetTheme.MutedInk, 0.78f);
             rightEdge -= 22f * scale;
         }
@@ -173,7 +173,7 @@ internal static class VRow
             var declineHit = new Vector2(declineRadius, declineRadius);
             overControl |= UiInteract.Hover(declineCenter - declineHit, declineCenter + declineHit);
             if (ui.IconButton(declineCenter, declineRadius,
-                    FontAwesomeIcon.Times.ToIconString(), VelvetTheme.MutedInk, AppSkin.Transparent, 0.9f))
+                    IconGlyph.Of(FontAwesomeIcon.Times), VelvetTheme.MutedInk, AppSkin.Transparent, 0.9f))
             {
                 hit = VRowHit.Decline;
             }

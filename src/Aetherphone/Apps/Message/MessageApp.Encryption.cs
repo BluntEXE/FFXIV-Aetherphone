@@ -66,7 +66,7 @@ internal sealed partial class MessageApp
         var radius = 34f * scale;
         var center = new Vector2(origin.X + width * 0.5f, origin.Y + 16f * scale + radius);
         drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.16f)), 48);
-        AppSkin.Icon(center, (encrypted ? FontAwesomeIcon.Lock : FontAwesomeIcon.LockOpen).ToIconString(),
+        AppSkin.Icon(center, IconGlyph.Of((encrypted ? FontAwesomeIcon.Lock : FontAwesomeIcon.LockOpen)),
             encrypted ? ui.Accent : ui.MutedInk, 1.7f);
         var headline = encrypted ? Loc.T(L.Encryption.EncryptedIndicator) : Loc.T(L.Encryption.PlaintextIndicator);
         Typography.DrawCentered(new Vector2(center.X, center.Y + radius + 20f * scale), headline,
@@ -317,7 +317,7 @@ internal sealed partial class MessageApp
         Typography.Draw(new Vector2(textLeft, row.Min.Y + 31f * scale),
             Loc.T(hasKey ? L.Encryption.MemberReady : L.Encryption.MemberNoKey), ui.MutedInk, TextStyles.Footnote);
         AppSkin.Icon(new Vector2(row.Max.X - 8f * scale, row.Center.Y),
-            (hasKey ? FontAwesomeIcon.Lock : FontAwesomeIcon.LockOpen).ToIconString(),
+            IconGlyph.Of((hasKey ? FontAwesomeIcon.Lock : FontAwesomeIcon.LockOpen)),
             hasKey ? ui.Accent : ui.MutedInk, 0.95f);
     }
 }

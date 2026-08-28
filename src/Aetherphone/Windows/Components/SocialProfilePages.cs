@@ -296,25 +296,25 @@ internal sealed class SocialProfilePages
         {
             if (openConductRules is not null)
             {
-                trailing = DrawTrailingIcon(trailing, centerY, height, FontAwesomeIcon.QuestionCircle.ToIconString(),
+                trailing = DrawTrailingIcon(trailing, centerY, height, IconGlyph.Of(FontAwesomeIcon.QuestionCircle),
                     style.Palette.MutedInk, Loc.T(L.Conduct.Eyebrow), openConductRules);
             }
 
             if (openSettings is not null && style.SettingsLabel is { } settingsLabel)
             {
-                trailing = DrawTrailingIcon(trailing, centerY, height, FontAwesomeIcon.Cog.ToIconString(),
+                trailing = DrawTrailingIcon(trailing, centerY, height, IconGlyph.Of(FontAwesomeIcon.Cog),
                     style.Palette.MutedInk, Loc.T(settingsLabel), openSettings);
             }
 
             if (openSaved is not null && style.SavedLabel is { } savedLabel)
             {
-                trailing = DrawTrailingIcon(trailing, centerY, height, FontAwesomeIcon.Bookmark.ToIconString(),
+                trailing = DrawTrailingIcon(trailing, centerY, height, IconGlyph.Of(FontAwesomeIcon.Bookmark),
                     style.Palette.MutedInk, Loc.T(savedLabel), openSaved);
             }
         }
         else
         {
-            trailing = DrawTrailingIcon(trailing, centerY, height, FontAwesomeIcon.Flag.ToIconString(), theme.Danger,
+            trailing = DrawTrailingIcon(trailing, centerY, height, IconGlyph.Of(FontAwesomeIcon.Flag), theme.Danger,
                 Loc.T(L.Report.Action), () => OpenReport("user", user.Id, Loc.T(L.Report.UserTitle)));
             if (openMessage is not null && style.MessageLabel is { } messageLabel && user.CanMessage)
             {

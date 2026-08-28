@@ -472,7 +472,7 @@ internal sealed partial class VelvetShell : IResumableApp
             {
                 LoadingPulse.Spinner(refreshCenter, 8f * scale, ui.Accent);
             }
-            else if (ui.IconButton(refreshCenter, 16f * scale, FontAwesomeIcon.Sync.ToIconString(),
+            else if (ui.IconButton(refreshCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.Sync),
                          VelvetTheme.TitleInk, AppSkin.Transparent, 0.9f, Loc.T(L.Common.Refresh),
                          HoverLabelSide.Below))
             {
@@ -481,7 +481,7 @@ internal sealed partial class VelvetShell : IResumableApp
         }
 
         var rulesCenter = new Vector2(headerRect.Max.X - 56f * scale, headerRect.Min.Y + headerHeight * 0.5f);
-        if (ui.IconButton(rulesCenter, 16f * scale, FontAwesomeIcon.QuestionCircle.ToIconString(),
+        if (ui.IconButton(rulesCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.QuestionCircle),
                 VelvetTheme.MutedInk, AppSkin.Transparent, 0.9f, Loc.T(L.Conduct.Eyebrow), HoverLabelSide.Below))
         {
             conduct.ShowRules(Id);

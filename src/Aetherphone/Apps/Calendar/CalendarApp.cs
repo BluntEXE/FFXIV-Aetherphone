@@ -155,7 +155,7 @@ internal sealed class CalendarApp : IPhoneApp
         drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(Palette.WithAlpha(iconColor, hovered ? 0.20f : 0.12f)), 32);
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {
-            var glyph = FontAwesomeIcon.Plus.ToIconString();
+            var glyph = IconGlyph.Of(FontAwesomeIcon.Plus);
             var fontSize = ImGui.GetFontSize() * 0.62f;
             var size = ImGui.CalcTextSize(glyph) * 0.62f;
             drawList.AddText(UiBuilder.IconFont, fontSize, center - size * 0.5f, ImGui.GetColorU32(iconColor), glyph);

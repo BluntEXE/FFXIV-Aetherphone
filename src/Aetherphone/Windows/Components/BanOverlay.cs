@@ -92,7 +92,7 @@ internal sealed class BanOverlay
             ImGui.GetColorU32(Palette.WithAlpha(theme.Danger, 0.16f * alpha)), 48);
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {
-            var glyph = FontAwesomeIcon.Ban.ToIconString();
+            var glyph = IconGlyph.Of(FontAwesomeIcon.Ban);
             var size = ImGui.CalcTextSize(glyph);
             dl.AddText(ImGui.GetFont(), ImGui.GetFontSize(), iconCenter - size * 0.5f,
                 ImGui.GetColorU32(Palette.WithAlpha(theme.Danger, alpha)), glyph);

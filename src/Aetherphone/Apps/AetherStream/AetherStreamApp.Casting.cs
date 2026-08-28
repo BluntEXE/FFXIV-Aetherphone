@@ -236,7 +236,7 @@ internal sealed partial class AetherStreamApp
         var saveCenter = new Vector2(origin.X + width - saveRadius, origin.Y + 22f * scale);
         var saveBackground = canSave ? ui.Accent : Palette.WithAlpha(ui.Accent, 0.35f);
         var saveInk = canSave ? new Vector4(1f, 1f, 1f, 1f) : new Vector4(1f, 1f, 1f, 0.6f);
-        if (ui.IconButton(saveCenter, saveRadius, FontAwesomeIcon.Plus.ToIconString(), saveInk, saveBackground,
+        if (ui.IconButton(saveCenter, saveRadius, IconGlyph.Of(FontAwesomeIcon.Plus), saveInk, saveBackground,
                 0.55f, Loc.T(L.AetherStream.CastingSavePreset)) && canSave)
         {
             submitted = true;
@@ -280,7 +280,7 @@ internal sealed partial class AetherStreamApp
                 row.Center.Y - nameHeight * 0.5f, applyMax.X - row.Min.X - Metrics.Space.Md * scale,
                 TextStyles.BodyEmphasized, accentedTheme.TextStrong, hovered);
 
-            if (ui.IconButton(removeCenter, 12f * scale, FontAwesomeIcon.TrashAlt.ToIconString(), theme.Danger,
+            if (ui.IconButton(removeCenter, 12f * scale, IconGlyph.Of(FontAwesomeIcon.TrashAlt), theme.Danger,
                     AppSkin.Transparent, 0.5f))
             {
                 screen.Engine.RemoveScreenPreset(preset.Name);

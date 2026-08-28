@@ -88,7 +88,7 @@ internal static class TimeOfDayField
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        AppSkin.Icon(drawList, rect.Center, icon.ToIconString(), hovered ? ui.TitleInk : ui.MutedInk, IconScale);
+        AppSkin.Icon(drawList, rect.Center, IconGlyph.Of(icon), hovered ? ui.TitleInk : ui.MutedInk, IconScale);
         return UiInteract.Click(rect.Min, rect.Max, hovered);
     }
 

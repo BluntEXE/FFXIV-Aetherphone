@@ -122,7 +122,7 @@ internal sealed partial class YellowPagesApp
         {
             LoadingPulse.Spinner(actionCenter, 8f * scale, ui.Accent);
         }
-        else if (ui.IconButton(actionCenter, 14f * scale, FontAwesomeIcon.Sync.ToIconString(),
+        else if (ui.IconButton(actionCenter, 14f * scale, IconGlyph.Of(FontAwesomeIcon.Sync),
                      AppPalettes.YellowPages.MutedInk, AppSkin.Transparent, 0.82f, Loc.T(L.Common.Refresh),
                      HoverLabelSide.Below))
         {
@@ -131,7 +131,7 @@ internal sealed partial class YellowPagesApp
         }
 
         var rulesCenter = new Vector2(actionCenter.X - 26f * scale, rowCenterY);
-        if (ui.IconButton(rulesCenter, 14f * scale, FontAwesomeIcon.QuestionCircle.ToIconString(),
+        if (ui.IconButton(rulesCenter, 14f * scale, IconGlyph.Of(FontAwesomeIcon.QuestionCircle),
                 AppPalettes.YellowPages.MutedInk, AppSkin.Transparent, 0.82f, Loc.T(L.Conduct.Eyebrow),
                 HoverLabelSide.Below))
         {
@@ -183,7 +183,7 @@ internal sealed partial class YellowPagesApp
         Typography.Draw(drawList, new Vector2(rect.Min.X + 12f * scale, rect.Center.Y - labelSize.Y * 0.5f), label,
             ui.Accent, TextStyles.FootnoteEmphasized);
         AppSkin.Icon(drawList, new Vector2(rect.Max.X - 11f * scale, rect.Center.Y),
-            FontAwesomeIcon.CaretDown.ToIconString(), Palette.WithAlpha(ui.Accent, 0.8f), 0.7f);
+            IconGlyph.Of(FontAwesomeIcon.CaretDown), Palette.WithAlpha(ui.Accent, 0.8f), 0.7f);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -295,7 +295,7 @@ internal sealed partial class YellowPagesApp
             Squircle.FillVerticalGradient(drawList, min, thumbMax, rounding,
                 ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.26f)),
                 ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.10f)));
-            AppSkin.Icon(drawList, (min + thumbMax) * 0.5f, AdCategories.Icon(ad.Category).ToIconString(),
+            AppSkin.Icon(drawList, (min + thumbMax) * 0.5f, IconGlyph.Of(AdCategories.Icon(ad.Category)),
                 Palette.WithAlpha(ui.Accent, 0.85f), 1f);
         }
 
@@ -350,7 +350,7 @@ internal sealed partial class YellowPagesApp
         var hovered = UiInteract.Hover(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
         drawList.AddCircleFilled(center, radius,
             ImGui.GetColorU32(new Vector4(0f, 0f, 0f, hovered ? 0.72f : 0.55f)), 28);
-        AppSkin.Icon(drawList, center, icon.ToIconString(), new Vector4(1f, 1f, 1f, 0.92f), 0.62f);
+        AppSkin.Icon(drawList, center, IconGlyph.Of(icon), new Vector4(1f, 1f, 1f, 0.92f), 0.62f);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -400,7 +400,7 @@ internal sealed partial class YellowPagesApp
         var glyphCenter = new Vector2((min.X + max.X) * 0.5f, min.Y + 27f * scale);
         drawList.AddCircleFilled(glyphCenter, 17f * scale,
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.18f)), 32);
-        AppSkin.Icon(drawList, glyphCenter, IntentIcon(intent).ToIconString(), ui.Accent, 0.92f);
+        AppSkin.Icon(drawList, glyphCenter, IconGlyph.Of(IntentIcon(intent)), ui.Accent, 0.92f);
         var textWidth = tileWidth - 12f * scale;
         var label = Loc.T(AdIntents.Label(intent));
         Typography.DrawWrappedCentered(drawList, label, labelStyle, AppPalettes.YellowPages.TitleInk,

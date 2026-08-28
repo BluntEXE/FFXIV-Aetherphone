@@ -243,7 +243,7 @@ internal sealed class ReportOverlay
         Typography.Draw(drawList, new Vector2(rect.Min.X + 14f * s, rect.Center.Y - labelSize.Y * 0.5f), fittedLabel,
             Palette.WithAlpha(ink, opacity), FieldTextScale * cardScale, FontWeight.Medium);
         AppSkin.Icon(drawList, new Vector2(rect.Max.X - 18f * s, rect.Center.Y),
-            FontAwesomeIcon.ChevronDown.ToIconString(), Palette.WithAlpha(theme.TextMuted, opacity), 0.72f);
+            IconGlyph.Of(FontAwesomeIcon.ChevronDown), Palette.WithAlpha(theme.TextMuted, opacity), 0.72f);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

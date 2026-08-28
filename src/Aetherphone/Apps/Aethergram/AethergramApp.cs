@@ -511,7 +511,7 @@ internal sealed partial class AethergramApp : IResumableApp
 
         var listRect = new Rect(new Vector2(area.Min.X, rowRect.Max.Y + 6f * scale), area.Max);
         DrawFeedList(listRect, activeScope);
-        if (ComposeFab.Draw(listRect, "##aethergramComposeFab", Accent, FontAwesomeIcon.Plus.ToIconString(),
+        if (ComposeFab.Draw(listRect, "##aethergramComposeFab", Accent, IconGlyph.Of(FontAwesomeIcon.Plus),
                 Loc.T(L.Aethergram.NewPost), "aethergram.compose"))
         {
             StartCompose(false);
@@ -578,14 +578,14 @@ internal sealed partial class AethergramApp : IResumableApp
         var chipRadius = 15f * scale;
         var chipCenter = new Vector2(row.Min.X + 12f * scale + chipRadius, row.Center.Y);
         drawList.AddCircleFilled(chipCenter, chipRadius, ImGui.GetColorU32(Accent), 32);
-        AppSkin.Icon(drawList, chipCenter, FontAwesomeIcon.UserClock.ToIconString(), new Vector4(1f, 1f, 1f, 1f),
+        AppSkin.Icon(drawList, chipCenter, IconGlyph.Of(FontAwesomeIcon.UserClock), new Vector4(1f, 1f, 1f, 1f),
             0.85f);
         var label = Loc.T(L.Social.FollowRequestsCount, count);
         var labelSize = Typography.Measure(label, 1f, FontWeight.SemiBold);
         Typography.Draw(new Vector2(chipCenter.X + chipRadius + 12f * scale, row.Center.Y - labelSize.Y * 0.5f),
             label, AppPalettes.Aethergram.TitleInk, 1f, FontWeight.SemiBold);
         AppSkin.Icon(drawList, new Vector2(row.Max.X - 18f * scale, row.Center.Y),
-            FontAwesomeIcon.ChevronRight.ToIconString(), AppPalettes.Aethergram.MutedInk, 0.8f);
+            IconGlyph.Of(FontAwesomeIcon.ChevronRight), AppPalettes.Aethergram.MutedInk, 0.8f);
         if (UiInteract.HoverClick(row.Min, row.Max))
         {
             OpenFollowRequests();
@@ -795,10 +795,10 @@ internal sealed partial class AethergramApp : IResumableApp
         }
 
         overflowItems[0] = new DropdownMenu.Item(Loc.T(L.Aethergram.SavedTitle),
-            FontAwesomeIcon.Bookmark.ToIconString());
-        overflowItems[1] = new DropdownMenu.Item(Loc.T(L.Aethergram.Settings), FontAwesomeIcon.Cog.ToIconString());
+            IconGlyph.Of(FontAwesomeIcon.Bookmark));
+        overflowItems[1] = new DropdownMenu.Item(Loc.T(L.Aethergram.Settings), IconGlyph.Of(FontAwesomeIcon.Cog));
         overflowItems[2] = new DropdownMenu.Item(Loc.T(L.Conduct.Eyebrow),
-            FontAwesomeIcon.QuestionCircle.ToIconString());
+            IconGlyph.Of(FontAwesomeIcon.QuestionCircle));
         switch (overflowMenu.Draw(screen, theme, overflowItems))
         {
             case 0:
@@ -821,13 +821,13 @@ internal sealed partial class AethergramApp : IResumableApp
         }
 
         mediaFilterItems[0] = new DropdownMenu.Item(Loc.T(L.Settings.AethergramShowGifs),
-            FontAwesomeIcon.Film.ToIconString(), Selected: configuration.AethergramShowGifPosts);
+            IconGlyph.Of(FontAwesomeIcon.Film), Selected: configuration.AethergramShowGifPosts);
         mediaFilterItems[1] = new DropdownMenu.Item(Loc.T(L.Settings.AethergramShowCommentMedia),
-            FontAwesomeIcon.Comment.ToIconString(), Selected: configuration.AethergramShowCommentMedia);
+            IconGlyph.Of(FontAwesomeIcon.Comment), Selected: configuration.AethergramShowCommentMedia);
         for (var regionIndex = 0; regionIndex < SocialRegion.Codes.Length; regionIndex++)
         {
             mediaFilterItems[2 + regionIndex] = new DropdownMenu.Item(SocialRegion.Codes[regionIndex],
-                FontAwesomeIcon.Globe.ToIconString(),
+                IconGlyph.Of(FontAwesomeIcon.Globe),
                 Selected: SocialRegion.MaskShows(configuration.AethergramFeedRegionMask, regionIndex));
         }
 
@@ -1102,7 +1102,7 @@ internal sealed partial class AethergramApp : IResumableApp
 
         var moreCenter = new Vector2(origin.X + width - inset - 6f * scale, avatarCenter.Y);
         var moreRadius = 14f * scale;
-        if (ui.IconButton(moreCenter, moreRadius, FontAwesomeIcon.EllipsisH.ToIconString(), AppPalettes.Aethergram.BodyInk,
+        if (ui.IconButton(moreCenter, moreRadius, IconGlyph.Of(FontAwesomeIcon.EllipsisH), AppPalettes.Aethergram.BodyInk,
                 AppSkin.Transparent, 1f, Loc.T(L.Aethergram.More)))
         {
             OpenPostSheet(post, true);
@@ -1115,7 +1115,7 @@ internal sealed partial class AethergramApp : IResumableApp
         var actionCenterY = actionsTop + actionsHeight * 0.5f;
         var iconRadius = PostCardMetrics.ActionIconRadius * scale;
         var heartCenter = new Vector2(innerX + PostCardMetrics.ActionIconInset * scale, actionCenterY);
-        if (ui.IconButton(heartCenter, iconRadius, FontAwesomeIcon.Heart.ToIconString(),
+        if (ui.IconButton(heartCenter, iconRadius, IconGlyph.Of(FontAwesomeIcon.Heart),
                 liked ? CommentHeart.LikeRed : AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.25f, Loc.T(L.Aethergram.Like)))
         {
             store.ToggleLike(post);
@@ -1135,7 +1135,7 @@ internal sealed partial class AethergramApp : IResumableApp
         }
 
         var commentCenter = new Vector2(cursorX + 6f * scale, actionCenterY);
-        if (ui.IconButton(commentCenter, iconRadius, FontAwesomeIcon.Comment.ToIconString(),
+        if (ui.IconButton(commentCenter, iconRadius, IconGlyph.Of(FontAwesomeIcon.Comment),
                 AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.2f, Loc.T(L.Aethergram.Comment)))
         {
             OpenDetail(post, true);
@@ -1152,7 +1152,7 @@ internal sealed partial class AethergramApp : IResumableApp
 
         var shareCenter = new Vector2(actionsRight + (post.CommentCount > 0 ? 14f : 6f) * scale + 13f * scale,
             actionCenterY);
-        if (ui.IconButton(shareCenter, iconRadius, FontAwesomeIcon.PaperPlane.ToIconString(),
+        if (ui.IconButton(shareCenter, iconRadius, IconGlyph.Of(FontAwesomeIcon.PaperPlane),
                 AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.15f, Loc.T(L.Aethergram.SendTo)))
         {
             OpenShare(post.Id);
@@ -1160,7 +1160,7 @@ internal sealed partial class AethergramApp : IResumableApp
 
         actionsRight = shareCenter.X + PostCardMetrics.ActionCountGap * scale;
         var bookmarkCenter = new Vector2(origin.X + width - inset - 8f * scale, actionCenterY);
-        if (ui.IconButton(bookmarkCenter, iconRadius, FontAwesomeIcon.Bookmark.ToIconString(),
+        if (ui.IconButton(bookmarkCenter, iconRadius, IconGlyph.Of(FontAwesomeIcon.Bookmark),
                 post.Saved ? ui.Accent : AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.15f,
                 Loc.T(L.Aethergram.SavedTitle)))
         {
@@ -1333,9 +1333,9 @@ internal sealed partial class AethergramApp : IResumableApp
         var alpha = elapsed < 0.55f ? 1f : 1f - (elapsed - 0.55f) / (LikeBurstDuration - 0.55f);
         var rise = elapsed < 0.55f ? 0f : (elapsed - 0.55f) * 46f * scale;
         var center = new Vector2(imageRect.Center.X, imageRect.Center.Y - rise);
-        AppSkin.Icon(center + new Vector2(0f, 2f * scale), FontAwesomeIcon.Heart.ToIconString(),
+        AppSkin.Icon(center + new Vector2(0f, 2f * scale), IconGlyph.Of(FontAwesomeIcon.Heart),
             new Vector4(0f, 0f, 0f, 0.35f * alpha), 4.5f * pop);
-        AppSkin.Icon(center, FontAwesomeIcon.Heart.ToIconString(), new Vector4(1f, 1f, 1f, alpha), 4.4f * pop);
+        AppSkin.Icon(center, IconGlyph.Of(FontAwesomeIcon.Heart), new Vector4(1f, 1f, 1f, alpha), 4.4f * pop);
     }
 
     private void DrawGramImage(Rect rect, string? url, float rounding, string? scanStatus = null) =>
@@ -1421,7 +1421,7 @@ internal sealed partial class AethergramApp : IResumableApp
         var active = activeTab == tab;
         DrawNavHoverPill(center, StepNavHover(slot, center));
         var color = active ? AppPalettes.Aethergram.TitleInk : AppPalettes.Aethergram.MutedInk;
-        if (ui.IconButton(center, NavHitRadius * scale, icon.ToIconString(), color, AppSkin.Transparent,
+        if (ui.IconButton(center, NavHitRadius * scale, IconGlyph.Of(icon), color, AppSkin.Transparent,
                 active ? 1.3f : 1.2f, label))
         {
             SelectTab(tab);
@@ -1432,7 +1432,7 @@ internal sealed partial class AethergramApp : IResumableApp
     {
         var scale = UiScale.Current;
         DrawNavHoverPill(center, StepNavHover(MessagesNavSlot, center));
-        if (ui.IconButton(center, NavHitRadius * scale, FontAwesomeIcon.PaperPlane.ToIconString(),
+        if (ui.IconButton(center, NavHitRadius * scale, IconGlyph.Of(FontAwesomeIcon.PaperPlane),
                 AppPalettes.Aethergram.MutedInk, AppSkin.Transparent, 1.2f, Loc.T(L.Aethergram.InboxTitle)))
         {
             OpenInbox();
@@ -1451,7 +1451,7 @@ internal sealed partial class AethergramApp : IResumableApp
         {
             store.EnsureMe();
             var color = active ? AppPalettes.Aethergram.TitleInk : AppPalettes.Aethergram.MutedInk;
-            if (ui.IconButton(center, NavHitRadius * scale, FontAwesomeIcon.User.ToIconString(), color,
+            if (ui.IconButton(center, NavHitRadius * scale, IconGlyph.Of(FontAwesomeIcon.User), color,
                     AppSkin.Transparent, 1.15f, label))
             {
                 SelectTab(AethergramTab.Profile);

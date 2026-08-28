@@ -75,7 +75,7 @@ internal sealed partial class JobsApp
         }
 
         items[categories.Count] = new DropdownMenu.Item(Loc.T(L.Jobs.NewCategory),
-            Glyph: FontAwesomeIcon.FolderPlus.ToIconString());
+            Glyph: IconGlyph.Of(FontAwesomeIcon.FolderPlus));
 
         var picked = menu.Draw(content, theme, items, out var rowAction);
         if (picked < 0)
@@ -108,14 +108,14 @@ internal sealed partial class JobsApp
         var radius = CategoryReorderRadius * scale;
         var down = new Vector2(headerRect.Max.X - radius, headerRect.Center.Y);
         var up = new Vector2(down.X - radius * 2f - 2f * scale, headerRect.Center.Y);
-        if (DrawReorderButton(up, radius, FontAwesomeIcon.ChevronUp.ToIconString(), 0.5f, categoryIndex > 0,
+        if (DrawReorderButton(up, radius, IconGlyph.Of(FontAwesomeIcon.ChevronUp), 0.5f, categoryIndex > 0,
                 Loc.T(L.Jobs.MoveUp)))
         {
             categoryMoveIndex = categoryIndex;
             categoryMoveDelta = -1;
         }
 
-        if (DrawReorderButton(down, radius, FontAwesomeIcon.ChevronDown.ToIconString(), 0.5f,
+        if (DrawReorderButton(down, radius, IconGlyph.Of(FontAwesomeIcon.ChevronDown), 0.5f,
                 categoryIndex < categoryCount - 1, Loc.T(L.Jobs.MoveDown)))
         {
             categoryMoveIndex = categoryIndex;
@@ -128,12 +128,12 @@ internal sealed partial class JobsApp
         var offset = RowReorderOffset * scale;
         var up = new Vector2(center.X, center.Y - offset);
         var down = new Vector2(center.X, center.Y + offset);
-        if (DrawReorderButton(up, radius, FontAwesomeIcon.ChevronUp.ToIconString(), 0.45f, rowIndex > 0, string.Empty))
+        if (DrawReorderButton(up, radius, IconGlyph.Of(FontAwesomeIcon.ChevronUp), 0.45f, rowIndex > 0, string.Empty))
         {
             QueueGearsetMove(section, rowIndex, rowIndex - 1);
         }
 
-        if (DrawReorderButton(down, radius, FontAwesomeIcon.ChevronDown.ToIconString(), 0.45f,
+        if (DrawReorderButton(down, radius, IconGlyph.Of(FontAwesomeIcon.ChevronDown), 0.45f,
                 rowIndex < section.Entries.Length - 1, string.Empty))
         {
             QueueGearsetMove(section, rowIndex, rowIndex + 1);
@@ -265,11 +265,11 @@ internal sealed partial class JobsApp
         if (removeIndex >= 0)
         {
             items[removeIndex] = new DropdownMenu.Item(Loc.T(L.Jobs.RemoveFromCategory),
-                Glyph: FontAwesomeIcon.FolderMinus.ToIconString());
+                Glyph: IconGlyph.Of(FontAwesomeIcon.FolderMinus));
         }
 
         items[newIndex] = new DropdownMenu.Item(Loc.T(L.Jobs.NewCategory),
-            Glyph: FontAwesomeIcon.FolderPlus.ToIconString());
+            Glyph: IconGlyph.Of(FontAwesomeIcon.FolderPlus));
 
         var picked = menu.Draw(content, theme, items);
         if (picked < 0)

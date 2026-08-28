@@ -162,7 +162,7 @@ internal sealed partial class AppStoreApp : IPhoneApp
             var hovered = UiInteract.Hover(cellMin, cellMax);
             var ink = active ? ui.Accent : hovered ? ui.TitleInk : ui.MutedInk;
             var center = new Vector2((cellMin.X + cellMax.X) * 0.5f, cellMin.Y + 22f * scale);
-            AppSkin.Icon(center, TabIcon(order[index]).ToIconString(), ink, active ? 1.02f : 0.94f);
+            AppSkin.Icon(center, IconGlyph.Of(TabIcon(order[index])), ink, active ? 1.02f : 0.94f);
             Typography.DrawCentered(new Vector2(center.X, center.Y + 20f * scale), Loc.T(TabLabel(order[index])), ink,
                 TextStyles.Caption1);
             if (hovered)

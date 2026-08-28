@@ -58,7 +58,7 @@ internal sealed class EncryptionInfoPane : IDisposable
         var active = encrypted && vault.State == KeyVaultState.Unlocked;
         var closedGlyph = active || vault.State == KeyVaultState.Locked;
         drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.16f)), 48);
-        AppSkin.Icon(center, (closedGlyph ? FontAwesomeIcon.Lock : FontAwesomeIcon.LockOpen).ToIconString(),
+        AppSkin.Icon(center, IconGlyph.Of((closedGlyph ? FontAwesomeIcon.Lock : FontAwesomeIcon.LockOpen)),
             active ? ui.Accent : ui.MutedInk, 1.7f);
         Typography.DrawCentered(new Vector2(center.X, center.Y + radius + 20f * scale), Headline(signedIn, encrypted),
             theme.TextStrong, 1.05f, FontWeight.SemiBold);

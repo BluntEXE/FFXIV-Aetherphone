@@ -496,7 +496,7 @@ internal sealed partial class ChirperApp : IResumableApp
         var listRect = new Rect(new Vector2(area.Min.X, rowRect.Max.Y), area.Max);
         DrawFeedList(listRect, activeScope);
         if (ComposeFab.Draw(listRect, "##chirperComposeFab", ChirperInk.Accent,
-                FontAwesomeIcon.Feather.ToIconString(), Loc.T(L.Chirper.NewChirp), "chirper.compose",
+                IconGlyph.Of(FontAwesomeIcon.Feather), Loc.T(L.Chirper.NewChirp), "chirper.compose",
                 ChirperInk.AccentDeep, FabRadius, ChirperIcons.Feather))
         {
             BeginCompose();

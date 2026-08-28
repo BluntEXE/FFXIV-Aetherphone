@@ -136,7 +136,7 @@ internal sealed partial class AetherStreamApp
             return;
         }
 
-        AppSkin.Icon(drawList, frame.Center, FontAwesomeIcon.Tv.ToIconString(), ui.MutedInk, 1.8f);
+        AppSkin.Icon(drawList, frame.Center, IconGlyph.Of(FontAwesomeIcon.Tv), ui.MutedInk, 1.8f);
     }
 
     private static void DrawTheaterScrims(ImDrawListPtr drawList, Rect area, float scale, float eased)

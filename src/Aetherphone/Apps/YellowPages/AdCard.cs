@@ -113,7 +113,7 @@ internal static class AdCard
             Squircle.FillVerticalGradient(drawList, card.Min, max, rounding,
                 ImGui.GetColorU32(Palette.WithAlpha(palette.Accent, 0.22f)),
                 ImGui.GetColorU32(Palette.WithAlpha(palette.Accent, 0.08f)));
-            AppSkin.Icon(drawList, (card.Min + max) * 0.5f, AdCategories.Icon(ad.Category).ToIconString(),
+            AppSkin.Icon(drawList, (card.Min + max) * 0.5f, IconGlyph.Of(AdCategories.Icon(ad.Category)),
                 Palette.WithAlpha(palette.Accent, 0.75f), 1.4f);
             return;
         }
@@ -223,7 +223,7 @@ internal static class AdCard
             metaRight -= photosSize.X;
             Typography.Draw(drawList, new Vector2(metaRight, top), photos, palette.MutedInk, TextStyles.Footnote);
             AppSkin.Icon(drawList, new Vector2(metaRight - 10f * scale, top + photosSize.Y * 0.5f),
-                FontAwesomeIcon.Camera.ToIconString(), Palette.WithAlpha(palette.MutedInk, 0.8f), 0.55f);
+                IconGlyph.Of(FontAwesomeIcon.Camera), Palette.WithAlpha(palette.MutedInk, 0.8f), 0.55f);
             metaRight -= 26f * scale;
         }
 

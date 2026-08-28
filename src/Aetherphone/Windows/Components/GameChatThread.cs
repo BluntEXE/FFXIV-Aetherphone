@@ -345,8 +345,8 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
         var downCenter = new Vector2(bar.Max.X - 22f * scale, bar.Center.Y);
         var enabled = matches.Count > 0;
         var ink = enabled ? theme.Accent : theme.TextMuted;
-        AppSkin.Icon(drawList, upCenter, FontAwesomeIcon.ChevronUp.ToIconString(), ink, 0.7f);
-        AppSkin.Icon(drawList, downCenter, FontAwesomeIcon.ChevronDown.ToIconString(), ink, 0.7f);
+        AppSkin.Icon(drawList, upCenter, IconGlyph.Of(FontAwesomeIcon.ChevronUp), ink, 0.7f);
+        AppSkin.Icon(drawList, downCenter, IconGlyph.Of(FontAwesomeIcon.ChevronDown), ink, 0.7f);
         if (!enabled)
         {
             return;
@@ -432,7 +432,7 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
         Squircle.Stroke(drawList, min, max, height * 0.5f,
             ImGui.GetColorU32(Palette.WithAlpha(theme.TextMuted, 0.35f)), 1f);
         AppSkin.Icon(drawList, new Vector2(min.X + 13f * scale, min.Y + height * 0.5f),
-            FontAwesomeIcon.ArrowDown.ToIconString(), theme.Accent, 0.62f);
+            IconGlyph.Of(FontAwesomeIcon.ArrowDown), theme.Accent, 0.62f);
         Typography.Draw(drawList, new Vector2(min.X + 22f * scale, min.Y + height * 0.5f - size.Y * 0.5f), label,
             theme.TextStrong, TextStyles.Caption1);
         if (UiInteract.HoverClick(min, max))
@@ -595,7 +595,7 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
         var retrySize = Typography.Measure(retry, TextStyles.FootnoteEmphasized);
         var left = bar.Min.X + Metrics.Space.Lg * scale;
         var center = bar.Min.Y + bar.Height * 0.5f;
-        AppSkin.Icon(drawList, new Vector2(left, center), FontAwesomeIcon.ExclamationCircle.ToIconString(),
+        AppSkin.Icon(drawList, new Vector2(left, center), IconGlyph.Of(FontAwesomeIcon.ExclamationCircle),
             theme.Danger, 0.62f);
         Typography.Draw(drawList, new Vector2(left + 12f * scale, center - labelSize.Y * 0.5f), label, theme.Danger,
             TextStyles.Caption1);

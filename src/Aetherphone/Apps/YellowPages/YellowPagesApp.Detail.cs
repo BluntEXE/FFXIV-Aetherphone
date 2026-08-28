@@ -199,7 +199,7 @@ internal sealed partial class YellowPagesApp
         }
 
         drawList.PopClipRect();
-        AppSkin.Icon(drawList, rect.Center, AdCategories.Icon(ad.Category).ToIconString(),
+        AppSkin.Icon(drawList, rect.Center, IconGlyph.Of(AdCategories.Icon(ad.Category)),
             Palette.WithAlpha(ui.Accent, 0.62f), 2.4f);
     }
 
@@ -256,7 +256,7 @@ internal sealed partial class YellowPagesApp
                 1.4f * scale);
         }
 
-        AppSkin.Icon(drawList, expandCenter, FontAwesomeIcon.Expand.ToIconString(), HeroInk, 0.66f);
+        AppSkin.Icon(drawList, expandCenter, IconGlyph.Of(FontAwesomeIcon.Expand), HeroInk, 0.66f);
         if (overExpand)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -415,7 +415,7 @@ internal sealed partial class YellowPagesApp
         bool urgent, float scale)
     {
         var ink = urgent ? theme.Danger : AppPalettes.YellowPages.MutedInk;
-        AppSkin.Icon(drawList, new Vector2(leftCenter.X + 6f * scale, leftCenter.Y), icon.ToIconString(),
+        AppSkin.Icon(drawList, new Vector2(leftCenter.X + 6f * scale, leftCenter.Y), IconGlyph.Of(icon),
             Palette.WithAlpha(urgent ? ink : ui.Accent, 0.85f), 0.62f);
         var labelSize = Typography.Measure(label, TextStyles.Footnote);
         Typography.Draw(drawList, new Vector2(leftCenter.X + 20f * scale, leftCenter.Y - labelSize.Y * 0.5f), label,
@@ -594,7 +594,7 @@ internal sealed partial class YellowPagesApp
         Typography.Draw(drawList, new Vector2(origin.X + pad, origin.Y + pad),
             Loc.Culture.TextInfo.ToUpper(label), AppPalettes.YellowPages.HeaderInk, TextStyles.Caption1);
         AppSkin.Icon(drawList, new Vector2(origin.X + width - pad - 6f * scale, origin.Y + pad + 6f * scale),
-            icon.ToIconString(), Palette.WithAlpha(ui.Accent, 0.55f), 0.72f);
+            IconGlyph.Of(icon), Palette.WithAlpha(ui.Accent, 0.55f), 0.72f);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, cardHeight + Metrics.Space.Md * scale));
         return new Rect(new Vector2(origin.X + pad, origin.Y + pad + labelHeight),
@@ -906,7 +906,7 @@ internal sealed partial class YellowPagesApp
         var labelSize = Typography.Measure(label, TextStyles.Headline);
         var clampedLabelWidth = MathF.Min(labelSize.X, labelMaxWidth);
         var left = rect.Center.X - (clampedLabelWidth + iconGap + iconWidth) * 0.5f;
-        AppSkin.Icon(drawList, new Vector2(left + iconWidth * 0.5f, rect.Center.Y), icon.ToIconString(),
+        AppSkin.Icon(drawList, new Vector2(left + iconWidth * 0.5f, rect.Center.Y), IconGlyph.Of(icon),
             PrimaryActionInk, 0.78f);
         Marquee.DrawLeft(drawList, "yellowpages.detail.primaryaction." + label, label, left + iconWidth + iconGap,
             rect.Center.Y - labelSize.Y * 0.5f, labelMaxWidth, TextStyles.Headline, PrimaryActionInk, hovered);
@@ -933,7 +933,7 @@ internal sealed partial class YellowPagesApp
         var clampedLabelWidth = MathF.Min(labelSize.X, labelMaxWidth);
         var left = rect.Center.X - (clampedLabelWidth + iconGap + iconWidth) * 0.5f;
         AppSkin.Icon(drawList, new Vector2(left + iconWidth * 0.5f, rect.Center.Y),
-            FontAwesomeIcon.Lock.ToIconString(), AppPalettes.YellowPages.MutedInk, 0.72f);
+            IconGlyph.Of(FontAwesomeIcon.Lock), AppPalettes.YellowPages.MutedInk, 0.72f);
         Marquee.DrawLeftAuto(drawList, "yellowpages.detail.lockedaction." + label, label, left + iconWidth + iconGap,
             rect.Center.Y - labelSize.Y * 0.5f, labelMaxWidth, TextStyles.Headline, AppPalettes.YellowPages.MutedInk);
     }
@@ -1002,7 +1002,7 @@ internal sealed partial class YellowPagesApp
         var iconGap = 8f * scale;
         var contentWidth = 14f * scale + iconGap + clampedLabelWidth;
         var left = center.X - contentWidth * 0.5f;
-        AppSkin.Icon(drawList, new Vector2(left + 7f * scale, center.Y), icon.ToIconString(), ink, 0.78f);
+        AppSkin.Icon(drawList, new Vector2(left + 7f * scale, center.Y), IconGlyph.Of(icon), ink, 0.78f);
         Marquee.DrawLeft(drawList, "yellowpages.detail.subaction." + label, label, left + 14f * scale + iconGap,
             center.Y - labelSize.Y * 0.5f, labelMaxWidth, TextStyles.Footnote, ink, hovered);
         if (hovered)

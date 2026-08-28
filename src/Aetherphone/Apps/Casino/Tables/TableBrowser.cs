@@ -249,7 +249,7 @@ internal sealed class TableBrowser
         var iconCenter = new Vector2(row.Min.X + 26f * scale, row.Center.Y);
         drawList.AddCircleFilled(iconCenter, 15f * scale,
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.16f)), 32);
-        AppSkin.Icon(drawList, iconCenter, FontAwesomeIcon.UserFriends.ToIconString(), ui.Accent, 0.85f);
+        AppSkin.Icon(drawList, iconCenter, IconGlyph.Of(FontAwesomeIcon.UserFriends), ui.Accent, 0.85f);
 
         var textLeft = row.Min.X + 48f * scale;
         var textWidth = row.Width - 62f * scale;

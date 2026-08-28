@@ -256,7 +256,7 @@ internal static class HousingChrome
         drawList.AddCircle(center, radius, ImGui.GetColorU32(Palette.WithAlpha(White, hovered ? 0.30f : 0.16f)), 28,
             1f * scale);
         var ink = active ? new Vector4(0.05f, 0.09f, 0.07f, 1f) : hovered ? ui.TitleInk : ui.BodyInk;
-        AppSkin.Icon(drawList, center, icon.ToIconString(), ink, 0.78f);
+        AppSkin.Icon(drawList, center, IconGlyph.Of(icon), ink, 0.78f);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

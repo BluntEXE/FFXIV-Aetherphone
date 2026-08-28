@@ -987,12 +987,12 @@ internal sealed partial class HealthApp
         var valueCenter = new Vector2((plus.X + minus.X) * 0.5f, row.Center.Y);
         Typography.DrawCentered(valueCenter, value, Pal.TitleInk, 0.95f, FontWeight.SemiBold);
         var delta = 0;
-        if (ui.IconButton(minus, radius, FontAwesomeIcon.Minus.ToIconString(), Pal.TitleInk, Pal.FieldSurface, 0.5f))
+        if (ui.IconButton(minus, radius, IconGlyph.Of(FontAwesomeIcon.Minus), Pal.TitleInk, Pal.FieldSurface, 0.5f))
         {
             delta--;
         }
 
-        if (ui.IconButton(plus, radius, FontAwesomeIcon.Plus.ToIconString(), Pal.TitleInk, Pal.FieldSurface, 0.5f))
+        if (ui.IconButton(plus, radius, IconGlyph.Of(FontAwesomeIcon.Plus), Pal.TitleInk, Pal.FieldSurface, 0.5f))
         {
             delta++;
         }
@@ -1096,9 +1096,9 @@ internal sealed partial class HealthApp
         Marquee.DrawLeftAuto("health.numberfield.label." + label, label, origin.X, centerY - labelSize.Y * 0.5f,
             labelMaxWidth, TextStyles.Subheadline, Pal.BodyInk);
 
-        dec = ui.IconButton(minusCenter, radius, FontAwesomeIcon.Minus.ToIconString(), Pal.TitleInk,
+        dec = ui.IconButton(minusCenter, radius, IconGlyph.Of(FontAwesomeIcon.Minus), Pal.TitleInk,
             Pal.FieldSurface, 0.5f);
-        inc = ui.IconButton(plusCenter, radius, FontAwesomeIcon.Plus.ToIconString(), Pal.TitleInk,
+        inc = ui.IconButton(plusCenter, radius, IconGlyph.Of(FontAwesomeIcon.Plus), Pal.TitleInk,
             Pal.FieldSurface, 0.5f);
 
         var boxMin = new Vector2(inputLeft, centerY - frameHeight * 0.5f);

@@ -49,7 +49,7 @@ internal static class VTabBar
             }
 
             var ink = isActive ? VelvetTheme.RoseInk : hovered ? VelvetTheme.TitleInk : VelvetTheme.MutedInk;
-            AppSkin.Icon(new Vector2(centerX, centerY), tabs[index].Icon.ToIconString(), ink, isActive ? 1.1f : 0.98f);
+            AppSkin.Icon(new Vector2(centerX, centerY), IconGlyph.Of(tabs[index].Icon), ink, isActive ? 1.1f : 0.98f);
             if (tabs[index].Badge > 0)
             {
                 VBadge.Count(drawList, new Vector2(centerX + 20f * scale, centerY - 12f * scale), tabs[index].Badge);

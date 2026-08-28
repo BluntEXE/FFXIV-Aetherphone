@@ -111,7 +111,7 @@ internal sealed partial class GamesApp
         Typography.DrawCentered(ImGui.GetWindowDrawList(), new Vector2(area.Center.X, actions.RowCenterY),
             DisplayName, ui.TitleInk, 1.3f, FontWeight.Bold);
         var glyph = searchOpen ? FontAwesomeIcon.Times : FontAwesomeIcon.Search;
-        if (!ui.IconButton(actions.Slot(0), actions.Radius, glyph.ToIconString(), ui.HeaderInk, ui.FieldSurface,
+        if (!ui.IconButton(actions.Slot(0), actions.Radius, IconGlyph.Of(glyph), ui.HeaderInk, ui.FieldSurface,
                 0.85f))
         {
             return;

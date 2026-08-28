@@ -22,7 +22,7 @@ internal static class SubmitField
         var glyphCenter = new Vector2(pillMin.X + 16f * scale, bar.Center.Y);
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {
-            var glyph = icon.ToIconString();
+            var glyph = IconGlyph.Of(icon);
             var size = ImGui.CalcTextSize(glyph);
             ImGui.SetCursorScreenPos(new Vector2(glyphCenter.X - size.X * 0.5f, glyphCenter.Y - size.Y * 0.5f));
             using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))

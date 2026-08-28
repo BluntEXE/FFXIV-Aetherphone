@@ -17,7 +17,7 @@ internal static class ModerationOverlay
         var scale = UiScale.Current;
         Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.55f)));
         var center = new Vector2((min.X + max.X) * 0.5f, (min.Y + max.Y) * 0.5f);
-        AppSkin.Icon(drawList, new Vector2(center.X, center.Y - 26f * scale), FontAwesomeIcon.Hourglass.ToIconString(),
+        AppSkin.Icon(drawList, new Vector2(center.X, center.Y - 26f * scale), IconGlyph.Of(FontAwesomeIcon.Hourglass),
             new Vector4(1f, 1f, 1f, 0.92f), 1.6f);
         Typography.DrawCentered(drawList, center, Loc.T(L.Moderation.InReview), new Vector4(1f, 1f, 1f, 0.95f),
             TextStyles.Headline);

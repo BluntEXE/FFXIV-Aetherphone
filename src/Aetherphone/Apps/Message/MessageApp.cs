@@ -388,7 +388,7 @@ internal sealed partial class MessageApp : IResumableApp
         if (activeTab == MessageTab.Chats && configuration.MessageArchivedChats.Count > 0)
         {
             var archiveCenter = new Vector2(area.Max.X - 24f * scale, area.Center.Y);
-            if (ui.IconButton(archiveCenter, 16f * scale, FontAwesomeIcon.BoxOpen.ToIconString(), ui.BodyInk,
+            if (ui.IconButton(archiveCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.BoxOpen), ui.BodyInk,
                     Transparent, 1.1f, Loc.T(L.Message.Archived), HoverLabelSide.Below))
             {
                 router.Push(MessageRoute.Archived);
@@ -398,7 +398,7 @@ internal sealed partial class MessageApp : IResumableApp
         if (activeTab == MessageTab.Chats && configuration.MessageStarredMessages.Count > 0)
         {
             var starCenter = new Vector2(area.Min.X + 24f * scale, area.Center.Y);
-            if (ui.IconButton(starCenter, 16f * scale, FontAwesomeIcon.Star.ToIconString(), ui.BodyInk,
+            if (ui.IconButton(starCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.Star), ui.BodyInk,
                     Transparent, 1.05f, Loc.T(L.Message.StarredTitle), HoverLabelSide.Below))
             {
                 router.Push(MessageRoute.Starred);
@@ -408,7 +408,7 @@ internal sealed partial class MessageApp : IResumableApp
         if (activeTab == MessageTab.Contacts)
         {
             var shieldCenter = new Vector2(area.Max.X - 24f * scale, area.Center.Y);
-            if (ui.IconButton(shieldCenter, 16f * scale, FontAwesomeIcon.ShieldAlt.ToIconString(), ui.BodyInk,
+            if (ui.IconButton(shieldCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.ShieldAlt), ui.BodyInk,
                     Transparent, 1.2f, Loc.T(L.Friends.NewNumberTitle), HoverLabelSide.Below) && session.IsSignedIn)
             {
                 router.Push(MessageRoute.Safety);
@@ -449,7 +449,7 @@ internal sealed partial class MessageApp : IResumableApp
         var active = activeTab == tab;
         var color = active ? ui.Accent : ui.MutedInk;
         var iconCenter = new Vector2(rect.Center.X, rect.Min.Y + 20f * scale);
-        AppSkin.Icon(iconCenter, icon.ToIconString(), color, 1.2f);
+        AppSkin.Icon(iconCenter, IconGlyph.Of(icon), color, 1.2f);
         Typography.DrawCentered(new Vector2(rect.Center.X, rect.Min.Y + 42f * scale), label, color, 0.72f,
             active ? FontWeight.SemiBold : FontWeight.Regular);
         if (badge > 0)

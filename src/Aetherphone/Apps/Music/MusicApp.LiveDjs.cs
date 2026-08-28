@@ -268,7 +268,7 @@ internal sealed partial class MusicApp
         var hovered = UiInteract.Hover(headingMin, headingMax);
         Typography.Draw(origin, title, ui.Palette.HeadingInk, TextStyles.Title3);
         var iconCenter = new Vector2(origin.X + width - iconBox * 0.5f, origin.Y + titleSize.Y * 0.5f);
-        AppSkin.Icon(iconCenter, FontAwesomeIcon.ChevronRight.ToIconString(), ui.MutedInk, 0.8f);
+        AppSkin.Icon(iconCenter, IconGlyph.Of(FontAwesomeIcon.ChevronRight), ui.MutedInk, 0.8f);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -620,7 +620,7 @@ internal sealed partial class MusicApp
                 var watchHovered = UiInteract.Hover(watchMin, watchMax);
                 var watchFill = watchHovered ? ui.Accent : Palette.WithAlpha(ui.Accent, 0.92f);
                 drawList.AddCircleFilled(watchCenter, actionRadius, ImGui.GetColorU32(watchFill), 32);
-                AppSkin.Icon(drawList, watchCenter, FontAwesomeIcon.Play.ToIconString(), ui.Palette.BackdropBottom, 1f);
+                AppSkin.Icon(drawList, watchCenter, IconGlyph.Of(FontAwesomeIcon.Play), ui.Palette.BackdropBottom, 1f);
                 if (watchHovered)
                 {
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -847,7 +847,7 @@ internal sealed partial class MusicApp
                     Squircle.Stroke(drawList, buttonMin, buttonMax, 8f * scale,
                         ImGui.GetColorU32(buttonHovered ? ui.Palette.Accent : ui.Palette.CardStroke), 1f);
                     AppSkin.Icon(drawList, new Vector2(buttonMin.X + iconButtonSize * 0.5f, buttonMin.Y + iconButtonSize * 0.5f),
-                        icon.ToIconString(), buttonHovered ? ui.Palette.Accent : ui.Palette.MutedInk, 0.88f);
+                        IconGlyph.Of(icon), buttonHovered ? ui.Palette.Accent : ui.Palette.MutedInk, 0.88f);
 
                     if (buttonHovered)
                     {
@@ -927,7 +927,7 @@ internal sealed partial class MusicApp
 
         AppSkin.Icon(drawList,
             new Vector2(textX + labelSize.X + gap + externalIconW * 0.5f, rowCenterY),
-            FontAwesomeIcon.Globe.ToIconString(), accent, 0.65f);
+            IconGlyph.Of(FontAwesomeIcon.Globe), accent, 0.65f);
 
         var rowMin = new Vector2(rowLeft, rowOrigin.Y);
         var rowMax = new Vector2(rowLeft + totalWidth, rowOrigin.Y + radius * 2f);
@@ -1064,7 +1064,7 @@ internal sealed partial class MusicApp
                 {
                     var watchCenter = new Vector2(npMax.X - 14f * scale - watchRadius, npMin.Y + npCardH * 0.5f);
                     drawList.AddCircleFilled(watchCenter, watchRadius, ImGui.GetColorU32(ui.Palette.Accent), 32);
-                    AppSkin.Icon(drawList, watchCenter, FontAwesomeIcon.Play.ToIconString(), ui.Palette.BackdropBottom, 1f);
+                    AppSkin.Icon(drawList, watchCenter, IconGlyph.Of(FontAwesomeIcon.Play), ui.Palette.BackdropBottom, 1f);
                     ImGui.SetCursorScreenPos(new Vector2(watchCenter.X - watchRadius, watchCenter.Y - watchRadius));
                     if (ImGui.InvisibleButton("##venueWatch", new Vector2(watchRadius * 2f, watchRadius * 2f)))
                     {

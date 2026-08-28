@@ -101,7 +101,7 @@ internal sealed partial class MusicApp
         var fill = hovered ? Palette.WithAlpha(ui.TitleInk, 0.16f) : ui.FieldSurface;
         Squircle.Fill(drawList, pillMin, pillMax, rounding, ImGui.GetColorU32(fill));
         var centerY = (pillMin.Y + pillMax.Y) * 0.5f;
-        AppSkin.Icon(new Vector2(pillMin.X + 18f * scale, centerY), FontAwesomeIcon.Search.ToIconString(),
+        AppSkin.Icon(new Vector2(pillMin.X + 18f * scale, centerY), IconGlyph.Of(FontAwesomeIcon.Search),
             ui.MutedInk, 0.85f);
         var fitted = Typography.FitText(hint, pillMax.X - pillMin.X - 48f * scale, TextStyles.Callout);
         var hintSize = Typography.Measure(fitted, TextStyles.Callout);
@@ -464,7 +464,7 @@ internal sealed partial class MusicApp
             var tooltip = Loc.T(isFavoriteStation ? L.Music.RemoveFavoriteStation : L.Music.AddFavoriteStation);
             var starX = max.X - inset - (current ? 30f : 12f) * scale;
             var starCenter = new Vector2(starX, min.Y + rowHeight * 0.5f);
-            if (ui.IconButton(starCenter, 14f * scale, FontAwesomeIcon.Star.ToIconString(),
+            if (ui.IconButton(starCenter, 14f * scale, IconGlyph.Of(FontAwesomeIcon.Star),
                     isFavoriteStation ? ui.Accent : ui.MutedInk, AppSkin.Transparent, 0.82f, tooltip))
             {
                 ToggleFavoriteStation(station);

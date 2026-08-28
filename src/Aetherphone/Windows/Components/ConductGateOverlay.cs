@@ -147,7 +147,7 @@ internal sealed class ConductGateOverlay
     private void DrawCloseButton(Vector2 center, PhoneTheme theme, float opacity, bool interactive)
     {
         var pressed = AppSkin.IconButton(center, CloseRadius * UiScale.Current,
-            FontAwesomeIcon.Times.ToIconString(), Palette.WithAlpha(theme.TextStrong, opacity),
+            IconGlyph.Of(FontAwesomeIcon.Times), Palette.WithAlpha(theme.TextStrong, opacity),
             Palette.WithAlpha(theme.TextStrong, 0.10f * opacity), 0.5f, theme);
         if (pressed && interactive && opacity > 0.5f)
         {
@@ -166,7 +166,7 @@ internal sealed class ConductGateOverlay
         var tileMax = tileMin + new Vector2(tileSize, tileSize);
         Squircle.Fill(drawList, tileMin, tileMax, tileSize * 0.30f,
             ImGui.GetColorU32(Palette.WithAlpha(accent, opacity)));
-        AppSkin.Icon(drawList, new Vector2(centerX, (tileMin.Y + tileMax.Y) * 0.5f), gate.Icon.ToIconString(),
+        AppSkin.Icon(drawList, new Vector2(centerX, (tileMin.Y + tileMax.Y) * 0.5f), IconGlyph.Of(gate.Icon),
             new Vector4(1f, 1f, 1f, opacity), 0.95f);
 
         var y = tileMax.Y + 12f * scale;
@@ -335,7 +335,7 @@ internal sealed class ConductGateOverlay
                 ConductTone.Restricted => FontAwesomeIcon.Ban,
                 _ => FontAwesomeIcon.InfoCircle,
             };
-            AppSkin.Icon(drawList, (chipMin + chipMax) * 0.5f, chipIcon.ToIconString(),
+            AppSkin.Icon(drawList, (chipMin + chipMax) * 0.5f, IconGlyph.Of(chipIcon),
                 Palette.WithAlpha(toneColor, opacity), 0.55f);
 
             Typography.DrawWrappedLeft(new Vector2(left + chip + chipGap, cursorY + (headerHeight - headingHeight) * 0.5f),
@@ -368,7 +368,7 @@ internal sealed class ConductGateOverlay
                 else
                 {
                     var mark = section.Tone == ConductTone.Encouraged ? FontAwesomeIcon.Check : FontAwesomeIcon.Times;
-                    AppSkin.Icon(drawList, markCenter, mark.ToIconString(), Palette.WithAlpha(toneColor, opacity),
+                    AppSkin.Icon(drawList, markCenter, IconGlyph.Of(mark), Palette.WithAlpha(toneColor, opacity),
                         0.58f);
                 }
 

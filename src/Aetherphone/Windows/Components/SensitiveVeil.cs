@@ -23,7 +23,7 @@ internal static class SensitiveVeil
         var compact = width < CompactEdge * scale || height < CompactEdge * scale;
         if (compact)
         {
-            AppSkin.Icon(drawList, center, FontAwesomeIcon.EyeSlash.ToIconString(), StrongInk, 1.15f);
+            AppSkin.Icon(drawList, center, IconGlyph.Of(FontAwesomeIcon.EyeSlash), StrongInk, 1.15f);
             HintHand(min, max);
             return;
         }
@@ -32,7 +32,7 @@ internal static class SensitiveVeil
         var title = Typography.FitText(Loc.T(L.Moderation.SensitiveTitle), textWidth, TextStyles.Headline);
         var hint = Typography.FitText(Loc.T(L.Moderation.SensitiveReveal), textWidth, TextStyles.Footnote);
 
-        AppSkin.Icon(drawList, new Vector2(center.X, center.Y - 28f * scale), FontAwesomeIcon.EyeSlash.ToIconString(),
+        AppSkin.Icon(drawList, new Vector2(center.X, center.Y - 28f * scale), IconGlyph.Of(FontAwesomeIcon.EyeSlash),
             StrongInk, 1.6f);
         Typography.DrawCentered(drawList, center, title, StrongInk, TextStyles.Headline);
         Typography.DrawCentered(drawList, new Vector2(center.X, center.Y + 22f * scale), hint, SoftInk,

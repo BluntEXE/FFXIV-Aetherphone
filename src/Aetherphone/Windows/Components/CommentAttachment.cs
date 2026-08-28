@@ -71,7 +71,7 @@ internal sealed class CommentAttachment
         }
         else
         {
-            AppSkin.Icon(center, FontAwesomeIcon.Image.ToIconString(), color, 0.95f);
+            AppSkin.Icon(center, IconGlyph.Of(FontAwesomeIcon.Image), color, 0.95f);
         }
 
         HoverTooltip.Show(new Rect(min, max), tooltip, HoverLabelSide.Above);
@@ -148,7 +148,7 @@ internal sealed class CommentAttachment
         var badgeHovered = !UiInteract.InputBlocked && UiInteract.HoverWindowOnly(badgeMin, badgeMax);
         drawList.AddCircleFilled(badgeCenter, badgeRadius,
             ImGui.GetColorU32(new Vector4(0f, 0f, 0f, badgeHovered ? 0.9f : 0.62f)), 20);
-        AppSkin.Icon(badgeCenter, FontAwesomeIcon.Times.ToIconString(), new Vector4(1f, 1f, 1f, 1f), 0.6f);
+        AppSkin.Icon(badgeCenter, IconGlyph.Of(FontAwesomeIcon.Times), new Vector4(1f, 1f, 1f, 1f), 0.6f);
         if (badgeHovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

@@ -143,7 +143,7 @@ internal sealed partial class ClockApp : IPhoneApp
         UiAnchors.Report("clock.add",
             new Rect(center - new Vector2(radius, radius), center + new Vector2(radius, radius)));
         var tooltip = activeTab == TabWorld ? Loc.T(L.Clock.AddCity) : Loc.T(L.Clock.NewAlarm);
-        if (ui.IconButton(center, radius, FontAwesomeIcon.Plus.ToIconString(), ui.TitleInk,
+        if (ui.IconButton(center, radius, IconGlyph.Of(FontAwesomeIcon.Plus), ui.TitleInk,
                 Palette.WithAlpha(ui.TitleInk, 0.12f), 0.6f, tooltip))
         {
             if (activeTab == TabWorld)

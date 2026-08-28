@@ -94,7 +94,7 @@ internal sealed partial class MusterApp
         }
 
         if (store.Mine is null && ComposeFab.Draw(body, "##musterStartFab", ui.Accent,
-                FontAwesomeIcon.Bullhorn.ToIconString(), Loc.T(L.Muster.StartMuster), "muster.start"))
+                IconGlyph.Of(FontAwesomeIcon.Bullhorn), Loc.T(L.Muster.StartMuster), "muster.start"))
         {
             router.Push(MusterRoute.Create);
         }
@@ -110,7 +110,7 @@ internal sealed partial class MusterApp
         {
             LoadingPulse.Spinner(actionCenter, 8f * scale, ui.Accent);
         }
-        else if (ui.IconButton(actionCenter, 14f * scale, FontAwesomeIcon.Sync.ToIconString(),
+        else if (ui.IconButton(actionCenter, 14f * scale, IconGlyph.Of(FontAwesomeIcon.Sync),
                      AppPalettes.Muster.BodyInk, AppSkin.Transparent, 0.9f, Loc.T(L.Common.Refresh),
                      HoverLabelSide.Below))
         {
@@ -118,7 +118,7 @@ internal sealed partial class MusterApp
         }
 
         var rulesCenter = new Vector2(actionCenter.X - 28f * scale, rowCenterY);
-        if (ui.IconButton(rulesCenter, 14f * scale, FontAwesomeIcon.QuestionCircle.ToIconString(),
+        if (ui.IconButton(rulesCenter, 14f * scale, IconGlyph.Of(FontAwesomeIcon.QuestionCircle),
                 AppPalettes.Muster.MutedInk, AppSkin.Transparent, 0.9f, Loc.T(L.Conduct.Eyebrow),
                 HoverLabelSide.Below))
         {
@@ -168,7 +168,7 @@ internal sealed partial class MusterApp
             ? Palette.WithAlpha(ui.Accent, hovered ? 0.36f : 0.26f)
             : hovered ? ui.HoverTint : AppPalettes.Muster.FieldSurface;
         drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(fill), 32);
-        AppSkin.Icon(drawList, center, FontAwesomeIcon.GlobeAmericas.ToIconString(),
+        AppSkin.Icon(drawList, center, IconGlyph.Of(FontAwesomeIcon.GlobeAmericas),
             pinned ? ui.Accent : AppPalettes.Muster.BodyInk, 0.68f);
         if (hovered)
         {
@@ -249,7 +249,7 @@ internal sealed partial class MusterApp
             card.Min.Y + 38f * scale, statusMaxWidth, TextStyles.SubheadlineEmphasized,
             live ? MusterCard.LiveGreen : AppPalettes.Muster.BodyInk);
         AppSkin.Icon(drawList, new Vector2(card.Max.X - 20f * scale, card.Center.Y),
-            FontAwesomeIcon.ChevronRight.ToIconString(), AppPalettes.Muster.MutedInk, 0.7f);
+            IconGlyph.Of(FontAwesomeIcon.ChevronRight), AppPalettes.Muster.MutedInk, 0.7f);
         if (hovered)
         {
             UiInteract.HoverHighlight(drawList, card.Min, card.Max, rounding);

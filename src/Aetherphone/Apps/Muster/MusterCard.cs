@@ -137,7 +137,7 @@ internal static class MusterCard
         var max = new Vector2(left + textSize.X + iconSpace + 22f * scale, centerY + height * 0.5f);
         Squircle.Fill(drawList, min, max, height * 0.5f, ImGui.GetColorU32(Palette.WithAlpha(accent, 0.16f)));
         AppSkin.Icon(drawList, new Vector2(min.X + 13f * scale, centerY),
-            MusterCategories.Icon(muster.Category).ToIconString(), accent, 0.6f);
+            IconGlyph.Of(MusterCategories.Icon(muster.Category)), accent, 0.6f);
         Typography.Draw(drawList, new Vector2(min.X + 11f * scale + iconSpace, centerY - textSize.Y * 0.5f), fitted,
             accent, TextStyles.SubheadlineEmphasized);
     }
@@ -153,7 +153,7 @@ internal static class MusterCard
         var max = new Vector2(right, centerY + chipHeight * 0.5f);
         Squircle.Fill(drawList, min, max, chipHeight * 0.5f,
             ImGui.GetColorU32(Palette.WithAlpha(accent, 0.14f)));
-        AppSkin.Icon(drawList, new Vector2(min.X + 11f * scale, centerY), FontAwesomeIcon.Plane.ToIconString(),
+        AppSkin.Icon(drawList, new Vector2(min.X + 11f * scale, centerY), IconGlyph.Of(FontAwesomeIcon.Plane),
             Palette.WithAlpha(accent, 0.9f), 0.52f);
         Typography.Draw(drawList, new Vector2(min.X + 9f * scale + iconSpace, centerY - textSize.Y * 0.5f), label,
             Palette.WithAlpha(accent, 0.9f), TextStyles.Caption1);
@@ -192,7 +192,7 @@ internal static class MusterCard
         var goingLeft = right - goingSize.X;
         Typography.Draw(drawList, new Vector2(goingLeft, centerY - goingSize.Y * 0.5f), going,
             muster.RsvpCount > 0 ? palette.TitleInk : palette.MutedInk, TextStyles.SubheadlineEmphasized);
-        AppSkin.Icon(drawList, new Vector2(goingLeft - 11f * scale, centerY), FontAwesomeIcon.Users.ToIconString(),
+        AppSkin.Icon(drawList, new Vector2(goingLeft - 11f * scale, centerY), IconGlyph.Of(FontAwesomeIcon.Users),
             Palette.WithAlpha(palette.MutedInk, 0.85f), 0.58f);
         var metaRight = goingLeft - 21f * scale;
         if (muster.MaxAttendees > 0 && muster.RsvpCount >= muster.MaxAttendees)
@@ -210,7 +210,7 @@ internal static class MusterCard
             return;
         }
 
-        AppSkin.Icon(drawList, new Vector2(left + 5f * scale, centerY), FontAwesomeIcon.MapMarkerAlt.ToIconString(),
+        AppSkin.Icon(drawList, new Vector2(left + 5f * scale, centerY), IconGlyph.Of(FontAwesomeIcon.MapMarkerAlt),
             Palette.WithAlpha(palette.MutedInk, 0.85f), 0.58f);
         var placeLeft = left + 15f * scale;
         var placeSize = Typography.Measure(place, TextStyles.Subheadline);

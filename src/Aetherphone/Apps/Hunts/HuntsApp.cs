@@ -268,7 +268,7 @@ internal sealed partial class HuntsApp : IPhoneApp
         }
 
         var ink = authenticated ? OpenBarColor : frameTheme.Danger;
-        AppSkin.Icon(center, FontAwesomeIcon.Wifi.ToIconString(), ink, 1.24f);
+        AppSkin.Icon(center, IconGlyph.Of(FontAwesomeIcon.Wifi), ink, 1.24f);
         var tooltip = authenticated ? Loc.T(L.Hunts.AuthenticatedTooltip) : Loc.T(L.Hunts.NotAuthenticatedTooltip);
         HoverTooltip.Show(new Rect(hitMin, hitMax), tooltip);
         if (UiInteract.Click(hitMin, hitMax, hovered))
@@ -292,7 +292,7 @@ internal sealed partial class HuntsApp : IPhoneApp
         drawList.AddCircleFilled(badgeCenter, badgeRadius + 1.5f * scale, ImGui.GetColorU32(frameTheme.AppBackground),
             16);
         drawList.AddCircleFilled(badgeCenter, badgeRadius, ImGui.GetColorU32(frameTheme.Danger), 16);
-        AppSkin.Icon(badgeCenter, FontAwesomeIcon.Times.ToIconString(), new Vector4(1f, 1f, 1f, 1f), 0.46f);
+        AppSkin.Icon(badgeCenter, IconGlyph.Of(FontAwesomeIcon.Times), new Vector4(1f, 1f, 1f, 1f), 0.46f);
 
         var badgeHitMin = badgeCenter - new Vector2(badgeRadius, badgeRadius) * 1.5f;
         var badgeHitMax = badgeCenter + new Vector2(badgeRadius, badgeRadius) * 1.5f;
@@ -311,7 +311,7 @@ internal sealed partial class HuntsApp : IPhoneApp
         SearchField.Draw(searchBar, "##hunts.search", Loc.T(L.Hunts.SearchHint), ref searchQuery, ui.Palette);
 
         var buttonCenter = new Vector2(content.Max.X - margin - buttonRadius, searchBar.Center.Y);
-        if (ui.IconButton(buttonCenter, buttonRadius, FontAwesomeIcon.Bars.ToIconString(),
+        if (ui.IconButton(buttonCenter, buttonRadius, IconGlyph.Of(FontAwesomeIcon.Bars),
                 filter.HasNarrowingFilters ? ui.Accent : ui.MutedInk, AppSkin.Transparent, 1.24f,
                 Loc.T(L.Hunts.FiltersTitle)))
         {

@@ -206,7 +206,7 @@ internal sealed class GameComposer
         var center = new Vector2((min.X + max.X) * 0.5f - 3f * scale, (min.Y + max.Y) * 0.5f);
         Typography.DrawCentered(drawList, center, label, tint, TextStyles.Caption1);
         AppSkin.Icon(drawList, new Vector2(max.X - 6f * scale, center.Y + 1f * scale),
-            FontAwesomeIcon.CaretDown.ToIconString(), Palette.WithAlpha(tint, 0.8f), 0.6f);
+            IconGlyph.Of(FontAwesomeIcon.CaretDown), Palette.WithAlpha(tint, 0.8f), 0.6f);
     }
 
     private static void DrawSend(ImDrawListPtr drawList, Vector2 center, float diameter, bool hasText, int used,
@@ -215,7 +215,7 @@ internal sealed class GameComposer
         var radius = diameter * 0.5f;
         drawList.AddCircleFilled(center, radius,
             ImGui.GetColorU32(hasText ? theme.Accent : theme.SurfaceMuted), 24);
-        AppSkin.Icon(drawList, center, FontAwesomeIcon.ArrowUp.ToIconString(), new Vector4(1f, 1f, 1f, 1f), 0.72f);
+        AppSkin.Icon(drawList, center, IconGlyph.Of(FontAwesomeIcon.ArrowUp), new Vector4(1f, 1f, 1f, 1f), 0.72f);
         if (budget <= 0)
         {
             return;

@@ -246,7 +246,7 @@ internal sealed partial class MusicApp
         Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(fill));
         Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.55f)), 1.2f);
         var center = new Vector2(min.X + (max.X - min.X) * 0.5f, min.Y + (max.Y - min.Y) * 0.5f);
-        AppSkin.Icon(new Vector2(center.X, center.Y - 10f * scale), FontAwesomeIcon.Plus.ToIconString(), ui.Accent, 0.95f);
+        AppSkin.Icon(new Vector2(center.X, center.Y - 10f * scale), IconGlyph.Of(FontAwesomeIcon.Plus), ui.Accent, 0.95f);
         var label = Loc.T(L.Music.NewPlaylist);
         Typography.DrawCentered(new Vector2(center.X, center.Y + 14f * scale), label, ui.TitleInk,
             TextStyles.Caption1);
@@ -387,7 +387,7 @@ internal sealed partial class MusicApp
         var newCenterY = (newMin.Y + newMax.Y) * 0.5f;
         var iconCenter = new Vector2(newMin.X + 26f * scale, newCenterY);
         drawList.AddCircleFilled(iconCenter, 16f * scale, ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.18f)), 24);
-        AppSkin.Icon(iconCenter, FontAwesomeIcon.Plus.ToIconString(), ui.Accent, 0.9f);
+        AppSkin.Icon(iconCenter, IconGlyph.Of(FontAwesomeIcon.Plus), ui.Accent, 0.9f);
         var newLabelSize = Typography.Measure(Loc.T(L.Music.NewPlaylist), TextStyles.BodyEmphasized);
         Typography.Draw(new Vector2(iconCenter.X + 26f * scale, newCenterY - newLabelSize.Y * 0.5f),
             Loc.T(L.Music.NewPlaylist), ui.Accent, TextStyles.BodyEmphasized);
@@ -428,13 +428,13 @@ internal sealed partial class MusicApp
         if (contains)
         {
             drawList.AddCircleFilled(indicatorCenter, 12f * scale, ImGui.GetColorU32(ui.Accent), 24);
-            AppSkin.Icon(indicatorCenter, FontAwesomeIcon.Check.ToIconString(), White, 0.72f);
+            AppSkin.Icon(indicatorCenter, IconGlyph.Of(FontAwesomeIcon.Check), White, 0.72f);
         }
         else
         {
             drawList.AddCircle(indicatorCenter, 12f * scale,
                 ImGui.GetColorU32(Palette.WithAlpha(ui.TitleInk, 0.35f)), 24, 1.4f * scale);
-            AppSkin.Icon(indicatorCenter, FontAwesomeIcon.Plus.ToIconString(), ui.MutedInk, 0.7f);
+            AppSkin.Icon(indicatorCenter, IconGlyph.Of(FontAwesomeIcon.Plus), ui.MutedInk, 0.7f);
         }
 
         ImGui.SetCursorScreenPos(origin);
@@ -597,7 +597,7 @@ internal sealed partial class MusicApp
         Typography.Draw(new Vector2(titleLeft, rowCenterY - titleSize.Y * 0.5f), fitted, ui.TitleInk,
             TextStyles.Title2);
         var menuCenter = new Vector2(content.Max.X - 22f * scale, rowCenterY);
-        if (ui.IconButton(menuCenter, 15f * scale, FontAwesomeIcon.EllipsisV.ToIconString(), ui.TitleInk,
+        if (ui.IconButton(menuCenter, 15f * scale, IconGlyph.Of(FontAwesomeIcon.EllipsisV), ui.TitleInk,
                 AppSkin.Transparent, 0.8f))
         {
             OpenPlaylistSheet(record);
@@ -661,7 +661,7 @@ internal sealed partial class MusicApp
         {
             var removeCenter = new Vector2(max.X - pad - 16f * scale, min.Y + rowHeight * 0.5f);
             removeClicked = ui.IconButton(removeCenter, 15f * scale,
-                FontAwesomeIcon.Minus.ToIconString(), ui.MutedInk, AppSkin.Transparent, 0.82f);
+                IconGlyph.Of(FontAwesomeIcon.Minus), ui.MutedInk, AppSkin.Transparent, 0.82f);
         }
 
         if (removeClicked)

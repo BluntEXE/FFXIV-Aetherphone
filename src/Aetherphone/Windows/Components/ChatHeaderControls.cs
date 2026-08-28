@@ -29,7 +29,7 @@ internal static class ChatHeaderControls
                     : Loc.T(L.Encryption.PlaintextIndicator);
         var glyph = encrypted ? FontAwesomeIcon.Lock : FontAwesomeIcon.LockOpen;
         var center = new Vector2(area.Max.X - LockOffset * scale, rowCenterY);
-        if (ui.IconButton(center, IconRadius * scale, glyph.ToIconString(), encrypted ? ui.Accent : ui.MutedInk,
+        if (ui.IconButton(center, IconRadius * scale, IconGlyph.Of(glyph), encrypted ? ui.Accent : ui.MutedInk,
                 AppSkin.Transparent, 1f, tooltip, HoverLabelSide.Below))
         {
             onOpen();
@@ -40,7 +40,7 @@ internal static class ChatHeaderControls
     {
         var scale = UiScale.Current;
         var center = new Vector2(area.Max.X - SearchOffset * scale, rowCenterY);
-        if (ui.IconButton(center, IconRadius * scale, FontAwesomeIcon.Search.ToIconString(),
+        if (ui.IconButton(center, IconRadius * scale, IconGlyph.Of(FontAwesomeIcon.Search),
                 open ? ui.Accent : ui.MutedInk, AppSkin.Transparent, 0.95f, Loc.T(L.Common.Search),
                 HoverLabelSide.Below))
         {
@@ -52,7 +52,7 @@ internal static class ChatHeaderControls
     {
         var scale = UiScale.Current;
         var center = new Vector2(area.Max.X - TranslateOffset * scale, rowCenterY);
-        return ui.IconButton(center, IconRadius * scale, FontAwesomeIcon.Language.ToIconString(),
+        return ui.IconButton(center, IconRadius * scale, IconGlyph.Of(FontAwesomeIcon.Language),
             translated ? ui.Accent : ui.MutedInk, AppSkin.Transparent, 0.95f,
             Loc.T(translated ? L.Translate.ChatOn : L.Translate.ChatToggle), HoverLabelSide.Below);
     }
@@ -89,7 +89,7 @@ AppSkin ui, ref Rect listRect, string text, Vector4 mutedInk, Action onDismiss)
             text, mutedInk, 0.76f, FontWeight.Medium);
         var dismissMin = new Vector2(max.X - height, min.Y);
         AppSkin.Icon(new Vector2(max.X - height * 0.5f, (min.Y + max.Y) * 0.5f),
-            FontAwesomeIcon.Times.ToIconString(), mutedInk, 0.6f);
+            IconGlyph.Of(FontAwesomeIcon.Times), mutedInk, 0.6f);
         if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
             if (UiInteract.Hover(dismissMin, max))

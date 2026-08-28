@@ -200,7 +200,7 @@ internal sealed partial class MusicApp
         {
             var addCenter = new Vector2(max.X - pad - 16f * scale, min.Y + rowHeight * 0.5f);
             addClicked = ui.IconButton(addCenter, 15f * scale,
-                FontAwesomeIcon.Plus.ToIconString(), ui.MutedInk, AppSkin.Transparent, 0.82f, Loc.T(L.Music.AddToPlaylist));
+                IconGlyph.Of(FontAwesomeIcon.Plus), ui.MutedInk, AppSkin.Transparent, 0.82f, Loc.T(L.Music.AddToPlaylist));
         }
 
         if (addClicked)

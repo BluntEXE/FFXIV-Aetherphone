@@ -113,7 +113,7 @@ internal sealed partial class AetherStreamApp
         }
         else
         {
-            AppSkin.Icon((artMin + artMax) * 0.5f, FontAwesomeIcon.Play.ToIconString(), ui.MutedInk, 0.7f);
+            AppSkin.Icon((artMin + artMax) * 0.5f, IconGlyph.Of(FontAwesomeIcon.Play), ui.MutedInk, 0.7f);
         }
 
         var textLeft = artMax.X + Metrics.Space.Md * scale;
@@ -147,7 +147,7 @@ internal sealed partial class AetherStreamApp
         }
         else
         {
-            AppSkin.Icon((artMin + artMax) * 0.5f, FontAwesomeIcon.Play.ToIconString(), ui.MutedInk, 0.7f);
+            AppSkin.Icon((artMin + artMax) * 0.5f, IconGlyph.Of(FontAwesomeIcon.Play), ui.MutedInk, 0.7f);
         }
 
         var textLeft = artMax.X + Metrics.Space.Md * scale;
@@ -324,7 +324,7 @@ internal sealed partial class AetherStreamApp
         }
         else
         {
-            AppSkin.Icon((artMin + artMax) * 0.5f, FontAwesomeIcon.Play.ToIconString(), ui.MutedInk, 0.7f);
+            AppSkin.Icon((artMin + artMax) * 0.5f, IconGlyph.Of(FontAwesomeIcon.Play), ui.MutedInk, 0.7f);
         }
 
         var textLeft = artMax.X + Metrics.Space.Md * scale;
@@ -339,7 +339,7 @@ internal sealed partial class AetherStreamApp
             Typography.FitText(secondLine, textWidth, TextStyles.Footnote), ui.MutedInk, TextStyles.Footnote);
 
         var handleCenter = new Vector2(row.Max.X - (52f + FeedCell.PadX) * scale, row.Center.Y);
-        AppSkin.Icon(handleCenter, FontAwesomeIcon.GripLines.ToIconString(), ui.MutedInk, 0.6f);
+        AppSkin.Icon(handleCenter, IconGlyph.Of(FontAwesomeIcon.GripLines), ui.MutedInk, 0.6f);
         var handleHit = UiInteract.Hover(handleCenter - new Vector2(14f * scale, 14f * scale),
             handleCenter + new Vector2(14f * scale, 14f * scale));
         if (handleHit && ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !queueDragActive)
@@ -356,7 +356,7 @@ internal sealed partial class AetherStreamApp
         }
 
         var removeCenter = new Vector2(row.Max.X - (16f + FeedCell.PadX) * scale, row.Center.Y);
-        if (ui.IconButton(removeCenter, 12f * scale, FontAwesomeIcon.Times.ToIconString(), ui.MutedInk,
+        if (ui.IconButton(removeCenter, 12f * scale, IconGlyph.Of(FontAwesomeIcon.Times), ui.MutedInk,
                 AppSkin.Transparent, 0.55f, Loc.T(L.AetherStream.Remove)))
         {
             queue.Remove(entry);

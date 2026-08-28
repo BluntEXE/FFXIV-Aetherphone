@@ -161,7 +161,7 @@ internal sealed partial class VenuesApp : IPhoneApp
             return;
         }
 
-        if (ui.IconButton(actionCenter, 14f * scale, FontAwesomeIcon.Sync.ToIconString(), AppPalettes.Venues.BodyInk,
+        if (ui.IconButton(actionCenter, 14f * scale, IconGlyph.Of(FontAwesomeIcon.Sync), AppPalettes.Venues.BodyInk,
                 AppSkin.Transparent, 0.9f))
         {
             venues.EnsureFresh(true);
@@ -377,7 +377,7 @@ internal sealed partial class VenuesApp : IPhoneApp
         var iconCenter = new Vector2(centerX, body.Min.Y + 84f * scale);
         drawList.AddCircleFilled(iconCenter, 30f * scale, ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.14f)), 40);
         var icon = failed ? FontAwesomeIcon.ExclamationTriangle : FontAwesomeIcon.MapMarkedAlt;
-        AppSkin.Icon(drawList, iconCenter, icon.ToIconString(), Palette.WithAlpha(ui.Accent, 0.95f), 1.15f);
+        AppSkin.Icon(drawList, iconCenter, IconGlyph.Of(icon), Palette.WithAlpha(ui.Accent, 0.95f), 1.15f);
         var message = failed ? Loc.T(L.Venues.Failed) : Loc.T(L.Venues.NoVenues);
         Typography.DrawCentered(new Vector2(centerX, iconCenter.Y + 52f * scale), message,
             AppPalettes.Venues.TitleInk, TextStyles.Headline);

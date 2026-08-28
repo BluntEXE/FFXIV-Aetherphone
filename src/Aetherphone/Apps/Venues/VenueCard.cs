@@ -48,7 +48,7 @@ internal static class VenueCard
         var starMin = starCenter - starHit;
         var starMax = starCenter + starHit;
         var starHovered = UiInteract.Hover(starMin, starMax);
-        AppSkin.Icon(starCenter, FontAwesomeIcon.Star.ToIconString(),
+        AppSkin.Icon(starCenter, IconGlyph.Of(FontAwesomeIcon.Star),
             favorite ? palette.Accent : starHovered ? palette.TitleInk : Palette.WithAlpha(palette.MutedInk, 0.75f),
             0.85f);
         var textLeft = thumb.Max.X + 12f * scale;
@@ -137,7 +137,7 @@ internal static class VenueCard
         var countLeft = right - countSize.X;
         Typography.Draw(new Vector2(countLeft, top), count, palette.MutedInk, TextStyles.Footnote);
         AppSkin.Icon(drawList, new Vector2(countLeft - 10f * scale, top + countSize.Y * 0.5f),
-            FontAwesomeIcon.Users.ToIconString(), Palette.WithAlpha(palette.MutedInk, 0.8f), 0.58f);
+            IconGlyph.Of(FontAwesomeIcon.Users), Palette.WithAlpha(palette.MutedInk, 0.8f), 0.58f);
     }
 
     private static string BuildSubtitle(VenueEvent venue)

@@ -140,7 +140,7 @@ internal sealed partial class ShortcutsApp
         Marquee.DrawLeftAuto("shortcuts.plugin.sub." + entry.InternalName, Subtitle(entry), textLeft,
             row.Center.Y + 4f * scale, textWidth, TextStyles.Footnote, ui.MutedInk);
 
-        AppSkin.Icon(new Vector2(chevronX, row.Center.Y), FontAwesomeIcon.ChevronRight.ToIconString(),
+        AppSkin.Icon(new Vector2(chevronX, row.Center.Y), IconGlyph.Of(FontAwesomeIcon.ChevronRight),
             Palette.WithAlpha(ui.MutedInk, 0.7f), 0.6f);
         if (UiInteract.HoverClick(row.Min, row.Max))
         {
@@ -333,7 +333,7 @@ internal sealed partial class ShortcutsApp
                 row.Center.Y + 4f * scale, textWidth, TextStyles.Footnote, ui.MutedInk);
         }
 
-        if (ui.IconButton(plusCenter, plusRadius, FontAwesomeIcon.Plus.ToIconString(), ui.Accent,
+        if (ui.IconButton(plusCenter, plusRadius, IconGlyph.Of(FontAwesomeIcon.Plus), ui.Accent,
                 Palette.WithAlpha(ui.Accent, 0.16f), 0.58f, Loc.T(L.Shortcuts.NewFromCommand)))
         {
             CreateCommandShortcut(command);

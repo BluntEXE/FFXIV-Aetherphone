@@ -71,13 +71,13 @@ internal sealed partial class LinkpearlApp
                 TextStyles.Caption1);
         }
 
-        if (ui.IconButton(actions.Slot(0), actions.Radius, FontAwesomeIcon.EllipsisH.ToIconString(),
+        if (ui.IconButton(actions.Slot(0), actions.Radius, IconGlyph.Of(FontAwesomeIcon.EllipsisH),
                 frameTheme.TextStrong, AppSkin.Transparent, 1f, Loc.T(L.Linkpearl.More), HoverLabelSide.Below))
         {
             OpenConversationSheet(row);
         }
 
-        if (ui.IconButton(actions.Slot(1), actions.Radius, FontAwesomeIcon.Search.ToIconString(),
+        if (ui.IconButton(actions.Slot(1), actions.Radius, IconGlyph.Of(FontAwesomeIcon.Search),
                 chatThread.SearchOpen ? frameTheme.Accent : frameTheme.TextStrong, AppSkin.Transparent, 0.95f,
                 Loc.T(L.Common.Search), HoverLabelSide.Below))
         {
@@ -85,7 +85,7 @@ internal sealed partial class LinkpearlApp
         }
 
         if (ui.IconButton(actions.Slot(2), actions.Radius,
-                (row.Muted ? FontAwesomeIcon.BellSlash : FontAwesomeIcon.Bell).ToIconString(),
+                IconGlyph.Of((row.Muted ? FontAwesomeIcon.BellSlash : FontAwesomeIcon.Bell)),
                 row.Muted ? frameTheme.Accent : frameTheme.TextStrong, AppSkin.Transparent, 0.95f,
                 Loc.T(row.Muted ? L.Linkpearl.Unmute : L.Linkpearl.Mute), HoverLabelSide.Below))
         {

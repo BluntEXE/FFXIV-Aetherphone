@@ -864,7 +864,7 @@ internal sealed partial class HuntsApp
             TextStyles.BodyEmphasized);
         var chevron = expanded ? FontAwesomeIcon.ChevronUp : FontAwesomeIcon.ChevronDown;
         AppSkin.Icon(drawList, new Vector2(headerMax.X - 14f * scale, origin.Y + headerHeight * 0.5f),
-            chevron.ToIconString(), ui.MutedInk, 0.55f);
+            IconGlyph.Of(chevron), ui.MutedInk, 0.55f);
 
         if (UiInteract.Click(origin, headerMax, hovered))
         {
@@ -1057,7 +1057,7 @@ internal sealed partial class HuntsApp
         var settings = hunts.NotificationSettings;
         var mode = settings.MobOverrideModeFor(mobId);
         var center = new Vector2(content.Max.X - 22f * scale, rowCenterY);
-        if (ui.IconButton(center, 16f * scale, NotificationIcon(mode).ToIconString(), NotificationTint(mode),
+        if (ui.IconButton(center, 16f * scale, IconGlyph.Of(NotificationIcon(mode)), NotificationTint(mode),
                 new Vector4(0f, 0f, 0f, 0f), 1.2f, MarkNotificationValueText(mobId, worldId, mode),
                 HoverLabelSide.Below))
         {

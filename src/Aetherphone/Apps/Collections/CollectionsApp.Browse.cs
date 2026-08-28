@@ -46,7 +46,7 @@ internal sealed partial class CollectionsApp
         Squircle.Stroke(drawList, min, max, 12f * scale, ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.28f)),
             1f * scale);
         var iconCenter = new Vector2(min.X + 21f * scale, (min.Y + max.Y) * 0.5f);
-        AppSkin.Icon(iconCenter, FontAwesomeIcon.Link.ToIconString(), ui.Accent, 0.85f);
+        AppSkin.Icon(iconCenter, IconGlyph.Of(FontAwesomeIcon.Link), ui.Accent, 0.85f);
         var textLeft = iconCenter.X + 15f * scale;
         Typography.DrawWrappedCentered(new Vector2(textLeft + maxWidth * 0.5f, (min.Y + max.Y) * 0.5f - textHeight * 0.5f),
             text, ui.BodyInk, TextStyles.Footnote, maxWidth);
@@ -163,7 +163,7 @@ internal sealed partial class CollectionsApp
         if (!progress.HasPercent)
         {
             ProgressRing.Track(center, radius, thickness, Palette.WithAlpha(ui.TitleInk, 0.10f));
-            AppSkin.Icon(center, FontAwesomeIcon.Lock.ToIconString(), Palette.WithAlpha(ui.MutedInk, 0.9f), 0.6f);
+            AppSkin.Icon(center, IconGlyph.Of(FontAwesomeIcon.Lock), Palette.WithAlpha(ui.MutedInk, 0.9f), 0.6f);
             return;
         }
 
@@ -376,7 +376,7 @@ internal sealed partial class CollectionsApp
         ImGui.Dummy(new Vector2(width, 24f * scale));
         var origin = ImGui.GetCursorScreenPos();
         var centerX = origin.X + width * 0.5f;
-        AppSkin.Icon(new Vector2(centerX, origin.Y + 4f * scale), FontAwesomeIcon.SearchMinus.ToIconString(),
+        AppSkin.Icon(new Vector2(centerX, origin.Y + 4f * scale), IconGlyph.Of(FontAwesomeIcon.SearchMinus),
             ui.MutedInk, 1.5f);
         Typography.DrawCentered(new Vector2(centerX, origin.Y + 40f * scale), Loc.T(L.Collections.NoResults),
             ui.MutedInk, TextStyles.Subheadline);

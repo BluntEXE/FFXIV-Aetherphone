@@ -106,7 +106,7 @@ internal sealed partial class SetupOverlay
         var contentHeight = globeHeight + Metrics.Space.Xxl * scale + listHeight;
         var top = CenteredTop(screen, contentHeight, 0) + offset.Y;
         AppSkin.Icon(drawList, new Vector2(screen.Center.X + offset.X, top + globeHeight * 0.5f),
-            FontAwesomeIcon.Globe.ToIconString(), Fade(theme.Accent, alpha), 2.6f);
+            IconGlyph.Of(FontAwesomeIcon.Globe), Fade(theme.Accent, alpha), 2.6f);
         var card = CardRect(screen, offset, top + globeHeight + Metrics.Space.Xxl * scale, listHeight);
         DrawCard(drawList, card, theme, alpha);
         var picked = -1;
@@ -274,7 +274,7 @@ internal sealed partial class SetupOverlay
         }
 
         drawList.AddCircleFilled(markCenter, markRadius, ImGui.GetColorU32(Fade(theme.Accent, alpha)), 32);
-        AppSkin.Icon(drawList, markCenter, FontAwesomeIcon.Check.ToIconString(), new Vector4(1f, 1f, 1f, alpha),
+        AppSkin.Icon(drawList, markCenter, IconGlyph.Of(FontAwesomeIcon.Check), new Vector4(1f, 1f, 1f, alpha),
             0.62f);
     }
 
@@ -712,7 +712,7 @@ internal sealed partial class SetupOverlay
         drawList.AddCircleFilled(badgeCenter, badgeRadius + 2.5f * scale,
             ImGui.GetColorU32(Fade(theme.AppBackground, alpha)), 32);
         drawList.AddCircleFilled(badgeCenter, badgeRadius, ImGui.GetColorU32(Fade(theme.Accent, alpha)), 32);
-        AppSkin.Icon(drawList, badgeCenter, FontAwesomeIcon.Camera.ToIconString(), new Vector4(1f, 1f, 1f, alpha),
+        AppSkin.Icon(drawList, badgeCenter, IconGlyph.Of(FontAwesomeIcon.Camera), new Vector4(1f, 1f, 1f, alpha),
             0.6f);
     }
 
@@ -784,7 +784,7 @@ internal sealed partial class SetupOverlay
         var tileRect = new Rect(new Vector2(left, top), new Vector2(left + tile, top + tile));
         Squircle.Fill(drawList, tileRect.Min, tileRect.Max, 12f * scale,
             ImGui.GetColorU32(Fade(row.Tint, 0.92f * alpha)));
-        AppSkin.Icon(drawList, tileRect.Center, row.Icon.ToIconString(), new Vector4(1f, 1f, 1f, alpha), 0.86f);
+        AppSkin.Icon(drawList, tileRect.Center, IconGlyph.Of(row.Icon), new Vector4(1f, 1f, 1f, alpha), 0.86f);
         var textLeft = tileRect.Max.X + Metrics.Space.Md * scale;
         var textWidth = width - tile - Metrics.Space.Md * scale;
         Typography.Draw(drawList, new Vector2(textLeft, top),
@@ -844,7 +844,7 @@ internal sealed partial class SetupOverlay
         Squircle.Fill(drawList, tileCenter - new Vector2(tileHalf, tileHalf),
             tileCenter + new Vector2(tileHalf, tileHalf), 18f * scale,
             ImGui.GetColorU32(Fade(tint, 0.92f * alpha)));
-        AppSkin.Icon(drawList, tileCenter, icon.ToIconString(), new Vector4(1f, 1f, 1f, alpha), 1.25f);
+        AppSkin.Icon(drawList, tileCenter, IconGlyph.Of(icon), new Vector4(1f, 1f, 1f, alpha), 1.25f);
         var titleHeight = LineBlock(TextStyles.Title1);
         var titleCenter = new Vector2(centerX,
             top + tileHalf * 2f + Metrics.Space.Xl * scale + titleHeight * 0.5f);
@@ -955,7 +955,7 @@ internal sealed partial class SetupOverlay
         if (selected)
         {
             AppSkin.Icon(drawList, new Vector2(row.Max.X - padding - 5f * scale, row.Center.Y),
-                FontAwesomeIcon.Check.ToIconString(), Fade(theme.Accent, alpha), 0.95f);
+                IconGlyph.Of(FontAwesomeIcon.Check), Fade(theme.Accent, alpha), 0.95f);
         }
 
         return live && UiInteract.Click(row.Min, row.Max, hovered);

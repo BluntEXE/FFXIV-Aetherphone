@@ -118,7 +118,7 @@ internal sealed partial class MusicApp
         var hovered = UiInteract.Hover(headingMin, headingMax);
         Typography.Draw(origin, title, ui.Palette.HeadingInk, TextStyles.Title3);
         var iconCenter = new Vector2(origin.X + width - iconBox * 0.5f, origin.Y + titleSize.Y * 0.5f);
-        AppSkin.Icon(iconCenter, FontAwesomeIcon.ChevronRight.ToIconString(), ui.MutedInk, 0.8f);
+        AppSkin.Icon(iconCenter, IconGlyph.Of(FontAwesomeIcon.ChevronRight), ui.MutedInk, 0.8f);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -332,7 +332,7 @@ internal sealed partial class MusicApp
         }
 
         var center = new Vector2(content.Max.X - 26f * scale, content.Min.Y + TopBarHeight * scale * 0.5f);
-        if (ui.IconButton(center, 16f * scale, FontAwesomeIcon.BroadcastTower.ToIconString(), ui.TitleInk,
+        if (ui.IconButton(center, 16f * scale, IconGlyph.Of(FontAwesomeIcon.BroadcastTower), ui.TitleInk,
                 AppSkin.Transparent, 0.8f, Loc.T(L.Music.MyStation)))
         {
             OpenMyStation();
@@ -671,7 +671,7 @@ internal sealed partial class MusicApp
         {
             var drawList = ImGui.GetWindowDrawList();
             drawList.AddCircleFilled(playCenter, radius, ImGui.GetColorU32(ui.FieldSurface), 32);
-            AppSkin.Icon(drawList, playCenter, FontAwesomeIcon.Bell.ToIconString(), ui.MutedInk, 1f);
+            AppSkin.Icon(drawList, playCenter, IconGlyph.Of(FontAwesomeIcon.Bell), ui.MutedInk, 1f);
         }
 
         ImGui.SetCursorScreenPos(origin);

@@ -132,7 +132,7 @@ internal sealed partial class MessageApp
             }
         }
 
-        if (ComposeFab.Draw(listRect, "##msgAddFab", ui.Accent, FontAwesomeIcon.UserPlus.ToIconString(),
+        if (ComposeFab.Draw(listRect, "##msgAddFab", ui.Accent, IconGlyph.Of(FontAwesomeIcon.UserPlus),
                 Loc.T(L.Friends.AddFriend), "message.addcontact"))
         {
             addError = string.Empty;
@@ -164,7 +164,7 @@ internal sealed partial class MessageApp
         if (number.Length > 0)
         {
             AppSkin.Icon(new Vector2(cardMax.X - 24f * scale, cardMin.Y + cardHeight * 0.5f),
-                FontAwesomeIcon.Copy.ToIconString(), ui.MutedInk, 1f);
+                IconGlyph.Of(FontAwesomeIcon.Copy), ui.MutedInk, 1f);
             if (UiInteract.HoverClick(cardMin, cardMax))
             {
                 ImGui.SetClipboardText(display);

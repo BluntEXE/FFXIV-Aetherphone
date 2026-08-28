@@ -90,7 +90,7 @@ internal sealed partial class CasinoApp
         var iconCenter = new Vector2(row.Min.X + inset + 15f * scale, row.Center.Y);
         drawList.AddCircleFilled(iconCenter, 15f * scale,
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.16f)), 32);
-        AppSkin.Icon(drawList, iconCenter, icon.ToIconString(), ui.Accent, 0.8f);
+        AppSkin.Icon(drawList, iconCenter, IconGlyph.Of(icon), ui.Accent, 0.8f);
 
         var pillHeight = 34f * scale;
         var pillMax = new Vector2(row.Max.X - inset, row.Center.Y + pillHeight * 0.5f);

@@ -212,7 +212,7 @@ internal sealed partial class MessageApp
             {
                 drawList.AddCircleFilled(avatarCenter, avatarRadius,
                     ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.85f)), 32);
-                AppSkin.Icon(avatarCenter, FontAwesomeIcon.Users.ToIconString(), White, 0.8f);
+                AppSkin.Icon(avatarCenter, IconGlyph.Of(FontAwesomeIcon.Users), White, 0.8f);
             }
             else
             {

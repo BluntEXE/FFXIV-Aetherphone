@@ -820,7 +820,7 @@ internal sealed partial class HousingApp
         ui.Card(drawList, min, max, Metrics.Radius.Card * scale, true);
         var iconCenter = new Vector2(center.X, min.Y + 34f * scale);
         drawList.AddCircleFilled(iconCenter, 20f * scale, ImGui.GetColorU32(ui.FieldSurface), 28);
-        AppSkin.Icon(drawList, iconCenter, icon.ToIconString(), ui.MutedInk, 1f);
+        AppSkin.Icon(drawList, iconCenter, IconGlyph.Of(icon), ui.MutedInk, 1f);
         var titleY = min.Y + 70f * scale;
         Typography.DrawWrappedCentered(drawList, new Vector2(center.X, titleY + 8f * scale), title, ui.TitleInk,
             TextStyles.SubheadlineEmphasized, width - 28f * scale);

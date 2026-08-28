@@ -112,7 +112,7 @@ internal sealed partial class HuntsApp
         Typography.Draw(new Vector2(textLeft, row.Center.Y + 4f * scale), valueText, ui.MutedInk, TextStyles.Footnote);
 
         var center = new Vector2(row.Max.X - 18f * scale, row.Center.Y);
-        if (ui.IconButton(center, 16f * scale, NotificationIcon(entry.Mode).ToIconString(),
+        if (ui.IconButton(center, 16f * scale, IconGlyph.Of(NotificationIcon(entry.Mode)),
                 NotificationTint(entry.Mode), new Vector4(0f, 0f, 0f, 0f), 1.2f, valueText, HoverLabelSide.Above))
         {
             entry.Mode = NextNotificationMode(entry.Mode);

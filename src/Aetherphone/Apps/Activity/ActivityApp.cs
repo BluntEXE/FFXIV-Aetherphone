@@ -420,13 +420,13 @@ internal sealed partial class ActivityApp : IPhoneApp
             TextStyles.Subheadline, AppPalettes.Activity.BodyInk, labelHovering);
         Typography.DrawCentered(valueCenter, value, AppPalettes.Activity.TitleInk, 0.95f, FontWeight.SemiBold);
         var delta = 0;
-        if (ui.IconButton(minusCenter, radius, FontAwesomeIcon.Minus.ToIconString(), AppPalettes.Activity.TitleInk,
+        if (ui.IconButton(minusCenter, radius, IconGlyph.Of(FontAwesomeIcon.Minus), AppPalettes.Activity.TitleInk,
                 AppPalettes.Activity.FieldSurface, 0.5f))
         {
             delta--;
         }
 
-        if (ui.IconButton(plusCenter, radius, FontAwesomeIcon.Plus.ToIconString(), AppPalettes.Activity.TitleInk,
+        if (ui.IconButton(plusCenter, radius, IconGlyph.Of(FontAwesomeIcon.Plus), AppPalettes.Activity.TitleInk,
                 AppPalettes.Activity.FieldSurface, 0.5f))
         {
             delta++;

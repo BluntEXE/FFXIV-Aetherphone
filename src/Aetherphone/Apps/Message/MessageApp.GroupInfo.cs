@@ -144,7 +144,7 @@ internal sealed partial class MessageApp
         else if (canRemove)
         {
             var removeCenter = new Vector2(row.Max.X - 6f * scale, row.Center.Y);
-            if (ui.IconButton(removeCenter, 14f * scale, FontAwesomeIcon.Times.ToIconString(),
+            if (ui.IconButton(removeCenter, 14f * scale, IconGlyph.Of(FontAwesomeIcon.Times),
                     ui.MutedInk, AppSkin.Transparent, 0.9f, Loc.T(L.Common.Close)))
             {
                 store.RemoveMember(conversationId, member.UserId, ok =>

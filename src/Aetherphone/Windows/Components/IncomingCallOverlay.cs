@@ -103,7 +103,7 @@ internal sealed class IncomingCallOverlay
         dl.AddCircleFilled(center, radius, ImGui.GetColorU32(Palette.WithAlpha(color, alpha)), 40);
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {
-            var glyph = icon.ToIconString();
+            var glyph = IconGlyph.Of(icon);
             var size = ImGui.CalcTextSize(glyph);
             ImGui.SetCursorScreenPos(center - size * 0.5f);
             using (ImRaii.PushColor(ImGuiCol.Text, Ink with { W = alpha }))

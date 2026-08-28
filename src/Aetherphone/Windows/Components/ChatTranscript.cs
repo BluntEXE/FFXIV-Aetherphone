@@ -47,12 +47,12 @@ internal static class ReactionArt
     {
         return token switch
         {
-            "heart" => FontAwesomeIcon.Heart.ToIconString(),
-            "laugh" => FontAwesomeIcon.Laugh.ToIconString(),
-            "wow" => FontAwesomeIcon.Surprise.ToIconString(),
-            "sad" => FontAwesomeIcon.SadTear.ToIconString(),
-            "pray" => FontAwesomeIcon.PrayingHands.ToIconString(),
-            _ => FontAwesomeIcon.ThumbsUp.ToIconString(),
+            "heart" => IconGlyph.Of(FontAwesomeIcon.Heart),
+            "laugh" => IconGlyph.Of(FontAwesomeIcon.Laugh),
+            "wow" => IconGlyph.Of(FontAwesomeIcon.Surprise),
+            "sad" => IconGlyph.Of(FontAwesomeIcon.SadTear),
+            "pray" => IconGlyph.Of(FontAwesomeIcon.PrayingHands),
+            _ => IconGlyph.Of(FontAwesomeIcon.ThumbsUp),
         };
     }
 
@@ -651,7 +651,7 @@ internal sealed class ChatTranscript
         if (deleted)
         {
             var iconCenter = new Vector2(bubbleMin.X + paddingX + 6f * scale, contentTop + textSize.Y * 0.5f);
-            AppSkin.Icon(drawList, fx.Apply(iconCenter), FontAwesomeIcon.Ban.ToIconString(),
+            AppSkin.Icon(drawList, fx.Apply(iconCenter), IconGlyph.Of(FontAwesomeIcon.Ban),
                 Palette.WithAlpha(ink, ink.W * fx.Alpha * 0.9f), 0.68f * fx.Pop);
         }
 
@@ -807,7 +807,7 @@ internal sealed class ChatTranscript
             {
                 Squircle.Fill(drawList, thumbMin, thumbMax, rounding,
                     ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.08f * fx.Alpha)));
-                AppSkin.Icon((thumbMin + thumbMax) * 0.5f, FontAwesomeIcon.Image.ToIconString(),
+                AppSkin.Icon((thumbMin + thumbMax) * 0.5f, IconGlyph.Of(FontAwesomeIcon.Image),
                     Palette.WithAlpha(model.MutedInk, fx.Alpha), 1.2f);
             }
             else
@@ -834,7 +834,7 @@ internal sealed class ChatTranscript
         {
             var iconCenter = new Vector2(bubbleMin.X + paddingX + 6f * scale,
                 contentTop + unavailableSize.Y * 0.5f);
-            AppSkin.Icon(drawList, fx.Apply(iconCenter), FontAwesomeIcon.EyeSlash.ToIconString(),
+            AppSkin.Icon(drawList, fx.Apply(iconCenter), IconGlyph.Of(FontAwesomeIcon.EyeSlash),
                 Palette.WithAlpha(ink, ink.W * fx.Alpha * 0.9f), 0.62f * fx.Pop);
             var labelPos = fx.Apply(new Vector2(bubbleMin.X + paddingX + 16f * scale, contentTop));
             Typography.Draw(drawList, labelPos, unavailableLabel, Palette.WithAlpha(ink, ink.W * fx.Alpha),
@@ -954,7 +954,7 @@ internal sealed class ChatTranscript
         var badgeFill = mine ? new Vector4(1f, 1f, 1f, 0.20f) : Palette.WithAlpha(model.Accent, 0.18f);
         drawList.AddCircleFilled(fx.Apply(badgeCenter), badgeRadius * fx.Pop,
             ImGui.GetColorU32(Palette.WithAlpha(badgeFill, badgeFill.W * fx.Alpha)), 32);
-        AppSkin.Icon(drawList, fx.Apply(badgeCenter), FontAwesomeIcon.MapMarkerAlt.ToIconString(),
+        AppSkin.Icon(drawList, fx.Apply(badgeCenter), IconGlyph.Of(FontAwesomeIcon.MapMarkerAlt),
             Palette.WithAlpha(accentInk, accentInk.W * fx.Alpha), 1.05f * fx.Pop);
 
         var textLeft = bubbleMin.X + paddingX + badgeColumn;
@@ -1003,7 +1003,7 @@ internal sealed class ChatTranscript
             var iconSpace = TravelIconSpace * scale;
             var contentLeft = (travelMin.X + travelMax.X) * 0.5f - (travelLabelSize.X + iconSpace) * 0.5f;
             AppSkin.Icon(drawList, fx.Apply(new Vector2(contentLeft + iconSpace * 0.4f, travelCenterY)),
-                FontAwesomeIcon.LocationArrow.ToIconString(),
+                IconGlyph.Of(FontAwesomeIcon.LocationArrow),
                 Palette.WithAlpha(accentInk, accentInk.W * fx.Alpha), 0.62f * fx.Pop);
             Typography.Draw(drawList,
                 fx.Apply(new Vector2(contentLeft + iconSpace, travelCenterY - travelLabelSize.Y * 0.5f)),
@@ -1154,7 +1154,7 @@ internal sealed class ChatTranscript
         var badgeFill = mine ? new Vector4(1f, 1f, 1f, 0.20f) : Palette.WithAlpha(model.Accent, 0.18f);
         drawList.AddCircleFilled(fx.Apply(badgeCenter), badgeRadius * fx.Pop,
             ImGui.GetColorU32(Palette.WithAlpha(badgeFill, badgeFill.W * fx.Alpha)), 32);
-        AppSkin.Icon(drawList, fx.Apply(badgeCenter), FontAwesomeIcon.Bullhorn.ToIconString(),
+        AppSkin.Icon(drawList, fx.Apply(badgeCenter), IconGlyph.Of(FontAwesomeIcon.Bullhorn),
             Palette.WithAlpha(accentInk, accentInk.W * fx.Alpha), 1.0f * fx.Pop);
 
         var textLeft = bubbleMin.X + paddingX + badgeColumn;
@@ -1306,7 +1306,7 @@ internal sealed class ChatTranscript
         var badgeFill = mine ? new Vector4(1f, 1f, 1f, 0.20f) : Palette.WithAlpha(model.Accent, 0.18f);
         drawList.AddCircleFilled(fx.Apply(badgeCenter), badgeRadius * fx.Pop,
             ImGui.GetColorU32(Palette.WithAlpha(badgeFill, badgeFill.W * fx.Alpha)), 32);
-        AppSkin.Icon(drawList, fx.Apply(badgeCenter), FontAwesomeIcon.AddressBook.ToIconString(),
+        AppSkin.Icon(drawList, fx.Apply(badgeCenter), IconGlyph.Of(FontAwesomeIcon.AddressBook),
             Palette.WithAlpha(accentInk, accentInk.W * fx.Alpha), 1.0f * fx.Pop);
 
         var textLeft = bubbleMin.X + paddingX + badgeColumn;
@@ -1403,7 +1403,7 @@ internal sealed class ChatTranscript
             Squircle.Fill(drawList, chipMin, chipMax, chipHeight * 0.5f,
                 ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.07f)));
             AppSkin.Icon(drawList, new Vector2(chipMin.X + 12f * scale + 5f * scale, chipMin.Y + chipHeight * 0.5f),
-                FontAwesomeIcon.EyeSlash.ToIconString(), Palette.WithAlpha(model.MutedInk, 0.9f), 0.62f);
+                IconGlyph.Of(FontAwesomeIcon.EyeSlash), Palette.WithAlpha(model.MutedInk, 0.9f), 0.62f);
             Typography.Draw(drawList, new Vector2(chipMin.X + 12f * scale + 15f * scale,
                 chipMin.Y + (chipHeight - chipTextSize.Y) * 0.5f), chipLabel,
                 Palette.WithAlpha(model.MutedInk, 0.95f), TextStyles.FootnoteEmphasized.Scale,
@@ -1422,7 +1422,7 @@ internal sealed class ChatTranscript
             {
                 Squircle.Fill(drawList, thumbMin, thumbMax, rounding,
                     ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.08f)));
-                AppSkin.Icon((thumbMin + thumbMax) * 0.5f, FontAwesomeIcon.Image.ToIconString(), model.MutedInk,
+                AppSkin.Icon((thumbMin + thumbMax) * 0.5f, IconGlyph.Of(FontAwesomeIcon.Image), model.MutedInk,
                     1.1f);
             }
             else
@@ -1456,7 +1456,7 @@ internal sealed class ChatTranscript
         var label = Loc.T(L.Message.ForwardedLabel);
         var size = Typography.Measure(label, 0.72f);
         var iconCenter = new Vector2(origin.X + 5f * scale, origin.Y + size.Y * 0.5f);
-        AppSkin.Icon(drawList, fx.Apply(iconCenter), FontAwesomeIcon.Share.ToIconString(),
+        AppSkin.Icon(drawList, fx.Apply(iconCenter), IconGlyph.Of(FontAwesomeIcon.Share),
             Palette.WithAlpha(ink, ink.W * fx.Alpha), 0.58f * fx.Pop);
         var textPos = fx.Apply(new Vector2(origin.X + 15f * scale, origin.Y));
         Typography.Draw(drawList, textPos, label, Palette.WithAlpha(ink, ink.W * fx.Alpha), 0.72f * fx.Pop);
@@ -1572,8 +1572,7 @@ internal sealed class ChatTranscript
         var playFill = mine ? new Vector4(1f, 1f, 1f, 0.22f) : Palette.WithAlpha(model.Accent, 0.9f);
         drawList.AddCircleFilled(playCenter, playRadius, ImGui.GetColorU32(Palette.WithAlpha(playFill,
             playFill.W * fx.Alpha)), 28);
-        AppSkin.Icon(drawList, playCenter, (state.Playing ? FontAwesomeIcon.Pause : FontAwesomeIcon.Play)
-            .ToIconString(), new Vector4(1f, 1f, 1f, fx.Alpha), 0.7f);
+        AppSkin.Icon(drawList, playCenter, IconGlyph.Of((state.Playing ? FontAwesomeIcon.Pause : FontAwesomeIcon.Play)), new Vector4(1f, 1f, 1f, fx.Alpha), 0.7f);
         var trackLeft = playCenter.X + playRadius + 9f * scale;
         var trackRight = bubbleMax.X - paddingX;
         var trackY = playCenter.Y;
@@ -1674,7 +1673,7 @@ internal sealed class ChatTranscript
         {
             Squircle.Fill(drawList, imageMin, imageMax, rounding,
                 ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.08f * fx.Alpha)));
-            AppSkin.Icon((imageMin + imageMax) * 0.5f, FontAwesomeIcon.Image.ToIconString(),
+            AppSkin.Icon((imageMin + imageMax) * 0.5f, IconGlyph.Of(FontAwesomeIcon.Image),
                 Palette.WithAlpha(model.MutedInk, fx.Alpha), 1.2f);
         }
         else
@@ -1811,9 +1810,9 @@ internal sealed class ChatTranscript
             var iconCenter = new Vector2(textLeft + 5f * scale, previewTop + 7f * scale);
             var glyph = message.ReplyKind switch
             {
-                KindVoice => FontAwesomeIcon.Microphone.ToIconString(),
-                KindLocation => FontAwesomeIcon.MapMarkerAlt.ToIconString(),
-                _ => FontAwesomeIcon.Camera.ToIconString(),
+                KindVoice => IconGlyph.Of(FontAwesomeIcon.Microphone),
+                KindLocation => IconGlyph.Of(FontAwesomeIcon.MapMarkerAlt),
+                _ => IconGlyph.Of(FontAwesomeIcon.Camera),
             };
             AppSkin.Icon(drawList, fx.Apply(iconCenter), glyph,
                 Palette.WithAlpha(previewInk, previewInk.W * fx.Alpha), 0.62f * fx.Pop);
@@ -1893,7 +1892,7 @@ internal sealed class ChatTranscript
         }
 
         var seen = message.ReadAtUnix is not null;
-        var glyph = (seen ? FontAwesomeIcon.CheckDouble : FontAwesomeIcon.Check).ToIconString();
+        var glyph = IconGlyph.Of((seen ? FontAwesomeIcon.CheckDouble : FontAwesomeIcon.Check));
         float tickWidth;
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {

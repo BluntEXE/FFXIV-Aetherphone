@@ -73,7 +73,7 @@ internal static class SupportButton
     private static void DrawContent(ImDrawListPtr drawList, Vector2 origin, Vector2 size, string label, float scale)
     {
         var ink = new Vector4(1f, 1f, 1f, 1f);
-        var heartGlyph = FontAwesomeIcon.Heart.ToIconString();
+        var heartGlyph = IconGlyph.Of(FontAwesomeIcon.Heart);
         Vector2 iconSize;
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {

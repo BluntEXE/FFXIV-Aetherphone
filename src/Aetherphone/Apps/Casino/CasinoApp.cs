@@ -285,7 +285,7 @@ internal sealed partial class CasinoApp : IPhoneApp
         var scale = UiScale.Current;
         AppHeader.Draw(context, "casino.header", TabTitle(), 44f * scale, navigation.Back);
         var rulesCenter = new Vector2(area.Max.X - 22f * scale, area.Min.Y + AppHeader.Height * scale * 0.5f);
-        if (ui.IconButton(rulesCenter, 14f * scale, FontAwesomeIcon.QuestionCircle.ToIconString(), ui.MutedInk,
+        if (ui.IconButton(rulesCenter, 14f * scale, IconGlyph.Of(FontAwesomeIcon.QuestionCircle), ui.MutedInk,
                 AppSkin.Transparent, 0.9f, Loc.T(L.Conduct.Eyebrow), HoverLabelSide.Below))
         {
             conduct.ShowRules(Id);

@@ -118,7 +118,7 @@ internal sealed partial class LinkpearlApp
         Squircle.Fill(drawList, banner.Min, banner.Max, banner.Height * 0.5f,
             ImGui.GetColorU32(Palette.WithAlpha(frameTheme.Accent, 0.14f)));
         var iconCenter = new Vector2(banner.Min.X + 18f * scale, banner.Center.Y);
-        AppSkin.Icon(drawList, iconCenter, FontAwesomeIcon.BellSlash.ToIconString(), frameTheme.Accent, 0.7f);
+        AppSkin.Icon(drawList, iconCenter, IconGlyph.Of(FontAwesomeIcon.BellSlash), frameTheme.Accent, 0.7f);
         var resume = Loc.T(L.Linkpearl.Resume);
         var resumeSize = Typography.Measure(resume, TextStyles.FootnoteEmphasized);
         var resumeCenter = new Vector2(banner.Max.X - Metrics.Space.Lg * scale - resumeSize.X * 0.5f, banner.Center.Y);

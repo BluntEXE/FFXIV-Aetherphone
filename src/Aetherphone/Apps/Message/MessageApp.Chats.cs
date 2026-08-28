@@ -102,7 +102,7 @@ internal sealed partial class MessageApp
             }
         }
 
-        if (ComposeFab.Draw(listRect, "##messageNewFab", ui.Accent, FontAwesomeIcon.Pen.ToIconString(),
+        if (ComposeFab.Draw(listRect, "##messageNewFab", ui.Accent, IconGlyph.Of(FontAwesomeIcon.Pen),
                 Loc.T(L.DirectMessages.NewMessage)))
         {
             selectedContacts.Clear();
@@ -228,7 +228,7 @@ internal sealed partial class MessageApp
         if (item.IsGroup)
         {
             drawList.AddCircleFilled(avatarCenter, radius, ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.85f)), 32);
-            AppSkin.Icon(avatarCenter, FontAwesomeIcon.Users.ToIconString(), White, 1f);
+            AppSkin.Icon(avatarCenter, IconGlyph.Of(FontAwesomeIcon.Users), White, 1f);
         }
         else
         {
@@ -244,14 +244,14 @@ internal sealed partial class MessageApp
         if (pinned)
         {
             AppSkin.Icon(new Vector2(markerRight - 12f * scale, origin.Y + 18f * scale),
-                FontAwesomeIcon.Thumbtack.ToIconString(), ui.MutedInk, 0.6f);
+                IconGlyph.Of(FontAwesomeIcon.Thumbtack), ui.MutedInk, 0.6f);
             markerRight -= 20f * scale;
         }
 
         if (item.Muted)
         {
             AppSkin.Icon(new Vector2(markerRight - 12f * scale, origin.Y + 18f * scale),
-                FontAwesomeIcon.BellSlash.ToIconString(), ui.MutedInk, 0.6f);
+                IconGlyph.Of(FontAwesomeIcon.BellSlash), ui.MutedInk, 0.6f);
             markerRight -= 20f * scale;
         }
 
@@ -261,7 +261,7 @@ internal sealed partial class MessageApp
             var musterExtent = new Vector2(12f * scale, 12f * scale);
             var musterRect = new Rect(musterCenter - musterExtent, musterCenter + musterExtent);
             var overMuster = UiInteract.Hover(musterRect.Min, musterRect.Max);
-            AppSkin.Icon(musterCenter, FontAwesomeIcon.Bullhorn.ToIconString(), AppAccents.For(MusterStore.AppId),
+            AppSkin.Icon(musterCenter, IconGlyph.Of(FontAwesomeIcon.Bullhorn), AppAccents.For(MusterStore.AppId),
                 0.6f);
             HoverTooltip.Show(musterRect, Loc.T(L.Message.HostingMuster), HoverLabelSide.Above);
             if (UiInteract.Click(musterRect.Min, musterRect.Max, overMuster))

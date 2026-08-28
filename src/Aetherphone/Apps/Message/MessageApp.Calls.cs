@@ -117,7 +117,7 @@ internal sealed partial class MessageApp
         }
 
         DrawConnectingHint(area, scale);
-        if (ComposeFab.Draw(area, "##msgNewCallFab", ui.Accent, FontAwesomeIcon.Phone.ToIconString(),
+        if (ComposeFab.Draw(area, "##msgNewCallFab", ui.Accent, IconGlyph.Of(FontAwesomeIcon.Phone),
                 Loc.T(L.Phone.NewCall), "message.newcall"))
         {
             searchDraft = string.Empty;
@@ -155,7 +155,7 @@ internal sealed partial class MessageApp
         {
             var infoCenter = new Vector2(rowMax.X - pad - 16f * scale, avatarCenter.Y);
             actionLeft = infoCenter.X - 22f * scale;
-            if (ui.IconButton(infoCenter, 16f * scale, FontAwesomeIcon.InfoCircle.ToIconString(), ui.MutedInk,
+            if (ui.IconButton(infoCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.InfoCircle), ui.MutedInk,
                     Transparent, 1.1f, Loc.T(L.Phone.ContactInfo), HoverLabelSide.Above))
             {
                 router.Push(MessageRoute.Contact(known.UserId));
@@ -190,7 +190,7 @@ internal sealed partial class MessageApp
             CallDirection.Incoming => Loc.T(L.Phone.Incoming),
             _ => Loc.T(L.Phone.Missed),
         };
-        AppSkin.Icon(new Vector2(textLeft + 5f * scale, origin.Y + 42f * scale), directionIcon.ToIconString(),
+        AppSkin.Icon(new Vector2(textLeft + 5f * scale, origin.Y + 42f * scale), IconGlyph.Of(directionIcon),
             directionInk, 0.6f);
         Typography.Draw(new Vector2(textLeft + 15f * scale, origin.Y + 35f * scale),
             Typography.FitText(directionLabel, textWidth - 15f * scale, TextStyles.Footnote), directionInk,
@@ -304,7 +304,7 @@ internal sealed partial class MessageApp
         Typography.Draw(new Vector2(textLeft, origin.Y + 35f * scale),
             Typography.FitText(ContactBook.Format(contact.PhoneNumber), textWidth, TextStyles.Footnote), ui.MutedInk,
             TextStyles.Footnote);
-        if (ui.IconButton(callCenter, 18f * scale, FontAwesomeIcon.Phone.ToIconString(), White, CallGreen, 0.9f,
+        if (ui.IconButton(callCenter, 18f * scale, IconGlyph.Of(FontAwesomeIcon.Phone), White, CallGreen, 0.9f,
                 Loc.T(L.Friends.Call), HoverLabelSide.Above)
             || cell.Tapped)
         {
@@ -321,7 +321,7 @@ internal sealed partial class MessageApp
         var drawList = ImGui.GetWindowDrawList();
         var iconCenter = new Vector2(centerX, baseY);
         drawList.AddCircleFilled(iconCenter, 34f * scale, ImGui.GetColorU32(ui.FieldSurface), 32);
-        AppSkin.Icon(iconCenter, FontAwesomeIcon.Phone.ToIconString(), CallGreen, 1.7f);
+        AppSkin.Icon(iconCenter, IconGlyph.Of(FontAwesomeIcon.Phone), CallGreen, 1.7f);
         Typography.DrawCentered(new Vector2(centerX, baseY + 56f * scale), Loc.T(L.Phone.EnableTitle), ui.TitleInk,
             TextStyles.Title3);
         var maxWidth = MathF.Min(body.Width - 56f * scale, 300f * scale);
@@ -511,7 +511,7 @@ internal sealed partial class MessageApp
         var baseFill = hovered ? Palette.Mix(fill, White, 0.14f) : fill;
         var fillAlpha = enabled ? MathF.Max(baseFill.W, 0.16f) : baseFill.W * 0.4f;
         drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(Palette.WithAlpha(baseFill, fillAlpha)), 40);
-        AppSkin.Icon(center, icon.ToIconString(), Palette.WithAlpha(ink, enabled ? 1f : 0.45f), iconScale);
+        AppSkin.Icon(center, IconGlyph.Of(icon), Palette.WithAlpha(ink, enabled ? 1f : 0.45f), iconScale);
         if (label.Length > 0)
         {
             Typography.DrawCentered(new Vector2(center.X, max.Y + 14f * scale), label,

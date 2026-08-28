@@ -187,7 +187,7 @@ internal sealed partial class VelvetShell
         var badgeCenter = new Vector2(center.X + radius * 0.70f, center.Y + radius * 0.70f);
         drawList.AddCircleFilled(badgeCenter, 14f * scale, VelvetTheme.GroundBottom.Packed(), 24);
         drawList.AddCircleFilled(badgeCenter, 12f * scale, VelvetTheme.Rose.Packed(), 24);
-        AppSkin.Icon(badgeCenter, FontAwesomeIcon.Camera.ToIconString(), VelvetTheme.OnAccent, 0.58f);
+        AppSkin.Icon(badgeCenter, IconGlyph.Of(FontAwesomeIcon.Camera), VelvetTheme.OnAccent, 0.58f);
 
         var avatarMin = new Vector2(center.X - radius, center.Y - radius);
         var avatarMax = new Vector2(center.X + radius, center.Y + radius);

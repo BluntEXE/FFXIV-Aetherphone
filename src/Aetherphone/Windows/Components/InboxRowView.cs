@@ -168,14 +168,14 @@ internal static class InboxRowView
         var markY = top + 19f * scale;
         if (row.Muted)
         {
-            AppSkin.Icon(drawList, new Vector2(cursor - 6f * scale, markY), FontAwesomeIcon.BellSlash.ToIconString(),
+            AppSkin.Icon(drawList, new Vector2(cursor - 6f * scale, markY), IconGlyph.Of(FontAwesomeIcon.BellSlash),
                 Palette.WithAlpha(theme.TextMuted, theme.TextMuted.W * alpha), MarkGlyphScale);
             cursor -= MarkGap * scale;
         }
 
         if (row.Pinned)
         {
-            AppSkin.Icon(drawList, new Vector2(cursor - 6f * scale, markY), FontAwesomeIcon.Thumbtack.ToIconString(),
+            AppSkin.Icon(drawList, new Vector2(cursor - 6f * scale, markY), IconGlyph.Of(FontAwesomeIcon.Thumbtack),
                 Palette.WithAlpha(theme.TextMuted, theme.TextMuted.W * alpha), MarkGlyphScale);
             cursor -= MarkGap * scale;
         }

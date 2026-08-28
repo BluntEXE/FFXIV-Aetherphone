@@ -126,7 +126,7 @@ internal sealed partial class AethergramApp
 
         var bellCenter = actions.Slot(1);
         UiAnchors.Report("aethergram.activity", actions.Bounds(1));
-        if (ui.IconButton(bellCenter, actions.Radius, FontAwesomeIcon.Bell.ToIconString(),
+        if (ui.IconButton(bellCenter, actions.Radius, IconGlyph.Of(FontAwesomeIcon.Bell),
                 AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.2f, Loc.T(L.Social.ActivityTitle),
                 HoverLabelSide.Below))
         {
@@ -134,7 +134,7 @@ internal sealed partial class AethergramApp
         }
 
         ActivityBadge.Draw(bellCenter + new Vector2(10f * scale, -10f * scale), social.UnseenCount(Id), theme, scale);
-        if (ui.IconButton(actions.Slot(0), actions.Radius, FontAwesomeIcon.EllipsisH.ToIconString(),
+        if (ui.IconButton(actions.Slot(0), actions.Radius, IconGlyph.Of(FontAwesomeIcon.EllipsisH),
                 AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.2f, Loc.T(L.Aethergram.More),
                 HoverLabelSide.Below))
         {

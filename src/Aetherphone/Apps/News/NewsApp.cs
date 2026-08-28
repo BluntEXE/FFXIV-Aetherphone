@@ -407,7 +407,7 @@ internal sealed class NewsApp : IPhoneApp
         var box = 14f * scale;
         UiAnchors.Report("news.refresh", new Rect(center - new Vector2(box, box), center + new Vector2(box, box)));
         var hovered = UiInteract.Hover(center - new Vector2(box, box), center + new Vector2(box, box));
-        var glyph = FontAwesomeIcon.Sync.ToIconString();
+        var glyph = IconGlyph.Of(FontAwesomeIcon.Sync);
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {
             var size = ImGui.CalcTextSize(glyph);

@@ -435,7 +435,7 @@ internal sealed partial class CasinoApp
         var iconCenter = new Vector2(row.Min.X + 26f * scale, row.Center.Y);
         drawList.AddCircleFilled(iconCenter, 15f * scale,
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.16f)), 32);
-        AppSkin.Icon(drawList, iconCenter, icon.ToIconString(), ui.Accent, 0.85f);
+        AppSkin.Icon(drawList, iconCenter, IconGlyph.Of(icon), ui.Accent, 0.85f);
 
         var textLeft = row.Min.X + 48f * scale;
         var chevronCenter = new Vector2(row.Max.X - 18f * scale, row.Center.Y);
@@ -446,7 +446,7 @@ internal sealed partial class CasinoApp
         var hintText = Typography.FitText(Loc.T(hint), textWidth, TextStyles.Footnote);
         Typography.Draw(drawList, new Vector2(textLeft, row.Min.Y + 32f * scale), hintText, ui.MutedInk,
             TextStyles.Footnote);
-        AppSkin.Icon(drawList, chevronCenter, FontAwesomeIcon.ChevronRight.ToIconString(), ui.MutedInk, 0.8f);
+        AppSkin.Icon(drawList, chevronCenter, IconGlyph.Of(FontAwesomeIcon.ChevronRight), ui.MutedInk, 0.8f);
 
         var clicked = UiInteract.Click(row.Min, row.Max, hovered);
         ImGui.SetCursorScreenPos(origin);

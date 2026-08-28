@@ -424,7 +424,7 @@ internal sealed partial class MarketApp
         var scale = UiScale.Current;
         var box = 14f * scale;
         var hovered = UiInteract.Hover(center - new Vector2(box, box), center + new Vector2(box, box));
-        var glyph = icon.ToIconString();
+        var glyph = IconGlyph.Of(icon);
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {
             var size = ImGui.CalcTextSize(glyph);

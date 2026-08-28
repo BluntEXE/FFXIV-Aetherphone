@@ -343,7 +343,7 @@ internal sealed class StoryViewerOverlay
         replyFocused = ImGui.IsItemActive();
         if (hasDraft)
         {
-            AppSkin.Icon(sendCenter, FontAwesomeIcon.PaperPlane.ToIconString(), new Vector4(1f, 1f, 1f, 0.95f), 1f);
+            AppSkin.Icon(sendCenter, IconGlyph.Of(FontAwesomeIcon.PaperPlane), new Vector4(1f, 1f, 1f, 0.95f), 1f);
             var hit = new Vector2(14f * scale, 14f * scale);
             if (UiInteract.Hover(sendCenter - hit, sendCenter + hit))
             {
@@ -446,7 +446,7 @@ internal sealed class StoryViewerOverlay
         }
 
         var ink = new Vector4(1f, 1f, 1f, 0.9f + 0.1f * hover);
-        AppSkin.Icon(new Vector2(origin.X + padding + iconWidth * 0.5f, centerY), FontAwesomeIcon.Eye.ToIconString(),
+        AppSkin.Icon(new Vector2(origin.X + padding + iconWidth * 0.5f, centerY), IconGlyph.Of(FontAwesomeIcon.Eye),
             ink, 0.8f);
         Typography.Draw(new Vector2(origin.X + padding + iconWidth + iconGap, centerY - size.Y * 0.5f), label, ink,
             TextStyles.FootnoteEmphasized);
@@ -688,7 +688,7 @@ internal sealed class StoryViewerOverlay
 
         Squircle.Fill(drawList, stage.Min, stage.Max, rounding, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.55f)));
         var center = stage.Center;
-        AppSkin.Icon(drawList, new Vector2(center.X, center.Y - 26f * scale), FontAwesomeIcon.Hourglass.ToIconString(),
+        AppSkin.Icon(drawList, new Vector2(center.X, center.Y - 26f * scale), IconGlyph.Of(FontAwesomeIcon.Hourglass),
             new Vector4(1f, 1f, 1f, 0.92f), 1.6f);
         Typography.DrawCentered(drawList, center, Loc.T(L.Moderation.InReview), new Vector4(1f, 1f, 1f, 0.95f),
             TextStyles.Headline);
@@ -754,7 +754,7 @@ internal sealed class StoryViewerOverlay
 
         var hit = new Vector2(14f * scale, 14f * scale);
         var closeCenter = new Vector2(row.Max.X - 10f * scale, row.Center.Y);
-        AppSkin.Icon(closeCenter, FontAwesomeIcon.Times.ToIconString(), new Vector4(1f, 1f, 1f, 0.9f), 1.1f);
+        AppSkin.Icon(closeCenter, IconGlyph.Of(FontAwesomeIcon.Times), new Vector4(1f, 1f, 1f, 0.9f), 1.1f);
         if (UiInteract.HoverClick(closeCenter - hit, closeCenter + hit))
         {
             Close();
@@ -766,7 +766,7 @@ internal sealed class StoryViewerOverlay
         }
 
         var deleteCenter = new Vector2(closeCenter.X - 32f * scale, row.Center.Y);
-        AppSkin.Icon(deleteCenter, FontAwesomeIcon.Trash.ToIconString(), new Vector4(1f, 1f, 1f, 0.82f), 1f);
+        AppSkin.Icon(deleteCenter, IconGlyph.Of(FontAwesomeIcon.Trash), new Vector4(1f, 1f, 1f, 0.82f), 1f);
         if (UiInteract.HoverClick(deleteCenter - hit, deleteCenter + hit))
         {
             onDelete?.Invoke(story);

@@ -174,7 +174,7 @@ internal sealed partial class VelvetShell
                 1f * scale);
         }
 
-        AppSkin.Icon(rect.Center, FontAwesomeIcon.SlidersH.ToIconString(),
+        AppSkin.Icon(rect.Center, IconGlyph.Of(FontAwesomeIcon.SlidersH),
             active ? VelvetTheme.RoseInk : VelvetTheme.MutedInk, 0.86f);
 
         if (active)
@@ -444,7 +444,7 @@ internal sealed partial class VelvetShell
             var badgeMax = new Vector2(badgeMin.X + badgeWidth, badgeMin.Y + 24f * scale);
             Squircle.Fill(drawList, badgeMin, badgeMax, 12f * scale, new Vector4(0.03f, 0.01f, 0.06f, 0.55f).Packed());
             AppSkin.Icon(new Vector2(badgeMin.X + 13f * scale, (badgeMin.Y + badgeMax.Y) * 0.5f),
-                FontAwesomeIcon.Lock.ToIconString(), VelvetTheme.RoseInk, 0.52f);
+                IconGlyph.Of(FontAwesomeIcon.Lock), VelvetTheme.RoseInk, 0.52f);
             Typography.Draw(drawList, new Vector2(badgeMin.X + 23f * scale, badgeMin.Y + 5f * scale), badgeText,
                 VelvetTheme.OnAccent, TextStyles.Footnote);
         }
@@ -590,7 +590,7 @@ internal sealed partial class VelvetShell
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         Squircle.Fill(drawList, rect.Min, rect.Max, Metrics.Radius.Field * scale, VelvetTheme.PlumWell.Packed());
-        AppSkin.Icon(new Vector2(rect.Min.X + 16f * scale, rect.Center.Y), FontAwesomeIcon.Search.ToIconString(),
+        AppSkin.Icon(new Vector2(rect.Min.X + 16f * scale, rect.Center.Y), IconGlyph.Of(FontAwesomeIcon.Search),
             VelvetTheme.MutedInk, 0.8f);
         if (value.Length == 0)
         {
@@ -609,7 +609,7 @@ internal sealed partial class VelvetShell
 
         if (value.Length > 0 &&
             ui.IconButton(new Vector2(rect.Max.X - 16f * scale, rect.Center.Y), 12f * scale,
-                FontAwesomeIcon.Times.ToIconString(), VelvetTheme.MutedInk, AppSkin.Transparent, 0.8f))
+                IconGlyph.Of(FontAwesomeIcon.Times), VelvetTheme.MutedInk, AppSkin.Transparent, 0.8f))
         {
             value = string.Empty;
         }

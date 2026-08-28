@@ -97,25 +97,25 @@ internal sealed class ChatMenuController
         var count = 0;
         if (model.CanReply)
         {
-            items[count] = new DropdownMenu.Item(Loc.T(L.Message.ReplyAction), FontAwesomeIcon.Reply.ToIconString());
+            items[count] = new DropdownMenu.Item(Loc.T(L.Message.ReplyAction), IconGlyph.Of(FontAwesomeIcon.Reply));
             actions[count++] = ActReply;
         }
 
         if (model.CanForward)
         {
-            items[count] = new DropdownMenu.Item(Loc.T(L.Message.ForwardAction), FontAwesomeIcon.Share.ToIconString());
+            items[count] = new DropdownMenu.Item(Loc.T(L.Message.ForwardAction), IconGlyph.Of(FontAwesomeIcon.Share));
             actions[count++] = ActForward;
         }
 
         if (model.CanCopy)
         {
-            items[count] = new DropdownMenu.Item(Loc.T(L.Encryption.CopyTextAction), FontAwesomeIcon.Copy.ToIconString());
+            items[count] = new DropdownMenu.Item(Loc.T(L.Encryption.CopyTextAction), IconGlyph.Of(FontAwesomeIcon.Copy));
             actions[count++] = ActCopy;
         }
 
         if (model.CanTranslate && !mine && kind == TextKind)
         {
-            items[count] = new DropdownMenu.Item(Loc.T(L.Translate.Action), FontAwesomeIcon.Language.ToIconString());
+            items[count] = new DropdownMenu.Item(Loc.T(L.Translate.Action), IconGlyph.Of(FontAwesomeIcon.Language));
             actions[count++] = ActTranslate;
         }
 
@@ -123,25 +123,25 @@ internal sealed class ChatMenuController
         {
             items[count] = new DropdownMenu.Item(
                 Loc.T(model.IsStarred(id) ? L.Message.UnstarAction : L.Message.StarAction),
-                FontAwesomeIcon.Star.ToIconString());
+                IconGlyph.Of(FontAwesomeIcon.Star));
             actions[count++] = ActStar;
         }
 
         if (model.CanEdit && mine && kind == TextKind)
         {
-            items[count] = new DropdownMenu.Item(Loc.T(L.Message.EditAction), FontAwesomeIcon.Pen.ToIconString());
+            items[count] = new DropdownMenu.Item(Loc.T(L.Message.EditAction), IconGlyph.Of(FontAwesomeIcon.Pen));
             actions[count++] = ActEdit;
         }
 
         if (model.CanInfo && mine)
         {
-            items[count] = new DropdownMenu.Item(Loc.T(L.Message.InfoAction), FontAwesomeIcon.InfoCircle.ToIconString());
+            items[count] = new DropdownMenu.Item(Loc.T(L.Message.InfoAction), IconGlyph.Of(FontAwesomeIcon.InfoCircle));
             actions[count++] = ActInfo;
         }
 
         if (model.CanDelete && mine)
         {
-            items[count] = new DropdownMenu.Item(Loc.T(L.Message.DeleteAction), FontAwesomeIcon.TrashAlt.ToIconString(),
+            items[count] = new DropdownMenu.Item(Loc.T(L.Message.DeleteAction), IconGlyph.Of(FontAwesomeIcon.TrashAlt),
                 Danger: true);
             actions[count++] = ActDelete;
         }
@@ -149,7 +149,7 @@ internal sealed class ChatMenuController
         if (model.CanReport && !mine)
         {
             items[count] = new DropdownMenu.Item(Loc.T(L.Encryption.ReportMessageAction),
-                FontAwesomeIcon.Flag.ToIconString(), Danger: true);
+                IconGlyph.Of(FontAwesomeIcon.Flag), Danger: true);
             actions[count++] = ActReport;
         }
 

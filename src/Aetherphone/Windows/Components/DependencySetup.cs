@@ -88,7 +88,7 @@ internal static class DependencySetup
         {
             case DependencyState.Ready:
                 drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(theme.ToggleOn), 20);
-                AppSkin.Icon(drawList, center, FontAwesomeIcon.Check.ToIconString(), new Vector4(1f, 1f, 1f, 1f),
+                AppSkin.Icon(drawList, center, IconGlyph.Of(FontAwesomeIcon.Check), new Vector4(1f, 1f, 1f, 1f),
                     0.34f);
                 return;
             case DependencyState.Failed:

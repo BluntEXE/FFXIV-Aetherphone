@@ -34,7 +34,7 @@ internal static class FeedControlRow
             UiAnchors.Report(anchorId, tabsRect);
         }
 
-        var mediaToggled = ui.IconButton(mediaCenter, radius, FontAwesomeIcon.Filter.ToIconString(),
+        var mediaToggled = ui.IconButton(mediaCenter, radius, IconGlyph.Of(FontAwesomeIcon.Filter),
             mediaOn ? accent : ui.MutedInk, ui.FieldSurface, 1.1f, mediaTooltip, HoverLabelSide.Below);
         var refreshed = false;
         if (loading)
@@ -45,7 +45,7 @@ internal static class FeedControlRow
         }
         else
         {
-            refreshed = ui.IconButton(refreshCenter, radius, FontAwesomeIcon.Sync.ToIconString(), ui.BodyInk,
+            refreshed = ui.IconButton(refreshCenter, radius, IconGlyph.Of(FontAwesomeIcon.Sync), ui.BodyInk,
                 ui.FieldSurface, 1.1f, refreshTooltip, HoverLabelSide.Below);
         }
 

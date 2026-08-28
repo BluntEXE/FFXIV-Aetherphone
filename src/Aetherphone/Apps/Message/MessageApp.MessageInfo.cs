@@ -224,7 +224,7 @@ internal sealed partial class MessageApp
     private void DrawReceiptStatusRow(Rect row, FontAwesomeIcon icon, Vector4 iconColor, string label, string value,
         float scale)
     {
-        AppSkin.Icon(new Vector2(row.Min.X + 8f * scale, row.Center.Y), icon.ToIconString(), iconColor, 0.95f);
+        AppSkin.Icon(new Vector2(row.Min.X + 8f * scale, row.Center.Y), IconGlyph.Of(icon), iconColor, 0.95f);
         var valueSize = Typography.Measure(value, 0.85f);
         var labelLeft = row.Min.X + 28f * scale;
         var labelMaxWidth = MathF.Max(1f, row.Max.X - valueSize.X - 10f * scale - labelLeft);
@@ -261,7 +261,7 @@ internal sealed partial class MessageApp
             right -= stampSize.X + 10f * scale;
         }
 
-        AppSkin.Icon(new Vector2(right - 6f * scale, row.Center.Y), icon.ToIconString(), iconColor,
+        AppSkin.Icon(new Vector2(right - 6f * scale, row.Center.Y), IconGlyph.Of(icon), iconColor,
             0.80f);
     }
 

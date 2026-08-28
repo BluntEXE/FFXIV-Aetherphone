@@ -29,10 +29,10 @@ internal sealed partial class StratsApp
     private const string LinkRowIdPrefix = "strats.link:";
 
     private static readonly TextStyle RoleCaptionStyle = new(0.72f, FontWeight.Medium);
-    private static readonly string VideoGlyph = FontAwesomeIcon.Video.ToIconString();
-    private static readonly string BoardGlyph = FontAwesomeIcon.Map.ToIconString();
-    private static readonly string DocumentGlyph = FontAwesomeIcon.FileAlt.ToIconString();
-    private static readonly string LinkGlyph = FontAwesomeIcon.ExternalLinkAlt.ToIconString();
+    private static readonly string VideoGlyph = IconGlyph.Of(FontAwesomeIcon.Video);
+    private static readonly string BoardGlyph = IconGlyph.Of(FontAwesomeIcon.Map);
+    private static readonly string DocumentGlyph = IconGlyph.Of(FontAwesomeIcon.FileAlt);
+    private static readonly string LinkGlyph = IconGlyph.Of(FontAwesomeIcon.ExternalLinkAlt);
 
     private FightDoc? labelsDoc;
     private string[] stratLabels = Array.Empty<string>();

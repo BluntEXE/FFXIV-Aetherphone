@@ -39,7 +39,7 @@ internal sealed class EmojiComposer
         }
         else
         {
-            AppSkin.Icon(center, FontAwesomeIcon.Smile.ToIconString(), color, 0.95f);
+            AppSkin.Icon(center, IconGlyph.Of(FontAwesomeIcon.Smile), color, 0.95f);
         }
 
         HoverTooltip.Show(new Rect(min, max), tooltip, side);

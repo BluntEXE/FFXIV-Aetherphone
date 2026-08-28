@@ -104,7 +104,7 @@ internal sealed partial class VelvetShell
         if (onboardStep > 0)
         {
             var backCenter = new Vector2(area.Min.X + 24f * scale, area.Min.Y + 68f * scale);
-            if (ui.IconButton(backCenter, 16f * scale, FontAwesomeIcon.ChevronLeft.ToIconString(), VelvetTheme.TitleInk,
+            if (ui.IconButton(backCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.ChevronLeft), VelvetTheme.TitleInk,
                     AppSkin.Transparent, 0.85f, Loc.T(L.Velvet.Back), HoverLabelSide.Below))
             {
                 onboardStep--;
@@ -209,7 +209,7 @@ internal sealed partial class VelvetShell
         var badgeCenter = new Vector2(center.X + radius * 0.70f, center.Y + radius * 0.70f);
         drawList.AddCircleFilled(badgeCenter, 15f * scale, VelvetTheme.GroundBottom.Packed(), 24);
         drawList.AddCircleFilled(badgeCenter, 13f * scale, VelvetTheme.Rose.Packed(), 24);
-        AppSkin.Icon(badgeCenter, FontAwesomeIcon.Camera.ToIconString(), VelvetTheme.OnAccent, 0.6f);
+        AppSkin.Icon(badgeCenter, IconGlyph.Of(FontAwesomeIcon.Camera), VelvetTheme.OnAccent, 0.6f);
 
         var avatarMin = new Vector2(center.X - radius, center.Y - radius);
         var avatarMax = new Vector2(center.X + radius, center.Y + radius);
@@ -273,7 +273,7 @@ internal sealed partial class VelvetShell
         var tileMax = new Vector2(tileMin.X + tileSize, tileMin.Y + tileSize);
         Squircle.Fill(drawList, tileMin, tileMax, tileSize * 0.32f, def.Hue.Packed());
         AppSkin.Icon(new Vector2((tileMin.X + tileMax.X) * 0.5f, (tileMin.Y + tileMax.Y) * 0.5f),
-            def.Icon.ToIconString(), VelvetTheme.OnAccent, 0.95f);
+            IconGlyph.Of(def.Icon), VelvetTheme.OnAccent, 0.95f);
 
         var textLeft = tileMax.X + 14f * scale;
         var textWidth = rect.Max.X - 46f * scale - textLeft;

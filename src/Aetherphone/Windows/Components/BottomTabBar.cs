@@ -84,7 +84,7 @@ internal sealed class BottomTabBar
         {
             var dimInk = Palette.WithAlpha(ui.MutedInk, 0.35f);
             var disabledIconCenter = new Vector2((cellMin.X + cellMax.X) * 0.5f, cellMin.Y + LabelIconOffset * scale);
-            AppSkin.Icon(drawList, disabledIconCenter, tab.Icon.ToIconString(), dimInk, LabelIconScale);
+            AppSkin.Icon(drawList, disabledIconCenter, IconGlyph.Of(tab.Icon), dimInk, LabelIconScale);
             var disabledStyle = TextStyles.Footnote;
             var disabledLabel = Typography.FitText(tab.Label, slot - 6f * scale, disabledStyle);
             Typography.DrawCentered(drawList,
@@ -103,7 +103,7 @@ internal sealed class BottomTabBar
         var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
         var press = PressFx.Scale(tab.Label, pressed, 0.90f);
         var ink = active ? ui.Accent : hovered ? ui.TitleInk : ui.MutedInk;
-        AppSkin.Icon(drawList, iconCenter, tab.Icon.ToIconString(), ink,
+        AppSkin.Icon(drawList, iconCenter, IconGlyph.Of(tab.Icon), ink,
             (active ? LabelActiveIconScale : LabelIconScale) * press);
         var style = active ? TextStyles.FootnoteEmphasized : TextStyles.Footnote;
         var label = Typography.FitText(tab.Label, slot - 6f * scale, style);
@@ -138,14 +138,14 @@ internal sealed class BottomTabBar
         if (tab.Disabled)
         {
             var hit = new Vector2(HitRadius * scale, HitRadius * scale);
-            AppSkin.Icon(center, tab.Icon.ToIconString(), Palette.WithAlpha(ui.MutedInk, 0.35f), IconScale);
+            AppSkin.Icon(center, IconGlyph.Of(tab.Icon), Palette.WithAlpha(ui.MutedInk, 0.35f), IconScale);
             HoverTooltip.Show(new Rect(center - hit, center + hit), tab.Label, HoverLabelSide.Above);
             return false;
         }
 
         DrawHoverPill(ui, center, StepHover(slot, center, HitRadius * scale), scale);
         var ink = active ? ui.TitleInk : ui.MutedInk;
-        var picked = ui.IconButton(center, HitRadius * scale, tab.Icon.ToIconString(), ink, AppSkin.Transparent,
+        var picked = ui.IconButton(center, HitRadius * scale, IconGlyph.Of(tab.Icon), ink, AppSkin.Transparent,
             active ? ActiveIconScale : IconScale, tab.Label);
         ActivityBadge.Draw(center + new Vector2(11f * scale, -10f * scale), tab.Badge, theme, scale);
         return picked;
@@ -160,7 +160,7 @@ internal sealed class BottomTabBar
         var fill = hovered ? Palette.Mix(ui.Accent, new Vector4(1f, 1f, 1f, 1f), 0.12f) : ui.Accent;
         Elevation.Floating(drawList, center - half, center + half, radius, scale, 0.55f);
         drawList.AddCircleFilled(center, radius * grow, ImGui.GetColorU32(fill), 40);
-        AppSkin.Icon(drawList, center, tab.Icon.ToIconString(), new Vector4(0.11f, 0.08f, 0.02f, 1f), 1.05f);
+        AppSkin.Icon(drawList, center, IconGlyph.Of(tab.Icon), new Vector4(0.11f, 0.08f, 0.02f, 1f), 1.05f);
         HoverTooltip.Show(new Rect(center - half, center + half), tab.Label, HoverLabelSide.Above);
         if (hovered)
         {

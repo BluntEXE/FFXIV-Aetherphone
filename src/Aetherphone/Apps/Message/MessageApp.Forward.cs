@@ -106,7 +106,7 @@ internal sealed partial class MessageApp
         if (item.IsGroup)
         {
             drawList.AddCircleFilled(avatarCenter, radius, ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.85f)), 32);
-            AppSkin.Icon(avatarCenter, FontAwesomeIcon.Users.ToIconString(), White, 0.9f);
+            AppSkin.Icon(avatarCenter, IconGlyph.Of(FontAwesomeIcon.Users), White, 0.9f);
         }
         else
         {
@@ -124,7 +124,7 @@ internal sealed partial class MessageApp
         Marquee.DrawLeft("picker.row." + item.Id, title, textLeft, titleTop, textMaxWidth,
             new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, titleHovering);
         AppSkin.Icon(new Vector2(iconCenterX, row.Center.Y),
-            FontAwesomeIcon.Share.ToIconString(), ui.MutedInk, 0.85f);
+            IconGlyph.Of(FontAwesomeIcon.Share), ui.MutedInk, 0.85f);
         var band = RowBand(row, scale);
         return UiInteract.HoverClick(band.Min, band.Max);
     }

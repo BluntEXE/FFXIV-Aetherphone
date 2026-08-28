@@ -68,7 +68,7 @@ internal sealed partial class VenuesApp
 
         var favorite = IsFavorite(venue.Id);
         var starCenter = new Vector2(area.Max.X - 22f * scale, rowCenterY);
-        if (ui.IconButton(starCenter, 14f * scale, FontAwesomeIcon.Star.ToIconString(),
+        if (ui.IconButton(starCenter, 14f * scale, IconGlyph.Of(FontAwesomeIcon.Star),
                 favorite ? ui.Accent : AppPalettes.Venues.BodyInk, AppSkin.Transparent, 0.9f))
         {
             ToggleFavorite(venue.Id);
@@ -252,7 +252,7 @@ internal sealed partial class VenuesApp
         var fullTextSize = Typography.Measure(label, 0.95f, FontWeight.SemiBold);
         var displayWidth = MathF.Min(fullTextSize.X, textMaxWidth);
         var left = rect.Center.X - (iconAdvance + displayWidth) * 0.5f;
-        AppSkin.Icon(drawList, new Vector2(left + 8f * scale, rect.Center.Y), icon.ToIconString(), ink, 0.85f);
+        AppSkin.Icon(drawList, new Vector2(left + 8f * scale, rect.Center.Y), IconGlyph.Of(icon), ink, 0.85f);
         Marquee.DrawLeft("venue.detail.action." + label, label, left + iconAdvance,
             rect.Center.Y - fullTextSize.Y * 0.5f, textMaxWidth, new TextStyle(0.95f, FontWeight.SemiBold), ink,
             hovered);

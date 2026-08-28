@@ -87,7 +87,7 @@ internal sealed partial class MusterApp
             return;
         }
 
-        if (ui.IconButton(center, 14f * scale, FontAwesomeIcon.Sync.ToIconString(), AppPalettes.Muster.BodyInk,
+        if (ui.IconButton(center, 14f * scale, IconGlyph.Of(FontAwesomeIcon.Sync), AppPalettes.Muster.BodyInk,
                 AppSkin.Transparent, 0.9f))
         {
             store.SyncNow();
@@ -224,7 +224,7 @@ internal sealed partial class MusterApp
             var inviteCenter = new Vector2(rowRight - inviteRadius, centerY);
             if (MusterPartyInvite.CanInvite(attendee.World))
             {
-                if (ui.IconButton(inviteCenter, inviteRadius, FontAwesomeIcon.UserPlus.ToIconString(), ui.Accent,
+                if (ui.IconButton(inviteCenter, inviteRadius, IconGlyph.Of(FontAwesomeIcon.UserPlus), ui.Accent,
                         AppPalettes.Muster.FieldSurface, 0.6f, Loc.T(L.Muster.InviteToParty))
                     && MusterPartyInvite.Invite(attendee.CharacterName, attendee.World))
                 {
@@ -234,7 +234,7 @@ internal sealed partial class MusterApp
             }
             else
             {
-                AppSkin.Icon(drawList, inviteCenter, FontAwesomeIcon.UserPlus.ToIconString(),
+                AppSkin.Icon(drawList, inviteCenter, IconGlyph.Of(FontAwesomeIcon.UserPlus),
                     Palette.WithAlpha(AppPalettes.Muster.MutedInk, 0.55f), 0.6f);
                 var hit = new Vector2(inviteRadius, inviteRadius);
                 HoverTooltip.Show(new Rect(inviteCenter - hit, inviteCenter + hit),

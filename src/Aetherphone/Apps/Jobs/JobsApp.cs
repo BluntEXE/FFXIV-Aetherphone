@@ -229,7 +229,7 @@ internal sealed partial class JobsApp : IPhoneApp
 
         colorButtonRect = new Rect(buttonCenter - new Vector2(radius, radius), buttonCenter + new Vector2(radius, radius));
         UiAnchors.Report("jobs.color", colorButtonRect);
-        if (ui.IconButton(buttonCenter, radius, FontAwesomeIcon.Palette.ToIconString(), ui.TitleInk,
+        if (ui.IconButton(buttonCenter, radius, IconGlyph.Of(FontAwesomeIcon.Palette), ui.TitleInk,
                 Palette.WithAlpha(ui.TitleInk, 0.12f), 0.55f, Loc.T(L.Jobs.BackgroundColor)))
         {
             menu.Toggle(ColorMenuId, colorButtonRect);
@@ -243,7 +243,7 @@ internal sealed partial class JobsApp : IPhoneApp
         var categoriesRect = new Rect(categoriesCenter - new Vector2(radius, radius),
             categoriesCenter + new Vector2(radius, radius));
         UiAnchors.Report("jobs.categories", categoriesRect);
-        if (ui.IconButton(categoriesCenter, radius, FontAwesomeIcon.FolderPlus.ToIconString(), ui.TitleInk,
+        if (ui.IconButton(categoriesCenter, radius, IconGlyph.Of(FontAwesomeIcon.FolderPlus), ui.TitleInk,
                 Palette.WithAlpha(ui.TitleInk, 0.12f), 0.55f, Loc.T(L.Jobs.Categories)))
         {
             menu.Toggle(CategoryMenuId, categoriesRect);
@@ -275,7 +275,7 @@ internal sealed partial class JobsApp : IPhoneApp
         }
 
         items[customIndex] = new DropdownMenu.Item(Loc.T(L.Jobs.CustomColor),
-            Glyph: FontAwesomeIcon.EyeDropper.ToIconString());
+            Glyph: IconGlyph.Of(FontAwesomeIcon.EyeDropper));
 
         var picked = menu.Draw(content, theme, items, out var rowAction);
         if (picked < 0)
@@ -422,7 +422,7 @@ internal sealed partial class JobsApp : IPhoneApp
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        if (hasMenu && ui.IconButton(menuCenter, menuRadius, FontAwesomeIcon.EllipsisH.ToIconString(), ui.MutedInk,
+        if (hasMenu && ui.IconButton(menuCenter, menuRadius, IconGlyph.Of(FontAwesomeIcon.EllipsisH), ui.MutedInk,
                 default, 0.5f))
         {
             menuGearsetId = job.GearsetId;

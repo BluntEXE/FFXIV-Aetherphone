@@ -49,7 +49,7 @@ internal sealed class PhotoTagOverlay
         var chipCenter = new Vector2(frame.Min.X + 14f * scale + ChipRadius * scale,
             frame.Max.Y - 14f * scale - ChipRadius * scale);
         drawList.AddCircleFilled(chipCenter, ChipRadius * scale, ImGui.GetColorU32(BadgeSurface), 24);
-        AppSkin.Icon(chipCenter, FontAwesomeIcon.User.ToIconString(), new Vector4(1f, 1f, 1f, 0.92f), 0.62f);
+        AppSkin.Icon(chipCenter, IconGlyph.Of(FontAwesomeIcon.User), new Vector4(1f, 1f, 1f, 0.92f), 0.62f);
         var chipMin = chipCenter - new Vector2(ChipRadius * scale, ChipRadius * scale);
         var chipMax = chipCenter + new Vector2(ChipRadius * scale, ChipRadius * scale);
         if (UiInteract.HoverClick(chipMin, chipMax))

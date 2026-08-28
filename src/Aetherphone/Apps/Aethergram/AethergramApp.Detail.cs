@@ -81,7 +81,7 @@ internal sealed partial class AethergramApp
             var liked = post.MyReaction >= 0;
             var actionsY = imageRect.Max.Y + 22f * scale;
             var heartCenter = new Vector2(origin.X + 13f * scale, actionsY);
-            if (ui.IconButton(heartCenter, 15f * scale, FontAwesomeIcon.Heart.ToIconString(),
+            if (ui.IconButton(heartCenter, 15f * scale, IconGlyph.Of(FontAwesomeIcon.Heart),
                     liked ? CommentHeart.LikeRed : AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.25f, Loc.T(L.Aethergram.Like)))
             {
                 store.ToggleLike(post);
@@ -114,7 +114,7 @@ internal sealed partial class AethergramApp
             }
 
             var commentCenter = new Vector2(actionCursorX + 13f * scale, actionsY);
-            if (ui.IconButton(commentCenter, 15f * scale, FontAwesomeIcon.Comment.ToIconString(), AppPalettes.Aethergram.BodyInk,
+            if (ui.IconButton(commentCenter, 15f * scale, IconGlyph.Of(FontAwesomeIcon.Comment), AppPalettes.Aethergram.BodyInk,
                     AppSkin.Transparent, 1.2f, Loc.T(L.Aethergram.Comment)))
             {
                 commentFocusPending = true;
@@ -131,7 +131,7 @@ internal sealed partial class AethergramApp
 
             var shareCenter = new Vector2(actionsRight + (post.CommentCount > 0 ? 14f : 6f) * scale + 13f * scale,
                 actionsY);
-            if (ui.IconButton(shareCenter, 15f * scale, FontAwesomeIcon.PaperPlane.ToIconString(),
+            if (ui.IconButton(shareCenter, 15f * scale, IconGlyph.Of(FontAwesomeIcon.PaperPlane),
                     AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.15f, Loc.T(L.Aethergram.SendTo)))
             {
                 OpenShare(post.Id);
@@ -140,7 +140,7 @@ internal sealed partial class AethergramApp
             actionsRight = shareCenter.X + 20f * scale;
             var moreCenter = new Vector2(origin.X + width - 14f * scale, actionsY);
             var bookmarkCenter = new Vector2(moreCenter.X - 32f * scale, actionsY);
-            if (ui.IconButton(bookmarkCenter, 15f * scale, FontAwesomeIcon.Bookmark.ToIconString(),
+            if (ui.IconButton(bookmarkCenter, 15f * scale, IconGlyph.Of(FontAwesomeIcon.Bookmark),
                     post.Saved ? ui.Accent : AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.15f,
                     Loc.T(L.Aethergram.SavedTitle)))
             {
@@ -158,7 +158,7 @@ internal sealed partial class AethergramApp
             }
 
             var moreRadius = 14f * scale;
-            if (ui.IconButton(moreCenter, moreRadius, FontAwesomeIcon.EllipsisH.ToIconString(),
+            if (ui.IconButton(moreCenter, moreRadius, IconGlyph.Of(FontAwesomeIcon.EllipsisH),
                     AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1f, Loc.T(L.Aethergram.More)))
             {
                 OpenPostSheet(post, false);
@@ -421,7 +421,7 @@ internal sealed partial class AethergramApp
         if (canDelete)
         {
             var trashCenter = new Vector2(bubbleRight - 13f * scale, bubbleTop + 13f * scale);
-            if (ui.IconButton(trashCenter, 11f * scale, FontAwesomeIcon.Times.ToIconString(), AppPalettes.Aethergram.MutedInk,
+            if (ui.IconButton(trashCenter, 11f * scale, IconGlyph.Of(FontAwesomeIcon.Times), AppPalettes.Aethergram.MutedInk,
                     AppSkin.Transparent, 0.85f,
                     Loc.T(mine ? L.Aethergram.DeleteComment : L.Aethergram.RemoveComment)) && store.DetailPost is { } post)
             {
@@ -577,7 +577,7 @@ internal sealed partial class AethergramApp
         var lockCenter = new Vector2(centerX, origin.Y + 52f * scale);
         drawList.AddCircle(lockCenter, 26f * scale,
             ImGui.GetColorU32(Palette.WithAlpha(AppPalettes.Aethergram.MutedInk, 0.5f)), 48, 1.6f * scale);
-        AppSkin.Icon(drawList, lockCenter, FontAwesomeIcon.Lock.ToIconString(), AppPalettes.Aethergram.TitleInk,
+        AppSkin.Icon(drawList, lockCenter, IconGlyph.Of(FontAwesomeIcon.Lock), AppPalettes.Aethergram.TitleInk,
             1.3f);
         var titleTop = lockCenter.Y + 40f * scale;
         var titleHeight = Typography.DrawWrappedCentered(new Vector2(centerX, titleTop),

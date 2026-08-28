@@ -20,7 +20,7 @@ internal static class VHeader
             midY - Typography.Measure(title, TextStyles.Title3).Y * 0.5f, area.Width - 44f * scale, TextStyles.Title3,
             VelvetTheme.TitleInk);
         var bellCenter = new Vector2(area.Max.X - 20f * scale, midY);
-        var clicked = AppSkin.IconButton(bellCenter, 16f * scale, FontAwesomeIcon.Bell.ToIconString(),
+        var clicked = AppSkin.IconButton(bellCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.Bell),
             VelvetTheme.TitleInk, AppSkin.Transparent, 0.9f, theme, Loc.T(L.Velvet.Activity), HoverLabelSide.Below);
         if (bellBadge > 0)
         {

@@ -160,7 +160,7 @@ internal sealed partial class MessageApp
         if (selected)
         {
             drawList.AddCircleFilled(checkCenter, 11f * scale, ImGui.GetColorU32(ui.Accent), 24);
-            AppSkin.Icon(checkCenter, FontAwesomeIcon.Check.ToIconString(), White, 0.7f);
+            AppSkin.Icon(checkCenter, IconGlyph.Of(FontAwesomeIcon.Check), White, 0.7f);
         }
         else
         {

@@ -95,7 +95,7 @@ internal static class ProgressRing
 
     public static void CenterIcon(ImDrawListPtr dl, Vector2 c, FontAwesomeIcon icon, Vector4 col, float targetHeight)
     {
-        var glyph = icon.ToIconString();
+        var glyph = IconGlyph.Of(icon);
         using (Plugin.Fonts.PushIcon(targetHeight, glyph))
         {
             var font = ImGui.GetFont();
@@ -124,7 +124,7 @@ internal static class ProgressRing
 
     public static void CenterIcon(Vector2 c, FontAwesomeIcon icon, Vector4 col, float targetHeight)
     {
-        var glyph = icon.ToIconString();
+        var glyph = IconGlyph.Of(icon);
         using (Plugin.Fonts.PushIcon(targetHeight, glyph))
         {
             var baseHeight = ImGui.CalcTextSize(glyph).Y;

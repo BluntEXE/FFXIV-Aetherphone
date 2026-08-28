@@ -183,7 +183,7 @@ internal sealed class GameChatMenu
 
     private void Add(LocString label, FontAwesomeIcon icon, byte action)
     {
-        items.Add(new DropdownMenu.Item(Loc.T(label), icon.ToIconString()));
+        items.Add(new DropdownMenu.Item(Loc.T(label), IconGlyph.Of(icon)));
         actions.Add(action);
     }
 

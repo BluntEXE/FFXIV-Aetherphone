@@ -179,7 +179,7 @@ internal sealed class NotesApp : IResumableApp
         UiAnchors.Report("notes.new",
             new Rect(buttonCenter - new Vector2(radius, radius), buttonCenter + new Vector2(radius, radius)));
         var tooltip = activeTab == 0 ? Loc.T(L.Notes.NewNote) : Loc.T(L.Notes.NewReminder);
-        if (ui.IconButton(buttonCenter, radius, FontAwesomeIcon.Plus.ToIconString(), ui.TitleInk,
+        if (ui.IconButton(buttonCenter, radius, IconGlyph.Of(FontAwesomeIcon.Plus), ui.TitleInk,
                 Palette.WithAlpha(ui.TitleInk, 0.12f), 0.6f, tooltip))
         {
             if (activeTab == 0)
@@ -357,7 +357,7 @@ internal sealed class NotesApp : IResumableApp
         var radius = 15f * scale;
         var trashCenter = new Vector2(content.Max.X - Metrics.Space.Lg * scale - radius,
             content.Min.Y + AppHeader.Height * scale * 0.5f);
-        if (ui.IconButton(trashCenter, radius, FontAwesomeIcon.TrashAlt.ToIconString(), theme.Danger,
+        if (ui.IconButton(trashCenter, radius, IconGlyph.Of(FontAwesomeIcon.TrashAlt), theme.Danger,
                 Palette.WithAlpha(theme.Danger, 0.14f), 0.55f, Loc.T(L.Notes.DeleteNote)))
         {
             AskDeleteNote(editingNote);
@@ -420,7 +420,7 @@ internal sealed class NotesApp : IResumableApp
             var radius = 15f * scale;
             var trashCenter = new Vector2(content.Max.X - Metrics.Space.Lg * scale - radius,
                 content.Min.Y + AppHeader.Height * scale * 0.5f);
-            if (ui.IconButton(trashCenter, radius, FontAwesomeIcon.TrashAlt.ToIconString(), theme.Danger,
+            if (ui.IconButton(trashCenter, radius, IconGlyph.Of(FontAwesomeIcon.TrashAlt), theme.Danger,
                     Palette.WithAlpha(theme.Danger, 0.14f), 0.55f, Loc.T(L.Notes.DeleteReminder)))
             {
                 AskDeleteReminder(editingReminderId);

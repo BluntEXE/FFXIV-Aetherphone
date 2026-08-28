@@ -127,7 +127,7 @@ internal sealed partial class CasinoApp
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        AppSkin.Icon(drawList, rect.Center, FontAwesomeIcon.Question.ToIconString(),
+        AppSkin.Icon(drawList, rect.Center, IconGlyph.Of(FontAwesomeIcon.Question),
             hovered ? ui.Accent : ui.MutedInk, 0.72f);
     }
 }

@@ -101,7 +101,7 @@ internal sealed partial class AppStoreApp
         if (front is null)
         {
             AppSkin.Icon(drawList, new Vector2(card.Max.X - 36f * scale, card.Min.Y + 42f * scale),
-                AppStoreCatalog.Icon(category).ToIconString(), Palette.WithAlpha(CardInk, 0.92f), 2f);
+                IconGlyph.Of(AppStoreCatalog.Icon(category)), Palette.WithAlpha(CardInk, 0.92f), 2f);
             return;
         }
 

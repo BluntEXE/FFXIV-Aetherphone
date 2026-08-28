@@ -123,7 +123,7 @@ internal sealed class StoryTrayRow
         var center = new Vector2(slotCenter.X, slotCenter.Y - 8f * scale);
         drawList.AddCircleFilled(center, radius - 2f * scale, ImGui.GetColorU32(palette.FieldSurface), 32);
         drawList.AddCircle(center, radius, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.18f)), 32, 1.4f * scale);
-        AppSkin.Icon(center, FontAwesomeIcon.Plus.ToIconString(), palette.BodyInk, 1.2f);
+        AppSkin.Icon(center, IconGlyph.Of(FontAwesomeIcon.Plus), palette.BodyInk, 1.2f);
         DrawLabel(drawList, center, radius, Loc.T(L.Story.YourStory), palette, scale);
         if (ClickedTile(center, radius))
         {

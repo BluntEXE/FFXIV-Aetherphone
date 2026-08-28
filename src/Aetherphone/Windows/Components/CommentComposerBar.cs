@@ -107,7 +107,7 @@ internal static class CommentComposerBar
             var sendFill = canSend ? style.SendEnabled : style.SendDisabled;
             drawList.AddCircleFilled(sendCenter, sendRadius,
                 ImGui.GetColorU32(Palette.WithAlpha(sendFill, sendFill.W * reveal)), 24);
-            AppSkin.Icon(sendCenter, FontAwesomeIcon.PaperPlane.ToIconString(),
+            AppSkin.Icon(sendCenter, IconGlyph.Of(FontAwesomeIcon.PaperPlane),
                 Palette.WithAlpha(style.SendIconInk, style.SendIconInk.W * reveal), style.SendIconScale * reveal);
             if (reveal > 0.5f && UiInteract.HoverClick(sendCenter - new Vector2(sendRadius, sendRadius),
                     sendCenter + new Vector2(sendRadius, sendRadius)))
@@ -118,7 +118,7 @@ internal static class CommentComposerBar
         else
         {
             var sendCenter = new Vector2(bar.Max.X - 28f * scale, bar.Center.Y);
-            if (ui.IconButton(sendCenter, 16f * scale, FontAwesomeIcon.PaperPlane.ToIconString(),
+            if (ui.IconButton(sendCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.PaperPlane),
                     canSend ? style.SendEnabled : style.SendDisabled, new Vector4(0f, 0f, 0f, 0f),
                     style.SendIconScale))
             {

@@ -204,7 +204,7 @@ internal sealed partial class MusicApp
         {
             DrawRepeatButton(drawList, new Vector2(frame.Max.X - 100f * scale, barCenterY), scale);
             if (ui.IconButton(new Vector2(frame.Max.X - 58f * scale, barCenterY), 14f * scale,
-                    FontAwesomeIcon.Plus.ToIconString(), ui.MutedInk, AppSkin.Transparent, 0.82f,
+                    IconGlyph.Of(FontAwesomeIcon.Plus), ui.MutedInk, AppSkin.Transparent, 0.82f,
                     Loc.T(L.Music.AddToPlaylist)))
             {
                 OpenPicker(CurrentSong());
@@ -218,7 +218,7 @@ internal sealed partial class MusicApp
             var tooltip = Loc.T(isFavoriteStation ? L.Music.RemoveFavoriteStation : L.Music.AddFavoriteStation);
 
             if (ui.IconButton(new Vector2(frame.Max.X - 58f * scale, barCenterY), 14f * scale,
-                    FontAwesomeIcon.Star.ToIconString(), isFavoriteStation ? ui.Accent : ui.MutedInk, AppSkin.Transparent,
+                    IconGlyph.Of(FontAwesomeIcon.Star), isFavoriteStation ? ui.Accent : ui.MutedInk, AppSkin.Transparent,
                     0.82f, tooltip))
             {
                 ToggleFavoriteStation(currentStation);
@@ -226,7 +226,7 @@ internal sealed partial class MusicApp
         }
 
         if (ui.IconButton(new Vector2(frame.Max.X - 26f * scale, barCenterY), 14f * scale,
-                FontAwesomeIcon.Stop.ToIconString(), ui.MutedInk, AppSkin.Transparent, 0.72f))
+                IconGlyph.Of(FontAwesomeIcon.Stop), ui.MutedInk, AppSkin.Transparent, 0.72f))
         {
             playback.Stop();
             CloseNowPlaying();
@@ -376,8 +376,8 @@ internal sealed partial class MusicApp
     {
         var leftIcon = new Vector2(frame.Min.X + pad + 6f * scale, volumeY);
         var rightIcon = new Vector2(frame.Max.X - pad - 6f * scale, volumeY);
-        AppSkin.Icon(leftIcon, FontAwesomeIcon.VolumeDown.ToIconString(), ui.MutedInk, 0.70f);
-        AppSkin.Icon(rightIcon, FontAwesomeIcon.VolumeUp.ToIconString(), ui.MutedInk, 0.70f);
+        AppSkin.Icon(leftIcon, IconGlyph.Of(FontAwesomeIcon.VolumeDown), ui.MutedInk, 0.70f);
+        AppSkin.Icon(rightIcon, IconGlyph.Of(FontAwesomeIcon.VolumeUp), ui.MutedInk, 0.70f);
         var track = new Rect(new Vector2(leftIcon.X + 22f * scale, volumeY - 1.5f * scale),
             new Vector2(rightIcon.X - 22f * scale, volumeY + 1.5f * scale));
         var slider = MusicRenderer.Slider("music.volume", track, playback.Volume,

@@ -110,7 +110,7 @@ internal static class CalendarDayList
 
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {
-            var glyph = FontAwesomeIcon.Trash.ToIconString();
+            var glyph = IconGlyph.Of(FontAwesomeIcon.Trash);
             var fontSize = ImGui.GetFontSize() * 0.72f;
             var size = ImGui.CalcTextSize(glyph) * 0.72f;
             drawList.AddText(UiBuilder.IconFont, fontSize, center - size * 0.5f, ImGui.GetColorU32(ui.MutedInk), glyph);

@@ -278,7 +278,7 @@ internal sealed partial class LinkpearlApp : IResumableApp
         if (activeTab == MessagesTab.People)
         {
             UiAnchors.Report("contacts.refresh", actions.Bounds(0));
-            if (ui.IconButton(actions.Slot(0), actions.Radius, FontAwesomeIcon.Sync.ToIconString(),
+            if (ui.IconButton(actions.Slot(0), actions.Radius, IconGlyph.Of(FontAwesomeIcon.Sync),
                     frameTheme.TextStrong, AppSkin.Transparent, 1f, Loc.T(L.Common.Refresh), HoverLabelSide.Below))
             {
                 RequestRefresh();
@@ -288,13 +288,13 @@ internal sealed partial class LinkpearlApp : IResumableApp
         }
 
         UiAnchors.Report("messages.new", actions.Bounds(0));
-        if (ui.IconButton(actions.Slot(0), actions.Radius, FontAwesomeIcon.Plus.ToIconString(), frameTheme.Accent,
+        if (ui.IconButton(actions.Slot(0), actions.Radius, IconGlyph.Of(FontAwesomeIcon.Plus), frameTheme.Accent,
                 Palette.WithAlpha(frameTheme.Accent, 0.16f), 1.05f, Loc.T(L.Linkpearl.NewChat), HoverLabelSide.Below))
         {
             OpenNewChat();
         }
 
-        if (ui.IconButton(actions.Slot(1), actions.Radius, FontAwesomeIcon.EllipsisH.ToIconString(),
+        if (ui.IconButton(actions.Slot(1), actions.Radius, IconGlyph.Of(FontAwesomeIcon.EllipsisH),
                 frameTheme.TextStrong, AppSkin.Transparent, 1f, Loc.T(L.Linkpearl.More), HoverLabelSide.Below))
         {
             OpenMoreMenu(actions.Bounds(1));
@@ -327,12 +327,12 @@ internal sealed partial class LinkpearlApp : IResumableApp
         }
 
         var paused = notificationGate.Paused;
-        moreItems[0] = new DropdownMenu.Item(Loc.T(L.Linkpearl.MarkAllRead), FontAwesomeIcon.CheckDouble.ToIconString());
+        moreItems[0] = new DropdownMenu.Item(Loc.T(L.Linkpearl.MarkAllRead), IconGlyph.Of(FontAwesomeIcon.CheckDouble));
         moreActions[0] = MoreMarkAllRead;
         moreItems[1] = new DropdownMenu.Item(Loc.T(paused ? L.Messages.ResumeNotifications : L.Messages.PauseNotifications),
-            (paused ? FontAwesomeIcon.Bell : FontAwesomeIcon.BellSlash).ToIconString());
+            IconGlyph.Of((paused ? FontAwesomeIcon.Bell : FontAwesomeIcon.BellSlash)));
         moreActions[1] = MorePause;
-        moreItems[2] = new DropdownMenu.Item(Loc.T(L.Linkpearl.ChatSettings), FontAwesomeIcon.Cog.ToIconString());
+        moreItems[2] = new DropdownMenu.Item(Loc.T(L.Linkpearl.ChatSettings), IconGlyph.Of(FontAwesomeIcon.Cog));
         moreActions[2] = MoreSettings;
         var clicked = moreMenu.Draw(area, frameTheme, moreItems);
         if (clicked < 0)

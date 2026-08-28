@@ -30,7 +30,7 @@ internal sealed partial class VelvetShell
         if (user != null && store.Me?.UserId != user.UserId && !AlreadyReported(user.UserId))
         {
             var flagCenter = new Vector2(area.Max.X - 22f * scale, area.Min.Y + VHeader.Height * scale * 0.5f);
-            if (ui.IconButton(flagCenter, 15f * scale, FontAwesomeIcon.Flag.ToIconString(), VelvetTheme.MutedInk,
+            if (ui.IconButton(flagCenter, 15f * scale, IconGlyph.Of(FontAwesomeIcon.Flag), VelvetTheme.MutedInk,
                     AppSkin.Transparent, 0.82f, Loc.T(L.Velvet.Report)))
             {
                 OpenReport("velvet_profile", user.UserId, Loc.T(L.Velvet.ReportProfile));

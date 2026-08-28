@@ -40,7 +40,7 @@ internal static class EmptyState
         var drawList = ImGui.GetWindowDrawList();
         var iconCenter = new Vector2(centerX, baseY);
         drawList.AddCircleFilled(iconCenter, 34f * scale, ImGui.GetColorU32(ui.FieldSurface), 32);
-        AppSkin.Icon(iconCenter, icon.ToIconString(), ui.MutedInk, 1.7f);
+        AppSkin.Icon(iconCenter, IconGlyph.Of(icon), ui.MutedInk, 1.7f);
         var titleY = baseY + 58f * scale;
         Typography.DrawCentered(new Vector2(centerX, titleY), title, ui.TitleInk, TextStyles.Title3);
         if (hint.Length == 0)
