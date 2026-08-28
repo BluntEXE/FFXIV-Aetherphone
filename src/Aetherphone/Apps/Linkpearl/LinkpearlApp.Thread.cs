@@ -14,8 +14,6 @@ internal sealed partial class LinkpearlApp
     private const float ThreadBackReserve = 40f;
     private const float ThreadAvatarRadius = 16f;
 
-    private string threadKey = string.Empty;
-
     private void DrawConversation(Rect area, string key)
     {
         inbox.Sync();

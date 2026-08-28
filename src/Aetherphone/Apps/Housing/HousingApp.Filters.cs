@@ -18,7 +18,6 @@ internal sealed partial class HousingApp
     private readonly ChipRail divisionRail = new();
     private readonly ChipRail dataRail = new();
     private readonly ChipRail entriesRail = new();
-    private readonly ChipRail reminderRail = new();
 
     private static readonly int[] EntryCaps = [0, 3, 10, 25];
 

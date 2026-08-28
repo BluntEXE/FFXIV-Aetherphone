@@ -51,8 +51,6 @@ internal sealed partial class JobsApp
         new("5E5CE6"), new("BF5AF2"), new("FF2D92"), new("A2845E"), new("8E8E93"), new("E5E9F0"),
     };
 
-    private Rect colorButtonRect;
-    private bool pickerOpen;
     private int pickerOpenedFrame;
     private int pickerSavedIndex = -1;
     private string pickerDigits = string.Empty;

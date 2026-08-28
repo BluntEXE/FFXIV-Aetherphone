@@ -16,8 +16,6 @@ internal sealed partial class VelvetShell
     private const float ThreadPollSeconds = 2.5f;
     private const float TypingSendSeconds = 3f;
 
-    private readonly ThreadView threadView;
-
     private sealed class ThreadView : ChatThreadView<VelvetMessageDto, VelvetThreadDto>
     {
         private readonly VelvetShell app;

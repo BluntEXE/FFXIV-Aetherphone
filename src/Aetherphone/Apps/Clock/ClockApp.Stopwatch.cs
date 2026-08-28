@@ -13,7 +13,6 @@ internal sealed partial class ClockApp
     private static readonly Vector4 GrayControl = new(0.55f, 0.56f, 0.60f, 1f);
     private static readonly float[] ReadoutScales = { 2.9f, 2.5f, 2.1f, 1.8f, 1.5f };
 
-    private readonly List<double> swLaps;
     private bool swRunning;
     private double swAccumulatedMs;
     private long swStartTick;

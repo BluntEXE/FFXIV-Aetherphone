@@ -14,12 +14,7 @@ namespace Aetherphone.Apps.Message;
 
 internal sealed partial class MessageApp
 {
-    private readonly HashSet<string> selectedContacts = new();
-    private string groupTitleDraft = string.Empty;
     private volatile bool composeBusy;
-    private volatile string? composeResult;
-    private volatile bool backToListPending;
-    private volatile bool backToDetailPending;
 
     private void DrawNewChat(Rect area)
     {

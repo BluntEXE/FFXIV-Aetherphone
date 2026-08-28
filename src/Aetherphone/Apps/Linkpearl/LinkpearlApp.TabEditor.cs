@@ -36,7 +36,6 @@ internal sealed partial class LinkpearlApp
         HistoryPolicy.Forever,
     };
 
-    private readonly DropdownMenu editorMenu = new();
     private readonly List<DropdownMenu.Item> editorItems = new(24);
     private readonly List<string> editorKeys = new(24);
     private string editorName = string.Empty;

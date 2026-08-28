@@ -34,6 +34,7 @@ internal sealed partial class SkywatcherApp : IPhoneApp
     private string zone = string.Empty;
     private float sinceRefresh;
     private SkywatcherTab activeTab;
+    private bool scrubbing;
 
     public SkywatcherApp(WeatherService weather, WeatherControl control)
     {

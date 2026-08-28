@@ -28,7 +28,6 @@ internal sealed partial class MusterApp
     private int createStartIndex;
     private int createDurationIndex = 1;
     private bool createLimit;
-    private int createMaxAttendees = DefaultMaxAttendees;
     private string maxAttendeesText = "8";
     private bool createUnlistWhenFull;
     private bool createIsPublic = true;

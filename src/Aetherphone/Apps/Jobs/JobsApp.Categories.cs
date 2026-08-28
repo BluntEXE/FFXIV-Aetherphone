@@ -22,7 +22,6 @@ internal sealed partial class JobsApp
 
     private static readonly List<JobsCategory> NoCategories = new();
 
-    private bool categoryEditorOpen;
     private int categoryEditorIndex = -1;
     private int categoryEditorGearsetId = -1;
     private int categoryEditorOpenedFrame;

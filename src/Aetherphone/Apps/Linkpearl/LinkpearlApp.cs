@@ -66,6 +66,14 @@ internal sealed partial class LinkpearlApp : IResumableApp
     private INavigator frameNavigation = null!;
     private MessagesTab activeTab;
     private string chatSearchQuery = string.Empty;
+    private readonly ChatSearch search = new();
+    private readonly ActionSheet conversationSheet = new();
+    private ChatFilter chatFilter;
+    private readonly SheetSurface newChatSheet = new("linkpearl.newChat");
+    private readonly Action<Rect> drawNewChatSheet;
+    private readonly DropdownMenu settingsMenu = new();
+    private readonly DropdownMenu editorMenu = new();
+    private string threadKey = string.Empty;
 
     public LinkpearlApp(ChatInbox inbox, TabStore tabs, ChatArchive archive,
         LinkpearlNotificationGate notificationGate,

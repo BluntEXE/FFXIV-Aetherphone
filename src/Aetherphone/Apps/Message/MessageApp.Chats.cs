@@ -19,7 +19,6 @@ internal sealed partial class MessageApp
     private const byte ChatFilterDirect = 1;
     private const byte ChatFilterGroups = 2;
 
-    private readonly ActionSheet chatSheet = new();
     private readonly ActionSheet.Item[] chatSheetItems = new ActionSheet.Item[4];
     private string? sheetConversationId;
     private string chatSheetTitle = string.Empty;

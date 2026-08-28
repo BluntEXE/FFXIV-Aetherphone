@@ -18,8 +18,6 @@ internal sealed partial class MessageApp
     private const float CallSearchHeight = 52f;
     private const float ReturnBannerHeight = 44f;
 
-    private string searchDraft = string.Empty;
-
     private float DrawReturnToCallBanner(Rect rect)
     {
         var scale = UiScale.Current;

@@ -58,6 +58,7 @@ internal sealed partial class CasinoApp : IPhoneApp
     private Rect screenArea;
     private CasinoTab tab;
     private string pendingTableId = string.Empty;
+    private bool historyLoadFailed;
 
     public CasinoApp(AethernetSession session, CoinStore coins, Core.Casino.CasinoStore casino,
         Core.Casino.CasinoPlayStore casinoPlay, Core.Casino.CasinoHistoryStore history,

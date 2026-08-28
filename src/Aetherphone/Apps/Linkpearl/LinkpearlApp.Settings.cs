@@ -18,7 +18,6 @@ internal sealed partial class LinkpearlApp
 
     private static readonly float[] TextScaleChoices = { 0.8f, 0.9f, 1f, 1.15f, 1.3f, 1.5f };
 
-    private readonly DropdownMenu settingsMenu = new();
     private readonly List<DropdownMenu.Item> settingsItems = new(6);
 
     private void DrawSettings(Rect area)

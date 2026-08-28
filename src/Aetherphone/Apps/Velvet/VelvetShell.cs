@@ -83,6 +83,12 @@ internal sealed partial class VelvetShell : IResumableApp
     private bool cachedLalafell;
     private bool raceKnown;
     private ulong raceContentId;
+    private readonly VelvetFilterSelection discoverInclude = new();
+    private readonly VelvetFilterSelection feedInclude = new();
+    private readonly ActionSheet postSheet = new();
+    private readonly ActionSheet threadSheet = new();
+    private VelvetMessagesTab messagesTab = VelvetMessagesTab.Chats;
+    private readonly ThreadView threadView;
 
     public VelvetShell(AethernetSession session, AethernetApi net, LodestoneService lodestone,
         Configuration configuration, PhotoLibrary library, HttpService http, RemoteImageCache images,

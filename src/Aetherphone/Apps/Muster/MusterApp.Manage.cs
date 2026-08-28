@@ -31,7 +31,6 @@ internal sealed partial class MusterApp
     private MusterAttendeeDto[] lastAttendees = Array.Empty<MusterAttendeeDto>();
     private string[] attendeeIdentities = Array.Empty<string>();
     private bool noticeBusy;
-    private float invitedTimer;
     private string invitedUserId = string.Empty;
 
     private void ResetManageState()

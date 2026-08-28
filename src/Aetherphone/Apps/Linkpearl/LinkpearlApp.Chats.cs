@@ -34,16 +34,13 @@ internal sealed partial class LinkpearlApp
     private const byte MenuDeleteTab = 5;
     private const byte MenuClearHistory = 6;
 
-    private readonly ChatSearch search = new();
     private readonly ChipRail filterRail = new();
     private readonly string[] filterLabels = new string[4];
     private readonly bool[] filterActive = new bool[4];
-    private readonly ActionSheet conversationSheet = new();
     private readonly List<ActionSheet.Item> conversationItems = new(7);
     private readonly List<byte> conversationActions = new(7);
     private string conversationSheetKey = string.Empty;
     private string conversationSheetTitle = string.Empty;
-    private ChatFilter chatFilter;
 
     private void DrawChatsTab(Rect content)
     {

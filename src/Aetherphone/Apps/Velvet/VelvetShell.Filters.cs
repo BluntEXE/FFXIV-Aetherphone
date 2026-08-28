@@ -11,8 +11,6 @@ namespace Aetherphone.Apps.Velvet;
 internal sealed partial class VelvetShell
 {
     private readonly VelvetFilterSelection mutes = new();
-    private readonly VelvetFilterSelection discoverInclude = new();
-    private readonly VelvetFilterSelection feedInclude = new();
     private VelvetPage filterSurface = VelvetPage.Discover;
 
     private VelvetFilterSelection IncludeFor(VelvetPage surface) =>

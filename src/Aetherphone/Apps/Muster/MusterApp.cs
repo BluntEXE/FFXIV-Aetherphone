@@ -51,6 +51,8 @@ internal sealed partial class MusterApp : IPhoneApp
     private float travelNoticeTimer;
     private string copiedKey = string.Empty;
     private bool lifestreamAvailable;
+    private int createMaxAttendees = DefaultMaxAttendees;
+    private float invitedTimer;
 
     public MusterApp(MusterStore store, MusterLauncher launcher, AethernetApi api, GameData gameData,
         RemoteImageCache images, LodestoneService lodestone, Configuration configuration, ConfirmService confirm,

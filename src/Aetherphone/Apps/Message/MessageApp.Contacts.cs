@@ -24,13 +24,10 @@ internal sealed partial class MessageApp
     private string numberDraft = string.Empty;
     private string aliasDraft = string.Empty;
     private string reasonDraft = string.Empty;
-    private string addError = string.Empty;
-    private float copiedTimer;
     private volatile bool addBusy;
     private volatile bool requestBusy;
     private volatile int addOutcome;
     private volatile int requestOutcome;
-    private volatile bool removePending;
 
     private void ProcessAddOutcomes()
     {

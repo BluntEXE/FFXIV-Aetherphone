@@ -16,8 +16,6 @@ internal sealed partial class CasinoApp
     private const float ActionPillHeight = 44f;
     private const int FairnessRecentRoundLimit = 8;
 
-    private bool historyLoadFailed;
-
     private void DrawHistory(Rect body)
     {
         var scale = UiScale.Current;

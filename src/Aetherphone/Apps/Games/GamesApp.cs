@@ -98,6 +98,8 @@ internal sealed partial class GamesApp : IPhoneApp
     private INavigator navigation = null!;
     private IMiniGame? currentGame;
     private int featuredIndex;
+    private readonly string[] countLabels;
+    private float frameSeconds;
     public string Id => "games";
     public string DisplayName => Loc.T(L.Apps.Games);
     public string Glyph => ">";

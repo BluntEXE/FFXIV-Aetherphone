@@ -76,6 +76,18 @@ internal sealed partial class MessageApp : IResumableApp
     private CallState lastCallState;
     private string filter = string.Empty;
     private bool recoveryNudgeDismissed;
+    private string searchDraft = string.Empty;
+    private readonly ActionSheet chatSheet = new();
+    private readonly HashSet<string> selectedContacts = new();
+    private string groupTitleDraft = string.Empty;
+    private volatile string? composeResult;
+    private volatile bool backToListPending;
+    private volatile bool backToDetailPending;
+    private string addError = string.Empty;
+    private float copiedTimer;
+    private volatile bool removePending;
+    private string? forwardOpenPending;
+    private readonly ThreadView threadView;
 
     public MessageApp(DirectMessagesStore store, ContactBook contacts, CallHub calls, AethernetSession session,
         RemoteImageCache images, LodestoneService lodestone, DmLauncher launcher, PhotoLibrary library,

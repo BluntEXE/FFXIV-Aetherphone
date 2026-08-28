@@ -40,6 +40,7 @@ internal sealed partial class ClockApp : IPhoneApp
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
     private int activeTab;
+    private readonly List<double> swLaps;
 
     public ClockApp(Configuration configuration, ConfirmService confirm)
     {

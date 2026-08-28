@@ -13,7 +13,6 @@ namespace Aetherphone.Apps.Message;
 
 internal sealed partial class MessageApp
 {
-    private readonly ThreadView threadView;
 
     private sealed class ThreadView : ChatThreadView<ChatMessageDto, ConversationDto>
     {

@@ -32,8 +32,6 @@ internal sealed partial class LinkpearlApp
             L.Linkpearl.PresetLocalHint),
     };
 
-    private readonly SheetSurface newChatSheet = new("linkpearl.newChat");
-    private readonly Action<Rect> drawNewChatSheet;
     private bool peopleFocusPending;
 
     private void OpenNewChat()

@@ -31,7 +31,6 @@ internal sealed partial class GamesApp
     private readonly TileRail recentRail = new();
     private readonly string[] filterLabels = new string[GamesLibrary.FilterCount];
     private readonly bool[] filterActive = new bool[GamesLibrary.FilterCount];
-    private readonly string[] countLabels;
     private LibraryFilter filter;
     private bool searchOpen;
     private bool focusSearch;
@@ -44,7 +43,6 @@ internal sealed partial class GamesApp
     private Spring searchReveal = new(0f);
     private Spring heroScale = new(1f);
     private float entrance;
-    private float frameSeconds;
 
     private void ResetLauncher()
     {

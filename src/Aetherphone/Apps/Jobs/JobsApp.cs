@@ -47,6 +47,9 @@ internal sealed partial class JobsApp : IPhoneApp
     private float sincePendingEquip;
     private int menuGearsetId = -1;
     private bool rowAnchorTaken;
+    private bool categoryEditorOpen;
+    private Rect colorButtonRect;
+    private bool pickerOpen;
 
     public JobsApp(GameData gameData, ITextureProvider textures, Configuration configuration, ConfirmService confirm,
         CharacterWatch characterWatch)

@@ -14,7 +14,6 @@ internal sealed partial class MessageApp
 {
     private string forwardFilter = string.Empty;
     private bool forwardBusy;
-    private string? forwardOpenPending;
 
     private void DrawForwardPicker(Rect area, string messageId)
     {
