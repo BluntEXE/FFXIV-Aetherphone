@@ -57,10 +57,6 @@ internal sealed class FontService : IDisposable
     private const int LearnedGlyphCap = 2000;
     private const int LearnedIconCap = 512;
     private const string TablerIconFile = "TablerIcons.ttf";
-    private const int FirstIconCodepoint = 0xE000;
-    private const int LastIconCodepoint = 0xF8FF;
-    private const int FirstTablerCodepoint = 0xE600;
-    private const int LastTablerCodepoint = 0xE61D;
     private const long LearnRebuildDebounceMs = 600;
     private readonly Configuration configuration;
     private readonly LoadingScreen loading;
@@ -263,7 +259,12 @@ internal sealed class FontService : IDisposable
 
     private void NoticeIcon(char codepoint)
     {
-        if (codepoint < FirstIconCodepoint || codepoint > LastIconCodepoint)
+        if (codepoint < IconPlan.FirstIconCodepoint || codepoint > IconPlan.LastIconCodepoint)
+        {
+            return;
+        }
+
+        if (iconCoverage.Contains(codepoint))
         {
             return;
         }
@@ -517,6 +518,7 @@ internal sealed class FontService : IDisposable
     private void ComposeSharedRanges()
     {
         sharedCoverage.Clear();
+        sharedCoverage.AddRanges(GlyphPlan.SharedBase, nativeCoverage);
         var catalogGlyphs = Loc.CatalogGlyphs;
         for (var index = 0; index < catalogGlyphs.Length; index++)
         {
@@ -547,9 +549,15 @@ internal sealed class FontService : IDisposable
     private void ComposeIconRanges()
     {
         iconCoverage.Clear();
-        for (var codepoint = FirstTablerCodepoint; codepoint <= LastTablerCodepoint; codepoint++)
+        for (var codepoint = IconPlan.FirstTablerCodepoint; codepoint <= IconPlan.LastTablerCodepoint; codepoint++)
         {
             iconCoverage.Add(codepoint);
+        }
+
+        var fontAwesome = IconPlan.FontAwesome;
+        for (var index = 0; index < fontAwesome.Length; index++)
+        {
+            iconCoverage.Add(fontAwesome[index]);
         }
 
         foreach (var codepoint in learnedIcons)
@@ -557,7 +565,7 @@ internal sealed class FontService : IDisposable
             iconCoverage.Add(codepoint);
         }
 
-        iconRanges = iconCoverage.ToRanges(FirstIconCodepoint);
+        iconRanges = iconCoverage.ToRanges(IconPlan.FirstIconCodepoint);
     }
 
     private void SeedLearned()
@@ -576,6 +584,11 @@ internal sealed class FontService : IDisposable
                 continue;
             }
 
+            if (GlyphPlan.IsSharedBase(codepoint))
+            {
+                continue;
+            }
+
             learned.Add(codepoint);
         }
     }
@@ -586,7 +599,12 @@ internal sealed class FontService : IDisposable
         for (var index = 0; index < stored.Length && learnedIcons.Count < LearnedIconCap; index++)
         {
             var codepoint = stored[index];
-            if (codepoint < FirstIconCodepoint || codepoint > LastIconCodepoint)
+            if (codepoint < IconPlan.FirstIconCodepoint || codepoint > IconPlan.LastIconCodepoint)
+            {
+                continue;
+            }
+
+            if (IconPlan.IsDeclared(codepoint))
             {
                 continue;
             }

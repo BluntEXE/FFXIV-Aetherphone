@@ -1,9 +1,11 @@
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Aetherphone.Core;
 using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
+using Dalamud.Interface;
 using Xunit;
 
 namespace Aetherphone.Tests;
@@ -37,12 +39,39 @@ public sealed class IconFontCoverageTests
             highest = Math.Max(highest, codepoint);
         }
 
-        Assert.Equal(lowest, ConstantValue("FirstTablerCodepoint"));
-        Assert.Equal(highest, ConstantValue("LastTablerCodepoint"));
+        Assert.Equal(IconPlan.FirstTablerCodepoint, lowest);
+        Assert.Equal(IconPlan.LastTablerCodepoint, highest);
     }
 
     [Fact]
-    public void AFreshInstallComposesAnIconRangeTheFontCanSatisfy()
+    public void TheIconCatalogIsSortedAndDistinct()
+    {
+        var catalog = IconPlan.FontAwesome;
+
+        Assert.NotEmpty(catalog.ToArray());
+        for (var index = 1; index < catalog.Length; index++)
+        {
+            Assert.True(catalog[index] > catalog[index - 1],
+                $"IconPlan.FontAwesome is binary searched, but U+{catalog[index]:X4} follows U+{catalog[index - 1]:X4}.");
+        }
+    }
+
+    [Fact]
+    public void TheIconCatalogDeclaresEveryFontAwesomeIconTheSourceDraws()
+    {
+        var used = FontAwesomeIconsUsedInSource();
+
+        Assert.NotEmpty(used);
+        foreach (var (name, codepoint) in used)
+        {
+            Assert.True(IconPlan.IsDeclared(codepoint),
+                $"FontAwesomeIcon.{name} (U+{codepoint:X4}) is drawn but missing from IconPlan, so its first draw "
+                + "rebuilds the whole font atlas. Add it to IconPlan.FontAwesomeCodepoints.");
+        }
+    }
+
+    [Fact]
+    public void AFreshInstallComposesAnIconRangeBothFontsCanSatisfy()
     {
         var service = (FontService)RuntimeHelpers.GetUninitializedObject(typeof(FontService));
         Field("iconCoverage").SetValue(service, new GlyphCoverage());
@@ -60,6 +89,92 @@ public sealed class IconFontCoverageTests
             Assert.True(composed.Contains(codepoint),
                 $"A fresh install asks the atlas for a range that omits U+{codepoint:X4}, which TablerIcons.ttf supplies.");
         }
+
+        var catalog = IconPlan.FontAwesome;
+        for (var index = 0; index < catalog.Length; index++)
+        {
+            Assert.True(composed.Contains(catalog[index]),
+                $"A fresh install asks FontAwesome for a range that omits U+{catalog[index]:X4}.");
+        }
+    }
+
+    [Fact]
+    public void AFreshInstallDrawingEveryDeclaredIconNeverDirtiesTheLedger()
+    {
+        var service = (FontService)RuntimeHelpers.GetUninitializedObject(typeof(FontService));
+        var learnedIcons = new HashSet<ushort>();
+        Field("iconCoverage").SetValue(service, new GlyphCoverage());
+        Field("learnedIcons").SetValue(service, learnedIcons);
+
+        typeof(FontService).GetMethod("ComposeIconRanges", BindingFlags.NonPublic | BindingFlags.Instance)!
+            .Invoke(service, null);
+
+        var notice = typeof(FontService).GetMethod("NoticeIcon", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var used = FontAwesomeIconsUsedInSource();
+        foreach (var (_, codepoint) in used)
+        {
+            notice.Invoke(service, new object[] { (char)codepoint });
+        }
+
+        var declared = DeclaredIconCodepoints();
+        for (var index = 0; index < declared.Count; index++)
+        {
+            notice.Invoke(service, new object[] { (char)declared[index].Codepoint });
+        }
+
+        Assert.Empty(learnedIcons);
+        Assert.Equal(0L, (long)Field("learnDirtySince").GetValue(service)!);
+    }
+
+    private static List<(string Name, int Codepoint)> FontAwesomeIconsUsedInSource()
+    {
+        var pattern = new Regex(@"FontAwesomeIcon\.(?<name>[A-Za-z0-9_]+)", RegexOptions.Compiled);
+        var seen = new Dictionary<string, int>(StringComparer.Ordinal);
+        var files = Directory.EnumerateFiles(PluginSourceDirectory(), "*.cs", SearchOption.AllDirectories);
+        foreach (var file in files)
+        {
+            if (file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                || file.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            foreach (Match match in pattern.Matches(File.ReadAllText(file)))
+            {
+                var name = match.Groups["name"].Value;
+                if (seen.ContainsKey(name) || !Enum.TryParse<FontAwesomeIcon>(name, false, out var icon))
+                {
+                    continue;
+                }
+
+                seen.Add(name, (int)icon);
+            }
+        }
+
+        var used = new List<(string Name, int Codepoint)>(seen.Count);
+        foreach (var pair in seen)
+        {
+            used.Add((pair.Key, pair.Value));
+        }
+
+        return used;
+    }
+
+    private static string PluginSourceDirectory()
+    {
+        var directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+        while (!string.IsNullOrEmpty(directory))
+        {
+            var candidate = Path.Combine(directory, "src", "Aetherphone");
+            if (Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            directory = Path.GetDirectoryName(directory)!;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate src/Aetherphone from the test assembly.");
     }
 
     private static FieldInfo Field(string name)
@@ -67,13 +182,6 @@ public sealed class IconFontCoverageTests
         var field = typeof(FontService).GetField(name, BindingFlags.NonPublic | BindingFlags.Instance);
         Assert.NotNull(field);
         return field!;
-    }
-
-    private static int ConstantValue(string name)
-    {
-        var field = typeof(FontService).GetField(name, BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.NotNull(field);
-        return (int)field!.GetRawConstantValue()!;
     }
 
     private static List<(string Name, int Codepoint)> DeclaredIconCodepoints()
