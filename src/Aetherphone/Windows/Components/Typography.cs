@@ -23,21 +23,9 @@ internal static class Typography
 
     private static readonly Dictionary<(string Text, float Width, float FontSize), string> FitCache = new();
 
-    private readonly struct WrapEntry
-    {
-        public readonly float Width;
-        public readonly float FontSize;
-        public readonly string[] Lines;
+    private const int CacheLimit = 512;
 
-        public WrapEntry(float width, float fontSize, string[] lines)
-        {
-            Width = width;
-            FontSize = fontSize;
-            Lines = lines;
-        }
-    }
-
-    private static readonly Dictionary<string, WrapEntry> WrapCache = new();
+    private static readonly Dictionary<(string Text, float Width, float FontSize), string[]> WrapCache = new();
 
     private static int cacheGeneration;
 
@@ -637,28 +625,21 @@ internal static class Typography
             var fontSize = ImGui.GetFontSize();
             var packed = ImGui.GetColorU32(color);
             var lineHeight = ImGui.CalcTextSize("Ay").Y * lineSpacing;
-            var buffer = new List<string>();
             var y = topCenter.Y;
-            var segments = text.Split('\n');
-            for (var segmentIndex = 0; segmentIndex < segments.Length; segmentIndex++)
+            var lines = WrapLines(text, maxWidth);
+            for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
             {
-                var segment = segments[segmentIndex].TrimEnd('\r');
-                if (segment.Length == 0)
+                var line = lines[lineIndex];
+                if (line.Length == 0)
                 {
                     y += lineHeight;
                     continue;
                 }
 
-                buffer.Clear();
-                WrapSegment(segment, maxWidth, buffer);
-                for (var lineIndex = 0; lineIndex < buffer.Count; lineIndex++)
-                {
-                    var line = buffer[lineIndex];
-                    var size = ImGui.CalcTextSize(line);
-                    drawList.AddText(font, fontSize,
-                        new Vector2(topCenter.X - size.X * 0.5f, y + (lineHeight - size.Y) * 0.5f), packed, line);
-                    y += lineHeight;
-                }
+                var size = ImGui.CalcTextSize(line);
+                drawList.AddText(font, fontSize,
+                    new Vector2(topCenter.X - size.X * 0.5f, y + (lineHeight - size.Y) * 0.5f), packed, line);
+                y += lineHeight;
             }
 
             return y;
@@ -785,13 +766,19 @@ internal static class Typography
     {
         InvalidateCachesOnFontChange();
         var fontSize = ImGui.GetFontSize();
-        if (WrapCache.TryGetValue(text, out var cached) && cached.Width == maxWidth && cached.FontSize == fontSize)
+        var key = (text, maxWidth, fontSize);
+        if (WrapCache.TryGetValue(key, out var cached))
         {
-            return cached.Lines;
+            return cached;
+        }
+
+        if (WrapCache.Count >= CacheLimit)
+        {
+            WrapCache.Clear();
         }
 
         var lines = Wrap(text, maxWidth);
-        WrapCache[text] = new WrapEntry(maxWidth, fontSize, lines);
+        WrapCache[key] = lines;
         return lines;
     }
 

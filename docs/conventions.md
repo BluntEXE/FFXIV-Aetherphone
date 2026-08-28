@@ -98,7 +98,7 @@ The codebase leans data-oriented: plain data in flat structures, transformed by 
 
 - **`sealed` liberally.** `internal sealed class` is the default class declaration; the tree has hundreds of them. Unsealed classes are the exception, not the rule.
 - **`const` and `readonly` wherever possible.** Metrics is nothing but consts; TextStyles is nothing but `public static readonly` values of a `readonly record struct`.
-- **Structs over classes for small data.** The tree has well over a hundred `readonly struct` and `readonly record struct` declarations (TextStyle in TextStyles.cs, WrapEntry inside Typography.cs).
+- **Structs over classes for small data.** The tree has well over a hundred `readonly struct` and `readonly record struct` declarations (TextStyle in TextStyles.cs, SweepTier inside Typography.cs).
 - **`ref struct` where it fits.** A ref struct can only live on the stack, so it never allocates on the garbage-collected heap. Examples: InputShield in src/Aetherphone/Core/Animation/InputShield.cs, ChatSearchModel in src/Aetherphone/Windows/Components/ChatSearchController.cs, ChatTranscriptModel in src/Aetherphone/Windows/Components/ChatTranscript.cs.
 - **Compact representations.** Glyph ranges are `ushort[]`, PluralKind is `enum : byte` (both in src/Aetherphone/Core/Localization/Language.cs). Pick the smallest type that holds the data.
 - **Static data tables over runtime lookups.** App accents come from AppAccents.For(id) (src/Aetherphone/Core/Apps/AppAccents.cs); the changelog is a readonly array in src/Aetherphone/Core/Changelog/ChangelogData.cs.
