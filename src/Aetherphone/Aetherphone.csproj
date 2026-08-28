@@ -61,7 +61,6 @@
 
   <ItemGroup>
     <Using Include="System" />
-    <Using Include="System.Collections" />
     <Using Include="System.Collections.Generic" />
     <Using Include="System.Linq" />
     <Using Include="System.Numerics" />
