@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 
 namespace Aetherphone.Core.Localization;
 
@@ -10,6 +11,7 @@ internal static class Loc
     private static StringCatalog catalog = StringCatalog.Empty;
     private static ushort[] glyphs = Array.Empty<ushort>();
     private static readonly Dictionary<string, string> UpperCache = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, CompositeFormat> FormatCache = new(StringComparer.Ordinal);
     public static LanguageInfo Current => current;
     public static CultureInfo Culture => culture;
     public static ushort[] CatalogGlyphs => glyphs;
@@ -47,6 +49,15 @@ internal static class Loc
     }
 
     public static string T(LocString entry) => catalog.TryGet(entry.Key, out var value) ? value : entry.Source;
+
+    public static string T<T0>(LocString entry, T0 arg0) => string.Format(culture, FormatFor(T(entry)), arg0);
+
+    public static string T<T0, T1>(LocString entry, T0 arg0, T1 arg1) =>
+        string.Format(culture, FormatFor(T(entry)), arg0, arg1);
+
+    public static string T<T0, T1, T2>(LocString entry, T0 arg0, T1 arg1, T2 arg2) =>
+        string.Format(culture, FormatFor(T(entry)), arg0, arg1, arg2);
+
     public static string T(LocString entry, params object[] args) => string.Format(culture, T(entry), args);
 
     public static string Plural(LocPlural entry, int count)
@@ -54,7 +65,19 @@ internal static class Loc
         var template = IsOne(count)
             ? Resolve(string.Concat(entry.KeyBase, ".one"), entry.OneSource)
             : Resolve(string.Concat(entry.KeyBase, ".other"), entry.OtherSource);
-        return string.Format(culture, template, count);
+        return string.Format(culture, FormatFor(template), count);
+    }
+
+    private static CompositeFormat FormatFor(string template)
+    {
+        if (FormatCache.TryGetValue(template, out var cached))
+        {
+            return cached;
+        }
+
+        var parsed = CompositeFormat.Parse(template);
+        FormatCache[template] = parsed;
+        return parsed;
     }
 
     private static string Resolve(string key, string source) => catalog.TryGet(key, out var value) ? value : source;
@@ -74,6 +97,7 @@ internal static class Loc
         current = language;
         culture = ResolveCulture(language.CultureName);
         UpperCache.Clear();
+        FormatCache.Clear();
         var path = Path.Combine(directory, string.Concat(language.Code, ".json"));
         catalog = ReferenceEquals(language, Languages.English) ? StringCatalog.Empty : StringCatalog.Load(path);
         glyphs = StringCatalog.ScanGlyphs(path);
