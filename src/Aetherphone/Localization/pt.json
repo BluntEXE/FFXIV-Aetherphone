@@ -1640,6 +1640,7 @@
   "encryption.safetyChanged": "A chave de segurança de {0} mudou.",
   "encryption.encryptedIndicator": "Criptografada de ponta a ponta",
   "encryption.plaintextIndicator": "Não criptografada",
+  "encryption.composerBlocked": "Esta conversa é criptografada e este PC não consegue abrir a chave dela. Toque para resolver.",
   "encryption.reportDisclosure": "Esta mensagem e até 5 mensagens anteriores, incluindo fotos e notas de voz, serão compartilhadas com os moderadores, descriptografadas.",
   "encryption.reportMessageAction": "Denunciar mensagem",
   "encryption.copyTextAction": "Copiar texto",

@@ -375,8 +375,15 @@ internal sealed class DirectMessagesStore : ChatThreadStoreBase<ChatMessageDto, 
 
                 var scope = ConversationKeyStore.ChatScope(targetId);
                 var status = await keys.EnsureChatKeysAsync(targetId, token).ConfigureAwait(false);
-                if (cipher.IsUnlocked && status.CanEncrypt
-                    && cipher.TryEncrypt(scope, status.CurrentGeneration, plaintext, MyUserId, out var encoded))
+                var encoded = default(EncryptedOutbound);
+                var encrypted = cipher.IsUnlocked && status.CanEncrypt
+                    && cipher.TryEncrypt(scope, status.CurrentGeneration, plaintext, MyUserId, out encoded);
+                if (DowngradeBlocked(targetId, "forward", encrypted, status))
+                {
+                    return false;
+                }
+
+                if (encrypted)
                 {
                     sent = await client.SendMessageAsync(targetId, encoded.Envelope, 0, token,
                         encVersion: EnvelopeCodec.VersionEnvelope, commitmentTag: encoded.CommitmentTag,

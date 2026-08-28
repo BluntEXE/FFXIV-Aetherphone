@@ -203,8 +203,15 @@ internal sealed class GramDmStore : ChatThreadStoreBase<GramMessageDto, GramThre
             var scope = ScopeFor(otherId);
             var generation = keys.CurrentGeneration(scope);
             GramMessageDto? sent;
-            if (cipher.IsUnlocked && status.CanEncrypt
-                && cipher.TryEncrypt(scope, generation, postId, MyUserId, out var encoded))
+            var encoded = default(EncryptedOutbound);
+            var encrypted = cipher.IsUnlocked && status.CanEncrypt
+                && cipher.TryEncrypt(scope, generation, postId, MyUserId, out encoded);
+            if (DowngradeBlocked(otherId, "post share", encrypted, status))
+            {
+                return;
+            }
+
+            if (encrypted)
             {
                 sent = await SendMessageRequestAsync(otherId, encoded.Envelope, PostShareKind, token, null, 0, 0,
                     EnvelopeCodec.VersionEnvelope, encoded.CommitmentTag, null, 0).ConfigureAwait(false);
@@ -247,8 +254,15 @@ internal sealed class GramDmStore : ChatThreadStoreBase<GramMessageDto, GramThre
             var scope = ScopeFor(otherId);
             var generation = keys.CurrentGeneration(scope);
             GramMessageDto? sent;
-            if (cipher.IsUnlocked && status.CanEncrypt
-                && cipher.TryEncrypt(scope, generation, text, MyUserId, out var encoded))
+            var encoded = default(EncryptedOutbound);
+            var encrypted = cipher.IsUnlocked && status.CanEncrypt
+                && cipher.TryEncrypt(scope, generation, text, MyUserId, out encoded);
+            if (DowngradeBlocked(otherId, "story reply", encrypted, status))
+            {
+                return;
+            }
+
+            if (encrypted)
             {
                 sent = await client.SendMessageAsync(otherId, encoded.Envelope, StoryReplyKind, token, null, 0, 0,
                     EnvelopeCodec.VersionEnvelope, encoded.CommitmentTag, null, 0, storyId).ConfigureAwait(false);

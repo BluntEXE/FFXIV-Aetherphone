@@ -19,6 +19,9 @@ internal struct ChatComposerModel
     public bool CanVoice;
     public bool CanLocation;
     public bool CanHandleEscape;
+    public bool Blocked;
+    public string BlockedNotice;
+    public Action OnBlockedTap;
     public Func<int> ResolveVoiceInput;
     public Action<string> OnPickImage;
     public Action<string> OnShareLocation;
@@ -139,6 +142,12 @@ internal sealed class ChatComposer : IDisposable
             }
         }
 
+        if (model.Blocked)
+        {
+            DrawBlockedComposer(composerRect, model);
+            return;
+        }
+
         if (recorder.Recording)
         {
             DrawRecordingComposer(composerRect, model);
@@ -146,6 +155,35 @@ internal sealed class ChatComposer : IDisposable
         }
 
         DrawInputComposer(composerRect, model);
+    }
+
+    private static void DrawBlockedComposer(Rect area, in ChatComposerModel model)
+    {
+        var ui = model.Ui;
+        var scale = UiScale.Current;
+        var drawList = ImGui.GetWindowDrawList();
+        drawList.AddLine(area.Min, new Vector2(area.Max.X, area.Min.Y), ImGui.GetColorU32(ui.Theme.Separator), 1f);
+
+        var edgePad = 14f * scale;
+        var iconRadius = 13f * scale;
+        var iconCenter = new Vector2(area.Min.X + edgePad + iconRadius, area.Center.Y);
+        AppSkin.Icon(iconCenter, IconGlyph.Of(FontAwesomeIcon.Lock), ui.MutedInk, 0.9f);
+
+        var textLeft = iconCenter.X + iconRadius + 9f * scale;
+        var label = Typography.FitText(model.BlockedNotice, area.Max.X - edgePad - textLeft, TextStyles.Footnote);
+        var labelSize = Typography.Measure(label, TextStyles.Footnote);
+        Typography.Draw(drawList, new Vector2(textLeft, area.Center.Y - labelSize.Y * 0.5f), label, ui.MutedInk,
+            TextStyles.Footnote);
+
+        if (UiInteract.Hover(area.Min, area.Max))
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        if (UiInteract.HoverClick(area.Min, area.Max))
+        {
+            model.OnBlockedTap?.Invoke();
+        }
     }
 
     private void DrawInputComposer(Rect area, in ChatComposerModel model)

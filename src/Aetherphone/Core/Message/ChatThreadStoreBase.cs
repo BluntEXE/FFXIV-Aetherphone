@@ -271,6 +271,31 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     public ChatKeyStatus CurrentKeyStatus => currentKeyStatus;
     public bool EncryptingCurrent => cipher.IsUnlocked && currentKeyStatus.CanEncrypt;
 
+    public bool SendWouldDowngrade => !EncryptingCurrent && IsEncryptedThread(currentKeyStatus);
+
+    private bool RefuseDowngrade(string threadId, string what)
+    {
+        var status = currentThreadId == threadId ? currentKeyStatus : ChatKeyStatus.None;
+        return DowngradeBlocked(threadId, what, EncryptingCurrent && currentThreadId == threadId, status);
+    }
+
+    protected bool DowngradeBlocked(string threadId, string what, bool encrypted, ChatKeyStatus status)
+    {
+        if (encrypted || !IsEncryptedThread(status))
+        {
+            return false;
+        }
+
+        AepLog.Warning(
+            $"[{logTag}] {what} held back in {threadId}: the thread is encrypted at generation {status.CurrentGeneration} but this device cannot encrypt for it, and sending in the clear would be a silent downgrade.");
+        return true;
+    }
+
+    private static bool IsEncryptedThread(ChatKeyStatus status)
+    {
+        return status.CurrentGeneration > 0 && status.MembersWithoutKeys.Length == 0;
+    }
+
     public DmDecryptedBody DecryptionState(string messageId) => cipher.DecryptionState(messageId);
 
     public bool HasOlderKeyMessages(string scope) => cipher.HasOlderKeyMessages(scope);
@@ -886,7 +911,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     public void SendMessage(string id, string body, Action<bool> onComplete, string? replyToId = null)
     {
         var trimmed = body.Trim();
-        if (trimmed.Length == 0 || sending)
+        if (trimmed.Length == 0 || sending || RefuseDowngrade(id, "send"))
         {
             return;
         }
@@ -934,7 +959,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     public void SendImageMessage(string id, string sourcePath, string caption, Action<bool> onComplete)
     {
-        if (sending)
+        if (sending || RefuseDowngrade(id, "send image"))
         {
             return;
         }
@@ -981,7 +1006,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     public void SendVoiceMessage(string id, byte[] wavBytes, int durationSecs, Action<bool> onComplete)
     {
-        if (sending)
+        if (sending || RefuseDowngrade(id, "send voice"))
         {
             return;
         }
@@ -1152,7 +1177,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     public void EditMessage(string id, string messageId, string body, Action<bool> onComplete)
     {
         var trimmed = body.Trim();
-        if (trimmed.Length == 0)
+        if (trimmed.Length == 0 || RefuseDowngrade(id, "edit"))
         {
             return;
         }

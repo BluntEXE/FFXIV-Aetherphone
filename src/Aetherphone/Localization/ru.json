@@ -1640,6 +1640,7 @@
   "encryption.safetyChanged": "Ключ безопасности {0} изменился.",
   "encryption.encryptedIndicator": "Сквозное шифрование",
   "encryption.plaintextIndicator": "Не зашифровано",
+  "encryption.composerBlocked": "Этот чат зашифрован, и этот ПК не может открыть его ключ. Нажмите, чтобы исправить.",
   "encryption.reportDisclosure": "Это сообщение и до 5 предыдущих сообщений, включая фото и голосовые сообщения, будут переданы модераторам в расшифрованном виде.",
   "encryption.reportMessageAction": "Пожаловаться на сообщение",
   "encryption.copyTextAction": "Копировать текст",

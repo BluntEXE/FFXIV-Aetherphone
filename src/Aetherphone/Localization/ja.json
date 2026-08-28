@@ -1640,6 +1640,7 @@
   "encryption.safetyChanged": "{0}のセキュリティキーが変更されました。",
   "encryption.encryptedIndicator": "エンドツーエンド暗号化",
   "encryption.plaintextIndicator": "暗号化されていません",
+  "encryption.composerBlocked": "このチャットは暗号化されていますが、このPCでは鍵を開けません。タップして修正してください。",
   "encryption.reportDisclosure": "このメッセージと直前の最大5件のメッセージが、写真やボイスメッセージを含めて復号された状態でモデレーターに共有されます。",
   "encryption.reportMessageAction": "メッセージを報告",
   "encryption.copyTextAction": "テキストをコピー",

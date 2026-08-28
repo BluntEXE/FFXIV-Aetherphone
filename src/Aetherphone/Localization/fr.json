@@ -1640,6 +1640,7 @@
   "encryption.safetyChanged": "La clé de sécurité de {0} a changé.",
   "encryption.encryptedIndicator": "Chiffré de bout en bout",
   "encryption.plaintextIndicator": "Non chiffré",
+  "encryption.composerBlocked": "Cette discussion est chiffrée et ce PC ne peut pas ouvrir sa clé. Touchez pour corriger.",
   "encryption.reportDisclosure": "Ce message et jusqu'à 5 messages précédents, y compris les photos et les notes vocales, seront transmis déchiffrés aux modérateurs.",
   "encryption.reportMessageAction": "Signaler le message",
   "encryption.copyTextAction": "Copier le texte",

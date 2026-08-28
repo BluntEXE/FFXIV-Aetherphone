@@ -1640,6 +1640,7 @@
   "encryption.safetyChanged": "{0} adlı kişinin güvenlik anahtarı değişti.",
   "encryption.encryptedIndicator": "Uçtan uca şifreli",
   "encryption.plaintextIndicator": "Şifrelenmemiş",
+  "encryption.composerBlocked": "Bu sohbet şifreli ve bu cihaz anahtarını açamıyor. Düzeltmek için dokun.",
   "encryption.reportDisclosure": "Bu mesaj ve önceki en fazla 5 mesaj, fotoğraflar ve sesli mesajlar dahil, şifresi çözülmüş olarak moderatörlerle paylaşılacak.",
   "encryption.reportMessageAction": "Mesajı bildir",
   "encryption.copyTextAction": "Metni kopyala",

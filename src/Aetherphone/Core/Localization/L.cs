@@ -3094,6 +3094,7 @@ internal static class L
         public static readonly LocString SafetyChanged = new("encryption.safetyChanged", "{0}'s security key changed.");
         public static readonly LocString EncryptedIndicator = new("encryption.encryptedIndicator", "End-to-end encrypted");
         public static readonly LocString PlaintextIndicator = new("encryption.plaintextIndicator", "Not encrypted");
+        public static readonly LocString ComposerBlocked = new("encryption.composerBlocked", "This chat is encrypted and this device can't open its key. Tap to fix.");
         public static readonly LocString ReportDisclosure = new("encryption.reportDisclosure", "This message and up to 5 previous messages, including photos and voice notes, will be shared with the moderators, decrypted.");
         public static readonly LocString ReportMessageAction = new("encryption.reportMessageAction", "Report message");
         public static readonly LocString CopyTextAction = new("encryption.copyTextAction", "Copy text");

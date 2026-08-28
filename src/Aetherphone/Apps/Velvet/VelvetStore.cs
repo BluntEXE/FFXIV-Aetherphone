@@ -1157,8 +1157,15 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
             await client.ConnectAsync(userId, trimmed, token).ConfigureAwait(false);
             var status = await keys.EnsureVelvetKeysAsync(userId, MyUserId, token).ConfigureAwait(false);
             var scope = ScopeFor(userId);
-            if (status.CanEncrypt
-                && cipher.TryEncrypt(scope, status.CurrentGeneration, trimmed, MyUserId, out var encoded))
+            var encoded = default(EncryptedOutbound);
+            var encrypted = status.CanEncrypt
+                && cipher.TryEncrypt(scope, status.CurrentGeneration, trimmed, MyUserId, out encoded);
+            if (DowngradeBlocked(userId, "intro", encrypted, status))
+            {
+                return false;
+            }
+
+            if (encrypted)
             {
                 var sent = await SendMessageRequestAsync(userId, encoded.Envelope, 0, token, null, 0, 0,
                     EnvelopeCodec.VersionEnvelope, encoded.CommitmentTag, null, 0).ConfigureAwait(false);

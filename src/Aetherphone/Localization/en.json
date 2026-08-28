@@ -1640,6 +1640,7 @@
   "encryption.safetyChanged": "{0}'s security key changed.",
   "encryption.encryptedIndicator": "End-to-end encrypted",
   "encryption.plaintextIndicator": "Not encrypted",
+  "encryption.composerBlocked": "This chat is encrypted and this device can't open its key. Tap to fix.",
   "encryption.reportDisclosure": "This message and up to 5 previous messages, including photos and voice notes, will be shared with the moderators, decrypted.",
   "encryption.reportMessageAction": "Report message",
   "encryption.copyTextAction": "Copy text",
