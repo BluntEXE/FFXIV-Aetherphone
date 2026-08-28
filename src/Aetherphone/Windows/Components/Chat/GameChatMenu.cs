@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using Aetherphone.Core;
+using Aetherphone.Core.Game;
 using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
@@ -23,14 +24,19 @@ internal sealed class GameChatMenu
     private const byte ActionLinkInChat = 10;
     private const byte ActionOpenMarket = 11;
     private const byte ActionOpenMap = 12;
+    private const byte ActionFriendRequest = 13;
+    private const byte ActionAdventurerPlate = 14;
+    private const byte ActionTargetPlayer = 15;
+    private const byte ActionBlacklist = 16;
 
     private readonly DropdownMenu menu = new();
-    private readonly List<DropdownMenu.Item> items = new(10);
-    private readonly List<byte> actions = new(10);
+    private readonly List<DropdownMenu.Item> items = new(12);
+    private readonly List<byte> actions = new(12);
     private readonly string id;
     private string text = string.Empty;
     private string name = string.Empty;
     private string world = string.Empty;
+    private PlayerActionAvailability playerActions;
     private ChatChunk link;
     private bool isLink;
     private Vector2 anchor;
@@ -109,6 +115,7 @@ internal sealed class GameChatMenu
 
     private void Arm()
     {
+        playerActions = PlayerActions.Resolve(name, world);
         anchor = ImGui.GetMousePos();
         pending = true;
         token++;
@@ -133,7 +140,31 @@ internal sealed class GameChatMenu
             Add(L.Linkpearl.LookUp, FontAwesomeIcon.Search, ActionLookUp);
         }
 
+        AddPlayerItems();
+    }
+
+    private void AddPlayerItems()
+    {
         Add(L.Linkpearl.InviteToParty, FontAwesomeIcon.UserPlus, ActionInviteParty);
+        if (playerActions.FriendRequest)
+        {
+            Add(L.Linkpearl.SendFriendRequest, FontAwesomeIcon.UserFriends, ActionFriendRequest);
+        }
+
+        if (playerActions.AdventurerPlate)
+        {
+            Add(L.Linkpearl.AdventurerPlate, FontAwesomeIcon.IdCard, ActionAdventurerPlate);
+        }
+
+        if (playerActions.Target)
+        {
+            Add(L.Linkpearl.TargetPlayer, FontAwesomeIcon.Crosshairs, ActionTargetPlayer);
+        }
+
+        if (playerActions.Blacklist)
+        {
+            Add(L.Linkpearl.AddToBlacklist, FontAwesomeIcon.UserSlash, ActionBlacklist, danger: true);
+        }
     }
 
     private void BuildLinkItems()
@@ -172,7 +203,7 @@ internal sealed class GameChatMenu
                     Add(L.Linkpearl.LookUp, FontAwesomeIcon.Search, ActionLookUp);
                 }
 
-                Add(L.Linkpearl.InviteToParty, FontAwesomeIcon.UserPlus, ActionInviteParty);
+                AddPlayerItems();
                 Add(L.Messages.CopyName, FontAwesomeIcon.Copy, ActionCopyName);
                 return;
             default:
@@ -181,9 +212,9 @@ internal sealed class GameChatMenu
         }
     }
 
-    private void Add(LocString label, FontAwesomeIcon icon, byte action)
+    private void Add(LocString label, FontAwesomeIcon icon, byte action, bool danger = false)
     {
-        items.Add(new DropdownMenu.Item(Loc.T(label), IconGlyph.Of(icon)));
+        items.Add(new DropdownMenu.Item(Loc.T(label), IconGlyph.Of(icon), danger));
         actions.Add(action);
     }
 
@@ -205,6 +236,18 @@ internal sealed class GameChatMenu
                 break;
             case ActionInviteParty:
                 GameLinkActions.InviteToParty(name, world);
+                break;
+            case ActionFriendRequest:
+                PlayerActions.SendFriendRequest(name, world);
+                break;
+            case ActionAdventurerPlate:
+                PlayerActions.OpenAdventurerPlate(name, world);
+                break;
+            case ActionTargetPlayer:
+                PlayerActions.TargetPlayer(name, world);
+                break;
+            case ActionBlacklist:
+                PlayerActions.AddToBlacklist(name, world);
                 break;
             case ActionOpenUrl:
                 UrlActions.AskThenOpen(text);

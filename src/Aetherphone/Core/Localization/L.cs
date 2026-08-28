@@ -3392,6 +3392,10 @@ internal static class L
         public static readonly LocString AlertsMentions = new("linkpearl.alertsMentions", "Mentions only");
         public static readonly LocString AlertsOff = new("linkpearl.alertsOff", "Off");
         public static readonly LocString StoredOnThisPc = new("linkpearl.storedOnThisPc", "History is kept on this PC only.");
+        public static readonly LocString SendFriendRequest = new("linkpearl.sendFriendRequest", "Send friend request");
+        public static readonly LocString AdventurerPlate = new("linkpearl.adventurerPlate", "Adventurer plate");
+        public static readonly LocString TargetPlayer = new("linkpearl.targetPlayer", "Target player");
+        public static readonly LocString AddToBlacklist = new("linkpearl.addToBlacklist", "Add to blacklist");
         public static readonly LocString SendTell = new("linkpearl.sendTell", "Send a tell");
         public static readonly LocString LookUp = new("linkpearl.lookUp", "Look up character");
         public static readonly LocString InviteToParty = new("linkpearl.inviteToParty", "Invite to party");
