@@ -4796,7 +4796,7 @@
   "changelog.r1013.3": "Added sound effects to the mini-games in Games, with their own volume under Game Sounds in Settings > Sounds",
   "changelog.r1013.4": "Added a Silent Mode switch to the main Settings page, so muting the ringtone, notifications and interface sounds is one tap away",
   "changelog.r1013.5": "Added keyboard controls to Beat: the four lanes bind to 1 to 4 with A, S, D and F as alternates, and each key is printed on a cap under its lane",
-  "changelog.r1013.6": "Added search to the home screen: pull down on the app grid or tap the Search pill where the page dots sit to find apps, contacts, settings pages, notes, conversations and market items in one list",
+  "changelog.r1013.6": "Added search to the home screen: pull down on the app grid or tap the Search pill to find apps, settings, messages, notes, shortcuts and more in one place, run a shortcut or flip a setting on the spot, and do quick math right in the search field",
   "changelog.r1013.7": "Added MogCast, Music, News and Hunts to the Chinese game version, so that client gets the same apps as everyone else",
   "changelog.r1013.8": "Added a Trademark document and updated the official Aetherphone documents, including the readme, terms, privacy notice and third-party notices, all readable in the GitHub repository",
   "changelog.r1013.9": "Moved Show in Group Pose off the main Settings page into General settings",

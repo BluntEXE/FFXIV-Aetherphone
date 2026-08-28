@@ -4796,7 +4796,7 @@
   "changelog.r1013.3": "Añadidos efectos de sonido a los minijuegos de Juegos, con su propio volumen en Sonidos de juegos dentro de Ajustes > Sonidos",
   "changelog.r1013.4": "Añadido un interruptor de Modo silencio en la página principal de Ajustes, para silenciar el tono, las notificaciones y los sonidos de la interfaz con un toque",
   "changelog.r1013.5": "Añadido el control con teclado en Beat: los cuatro carriles responden del 1 al 4, con A, S, D y F como alternativa, y cada tecla aparece en una pestaña bajo su carril",
-  "changelog.r1013.6": "Añadida la búsqueda a la pantalla de inicio: desliza hacia abajo en la cuadrícula de apps o toca la píldora Buscar donde están los puntos de página para encontrar apps, contactos, páginas de ajustes, notas, conversaciones y objetos del mercado en una sola lista",
+  "changelog.r1013.6": "Añadida la búsqueda a la pantalla de inicio: desliza hacia abajo en la cuadrícula de apps o toca la píldora Buscar para encontrar apps, ajustes, mensajes, notas, atajos y más en un solo sitio, lanzar un atajo o cambiar un ajuste al momento, y hacer cuentas rápidas en el propio campo de búsqueda",
   "changelog.r1013.7": "Añadidos MogCast, Música, Noticias y Cacerías en la versión china del juego, para que ese cliente tenga las mismas apps que el resto",
   "changelog.r1013.8": "Añadido un documento de marca registrada y actualizados los documentos oficiales de Aetherphone, entre ellos el readme, los términos, el aviso de privacidad y los avisos de terceros, todos disponibles en el repositorio de GitHub",
   "changelog.r1013.9": "Movido Mostrar en Pose de grupo de la página principal de Ajustes a los ajustes de General",

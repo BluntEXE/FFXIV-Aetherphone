@@ -1647,7 +1647,7 @@ internal static class L
             new("changelog.r1013.5",
                 "Added keyboard controls to Beat: the four lanes bind to 1 to 4 with A, S, D and F as alternates, and each key is printed on a cap under its lane"),
             new("changelog.r1013.6",
-                "Added search to the home screen: pull down on the app grid or tap the Search pill where the page dots sit to find apps, contacts, settings pages, notes, conversations and market items in one list"),
+                "Added search to the home screen: pull down on the app grid or tap the Search pill to find apps, settings, messages, notes, shortcuts and more in one place, run a shortcut or flip a setting on the spot, and do quick math right in the search field"),
             new("changelog.r1013.7",
                 "Added MogCast, Music, News and Hunts to the Chinese game version, so that client gets the same apps as everyone else"),
             new("changelog.r1013.8",

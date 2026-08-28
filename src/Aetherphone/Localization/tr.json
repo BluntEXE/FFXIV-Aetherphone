@@ -4796,7 +4796,7 @@
   "changelog.r1013.3": "Oyunlar'daki mini oyunlara ses efektleri eklendi, ses seviyesi Ayarlar > Sesler altındaki Oyun sesleri ile ayrı ayarlanıyor",
   "changelog.r1013.4": "Ayarlar'ın ana sayfasına Sessiz mod anahtarı eklendi, böylece zil sesi, bildirimler ve arayüz sesleri tek dokunuşla susuyor",
   "changelog.r1013.5": "Beat'e klavye desteği eklendi: dört şerit 1 ile 4 arasına, alternatif olarak A, S, D ve F tuşlarına bağlı ve her tuş kendi şeridinin altındaki bir kapakta yazılı",
-  "changelog.r1013.6": "Ana ekrana arama eklendi: uygulama ızgarasını aşağı çek ya da sayfa noktalarının yerindeki Ara hapına dokun, uygulamaları, kişileri, ayar sayfalarını, notları, sohbetleri ve market eşyalarını tek listede bul",
+  "changelog.r1013.6": "Ana ekrana arama eklendi: uygulama ızgarasını aşağı çek ya da Ara hapına dokun; uygulamaları, ayarları, mesajları, notları, kısayolları ve daha fazlasını tek yerden bul, bir kısayolu çalıştır ya da bir ayarı oracıkta değiştir, arama alanında hızlıca hesap yap",
   "changelog.r1013.7": "Oyunun Çin sürümüne MogCast, Müzik, Haberler ve Avlar eklendi, böylece o istemcide de diğerleriyle aynı uygulamalar var",
   "changelog.r1013.8": "Bir marka belgesi eklendi ve Aetherphone'un resmi belgeleri güncellendi: readme, koşullar, gizlilik bildirimi ve üçüncü taraf bildirimleri, hepsi GitHub deposundan okunabiliyor",
   "changelog.r1013.9": "Grup pozunda göster ayarı Ayarlar'ın ana sayfasından Genel ayarlarına taşındı",

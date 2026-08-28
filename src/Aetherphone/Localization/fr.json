@@ -4796,7 +4796,7 @@
   "changelog.r1013.3": "Effets sonores ajoutés aux mini-jeux de Jeux, avec leur propre volume sous Sons des jeux dans Réglages > Sons",
   "changelog.r1013.4": "Interrupteur Mode silencieux ajouté sur la page principale des Réglages, pour couper la sonnerie, les notifications et les sons de l'interface d'un seul geste",
   "changelog.r1013.5": "Commandes clavier ajoutées à Beat : les quatre voies répondent aux touches 1 à 4, avec A, S, D et F en variantes, et chaque touche est imprimée sur un cabochon sous sa voie",
-  "changelog.r1013.6": "Recherche ajoutée à l'écran d'accueil : tirez la grille d'apps vers le bas ou touchez la pilule Rechercher à la place des points de page pour trouver apps, contacts, pages de réglages, notes, conversations et objets du marché dans une seule liste",
+  "changelog.r1013.6": "Recherche ajoutée à l'écran d'accueil : tirez la grille d'apps vers le bas ou touchez la pilule Rechercher pour trouver apps, réglages, messages, notes, raccourcis et plus au même endroit, lancer un raccourci ou changer un réglage sur place, et faire un calcul rapide dans le champ de recherche",
   "changelog.r1013.7": "MogCast, Musique, Actus et Chasses ajoutés sur la version chinoise du jeu, pour que ce client retrouve les mêmes apps que les autres",
   "changelog.r1013.8": "Document de marque ajouté et documents officiels d'Aetherphone mis à jour, dont le readme, les conditions, l'avis de confidentialité et les mentions tierces, tous consultables dans le dépôt GitHub",
   "changelog.r1013.9": "Afficher dans le Photodrame déplacé de la page principale des Réglages vers les réglages Général",
