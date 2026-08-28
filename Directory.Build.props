@@ -23,6 +23,18 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
+  <!--
+    Code style is enforced by the compiler, not by review. Without
+    EnforceCodeStyleInBuild the IDE rules in .editorconfig fire in an editor
+    and under dotnet format but never during a build, so CI never sees them.
+    ManagedDoom opts out of all three in its own csproj.
+  -->
+  <PropertyGroup Label="CodeStyle">
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-minimum</AnalysisLevel>
+  </PropertyGroup>
+
   <PropertyGroup Label="Restore">
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
