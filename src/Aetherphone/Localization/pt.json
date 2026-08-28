@@ -4876,6 +4876,7 @@
   "changelog.r1013.31": "Valores em gil e contagens de espectadores agora seguem a formatação numérica do seu idioma em todo lugar",
   "changelog.r1013.33": "As abas do Chirper agora atualizam quando você volta para elas, em vez de ficar com o que buscaram da primeira vez, Explorar mantém seus resultados quando você sai da aba, e os efeitos de nome se animam no app inteiro, não só nos perfis",
   "changelog.r1013.34": "Corrigido uma instalação nova ficar um minuto na tela de inicialização antes de o telefone aparecer, e o texto mudar de tamanho ao acaso na primeira vez que um app desenhava um ícone que ainda não tinha desenhado",
+  "changelog.r1013.35": "Corrigido o brilho no topo dos painéis terminar em uma linha dura logo antes dos cantos arredondados, na barra na parte de baixo da tela inicial, nos cartões do Vigia do Céu e em painéis de outras partes do telefone, de modo que agora ele se dissolve nas duas pontas",
   "changelog.r1012.0": "Adicionado Mods, um navegador do Heliosphere: pesquise o catálogo por nome ou categoria, ordene por alta, downloads ou data e veja as imagens, o changelog e as permissões de cada mod sem sair do jogo",
   "changelog.r1012.1": "Instalar e atualizar pelo Mods passa pelo plugin do Heliosphere, então os criadores mantêm suas contagens de downloads e o celular nunca toca na pasta de mods do Penumbra",
   "changelog.r1012.2": "A aba Instalados do Mods lista seus mods do Heliosphere com as capas, marca os que têm atualização e os ativa ou desativa na sua coleção",

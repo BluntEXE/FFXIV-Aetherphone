@@ -4876,6 +4876,7 @@
   "changelog.r1013.31": "Gil-Beträge und Zuschauerzahlen folgen jetzt überall der Zahlenschreibweise deiner Sprache",
   "changelog.r1013.33": "Chirper-Tabs aktualisieren jetzt, wenn du zu ihnen zurückkehrst, statt auf dem stehen zu bleiben, was sie beim ersten Mal geholt haben, Entdecken behält seine Ergebnisse, wenn du den Tab verlässt, und Namenseffekte laufen überall in der App statt nur auf Profilen",
   "changelog.r1013.34": "Behoben, dass eine Neuinstallation eine Minute auf dem Startbildschirm hing, bevor das Handy erschien, und dass Text zufällig die Größe wechselte, wenn eine App zum ersten Mal ein noch nie gezeichnetes Symbol malte",
+  "changelog.r1013.35": "Behoben, dass der Glanzstreifen am oberen Rand von Flächen kurz vor den abgerundeten Ecken hart abbrach, in der Leiste am unteren Rand des Startbildschirms, auf den Karten von Wetterwart und auf Flächen anderswo auf dem Handy, sodass er jetzt an beiden Enden ausläuft",
   "changelog.r1012.0": "Neu: Mods, ein Heliosphere-Browser: durchsuche den Katalog nach Name oder Kategorie, sortiere nach Trend, Downloads oder Datum und sieh dir Bilder, Changelog und Berechtigungen jedes Mods an, ohne das Spiel zu verlassen",
   "changelog.r1012.1": "Installieren und Aktualisieren aus Mods läuft über das Heliosphere-Plugin, sodass Ersteller ihre Download-Zahlen behalten und das Handy den Mod-Ordner von Penumbra nie anfasst",
   "changelog.r1012.2": "Der Tab Installiert in Mods zeigt deine Heliosphere-Mods mit Cover, markiert die mit einem Update und schaltet sie in deiner Sammlung ein oder aus",

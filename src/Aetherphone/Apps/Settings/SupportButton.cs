@@ -48,9 +48,8 @@ internal static class SupportButton
         }
 
         Squircle.Fill(drawList, origin, end, rounding, ImGui.GetColorU32(fill));
-        drawList.AddLine(new Vector2(origin.X + rounding, origin.Y + 1.5f * scale),
-            new Vector2(end.X - rounding, origin.Y + 1.5f * scale),
-            ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.24f)), 1f);
+        Material.Sheen(drawList, origin, end, rounding, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.24f)), 1f,
+            1.5f * scale);
         Sheen(drawList, origin, size);
         Squircle.Stroke(drawList, origin, end, rounding,
             ImGui.GetColorU32(new Vector4(1f, 1f, 1f, hovered ? 0.44f : 0.20f)), 1f * scale);

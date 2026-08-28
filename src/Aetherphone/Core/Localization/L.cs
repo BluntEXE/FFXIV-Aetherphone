@@ -1702,6 +1702,8 @@ internal static class L
                 "Gil figures and viewer counts now follow your language's number formatting everywhere"),
             new("changelog.r1013.34",
                 "Fixed a fresh install holding on the boot screen for a minute before the phone appeared, and text resizing at random the first time an app drew an icon it had not seen"),
+            new("changelog.r1013.35",
+                "Fixed the glossy highlight along the top of panels ending in a hard line short of their rounded corners, on the bar at the bottom of the home screen, on Skywatcher's cards and on panels elsewhere on the phone, so it now fades out at both ends"),
         };
 
         public static readonly LocString[] Release1012 =

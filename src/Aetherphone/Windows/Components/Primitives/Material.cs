@@ -6,6 +6,7 @@ internal static class Material
 {
     private const float BorderAlpha = 0.09f;
     private const float HighlightAlpha = 0.11f;
+    private const float SheenFalloff = 0.18f;
     private const uint AlphaChannel = 0xFF000000;
     private static readonly Vector4 FrostedFill = new(0.12f, 0.12f, 0.15f, 0.86f);
     private static readonly Vector4 DockGlassCalm = new(0.90f, 0.92f, 0.98f, 0.26f);
@@ -77,12 +78,8 @@ internal static class Material
         var fill = Vector4.Lerp(DockGlassCalm, DockGlassHarsh, harsh);
         Squircle.Fill(drawList, min, max, radius, ImGui.GetColorU32(fill with { W = fill.W * opacity }));
 
-        var inset = MathF.Max(radius, 1f);
-        var sheen = ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.10f * opacity));
-        var sheenClear = ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0f));
-        var sheenBottom = min.Y + (max.Y - min.Y) * 0.5f;
-        drawList.AddRectFilledMultiColor(new Vector2(min.X + inset, min.Y + 1f * scale),
-            new Vector2(max.X - inset, sheenBottom), sheen, sheen, sheenClear, sheenClear);
+        SheenBlock(drawList, min, max, radius, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.10f * opacity)), 1f * scale,
+            0.5f);
 
         Squircle.Stroke(drawList, min, max, radius,
             ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.42f * opacity)), 1.4f * scale);
@@ -142,6 +139,42 @@ internal static class Material
         DrawSheen(drawList, min, max, box, RoundedInset(box, depth), color, thickness, depth);
     }
 
+    public static void SheenBlock(ImDrawListPtr drawList, Vector2 min, Vector2 max, float radius, uint color,
+        float depth, float coverage)
+    {
+        if ((color & AlphaChannel) == 0u)
+        {
+            return;
+        }
+
+        var box = Squircle.CornerBox(min, max, radius);
+        var inset = Squircle.EdgeInset(box, depth);
+        var left = min.X + inset;
+        var right = max.X - inset;
+        var top = min.Y + depth;
+        var bottom = min.Y + (max.Y - min.Y) * coverage;
+        if (right - left <= 1f || bottom <= top)
+        {
+            return;
+        }
+
+        var middle = (left + right) * 0.5f;
+        var taper = MathF.Max(box - inset, (right - left) * SheenFalloff);
+        var solidLeft = MathF.Min(left + taper, middle);
+        var solidRight = MathF.Max(right - taper, middle);
+        var clear = color & ~AlphaChannel;
+        drawList.AddRectFilledMultiColor(new Vector2(left, top), new Vector2(solidLeft, bottom), clear, color, clear,
+            clear);
+        if (solidRight > solidLeft)
+        {
+            drawList.AddRectFilledMultiColor(new Vector2(solidLeft, top), new Vector2(solidRight, bottom), color, color,
+                clear, clear);
+        }
+
+        drawList.AddRectFilledMultiColor(new Vector2(solidRight, top), new Vector2(right, bottom), color, clear, clear,
+            clear);
+    }
+
     private static float RoundedInset(float box, float depth)
     {
         if (box <= 0f || depth <= 0f)
@@ -176,8 +209,9 @@ internal static class Material
         var top = min.Y + depth;
         var bottom = top + MathF.Max(thickness, 1f);
         var middle = (left + right) * 0.5f;
-        var solidLeft = MathF.Min(min.X + box, middle);
-        var solidRight = MathF.Max(max.X - box, middle);
+        var taper = MathF.Max(box - inset, (right - left) * SheenFalloff);
+        var solidLeft = MathF.Min(left + taper, middle);
+        var solidRight = MathF.Max(right - taper, middle);
         var clear = color & ~AlphaChannel;
         drawList.AddRectFilledMultiColor(new Vector2(left, top), new Vector2(solidLeft, bottom), clear, color, color,
             clear);

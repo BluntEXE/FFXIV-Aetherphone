@@ -43,10 +43,7 @@ internal static class WeatherCard
             return;
         }
 
-        var inset = MathF.Max(radius, 1f);
-        var y = card.Min.Y + 1.2f * scale;
-        drawList.AddLine(new Vector2(card.Min.X + inset, y), new Vector2(card.Max.X - inset, y),
-            ImGui.GetColorU32(color), 1.2f * scale);
+        Material.Sheen(drawList, card.Min, card.Max, radius, ImGui.GetColorU32(color), 1.2f * scale, 1.2f * scale);
     }
 
     public static void Chip(ImDrawListPtr drawList, Rect chip, WeatherKind kind, bool isDay, float scale)

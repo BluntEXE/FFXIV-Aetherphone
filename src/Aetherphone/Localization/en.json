@@ -4876,6 +4876,7 @@
   "changelog.r1013.31": "Gil figures and viewer counts now follow your language's number formatting everywhere",
   "changelog.r1013.33": "Chirper tabs now refresh when you come back to them instead of sitting on what they fetched the first time, Explore keeps its results when you leave the tab, and name effects play everywhere in the app rather than only on profiles",
   "changelog.r1013.34": "Fixed a fresh install holding on the boot screen for a minute before the phone appeared, and text resizing at random the first time an app drew an icon it had not seen",
+  "changelog.r1013.35": "Fixed the glossy highlight along the top of panels ending in a hard line short of their rounded corners, on the bar at the bottom of the home screen, on Skywatcher's cards and on panels elsewhere on the phone, so it now fades out at both ends",
   "changelog.r1012.0": "Added Mods, a Heliosphere browser: search the catalog by name or category, sort by trending, downloads or date, and read each mod's images, changelog and permissions without leaving the game",
   "changelog.r1012.1": "Installing and updating from Mods goes through the Heliosphere plugin, so creators keep their download counts and the phone never touches Penumbra's mod folder",
   "changelog.r1012.2": "The Installed tab in Mods lists your Heliosphere mods with their covers, flags the ones with an update, and switches them on or off in your collection",

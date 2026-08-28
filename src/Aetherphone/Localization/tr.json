@@ -4876,6 +4876,7 @@
   "changelog.r1013.31": "Gil tutarları ve izleyici sayıları artık her yerde dilinizin sayı biçimini izliyor",
   "changelog.r1013.33": "Chirper sekmeleri artık geri döndüğünüzde ilk seferde getirdikleriyle kalmayıp yenileniyor, Keşfet sekmeden çıktığınızda sonuçlarını koruyor ve isim efektleri yalnızca profillerde değil uygulamanın tamamında oynuyor",
   "changelog.r1013.34": "Yeni bir kurulumun telefon görünmeden önce bir dakika açılış ekranında beklemesi ve bir uygulama ilk kez görmediği bir simge çizdiğinde yazıların rastgele boyut değiştirmesi düzeltildi",
+  "changelog.r1013.35": "Panellerin üst kenarındaki parlaklığın yuvarlatılmış köşelere varmadan sert bir çizgiyle kesilmesi düzeltildi: ana ekranın altındaki çubukta, Gökgözcü kartlarında ve telefonun başka yerlerindeki panellerde artık iki uçta da yumuşakça sönümleniyor",
   "changelog.r1012.0": "Heliosphere tarayıcısı Modlar eklendi: kataloğu ada veya kategoriye göre arayın, trend, indirme veya tarihe göre sıralayın ve her modun görsellerini, değişiklik günlüğünü ve izinlerini oyundan çıkmadan okuyun",
   "changelog.r1012.1": "Modlar'dan kurulum ve güncelleme Heliosphere eklentisi üzerinden yapılır, böylece yapımcılar indirme sayılarını korur ve telefon Penumbra'nın mod klasörüne asla dokunmaz",
   "changelog.r1012.2": "Modlar'daki Kurulu sekmesi Heliosphere modlarınızı kapaklarıyla listeler, güncellemesi olanları işaretler ve koleksiyonunuzda açıp kapatır",
