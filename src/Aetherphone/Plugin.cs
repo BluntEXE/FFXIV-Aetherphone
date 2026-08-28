@@ -305,6 +305,7 @@ public sealed class Plugin : IDalamudPlugin
     private void OnDeviceLinkTick(IFramework framework)
     {
         services.DeviceLinks.Tick((float)framework.UpdateDelta.TotalSeconds);
+        services.EncryptionGuide.Tick((float)framework.UpdateDelta.TotalSeconds);
     }
 
     private void OnAutoOpenTick(IFramework framework)

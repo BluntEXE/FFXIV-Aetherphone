@@ -123,6 +123,8 @@ internal sealed class PhoneServices : IDisposable
     public required KeyVault KeyVault { get; init; }
 
     public required DeviceLinkWatcher DeviceLinks { get; init; }
+
+    public required EncryptionGuide EncryptionGuide { get; init; }
     public required PeerKeyDirectory PeerKeys { get; init; }
     public required ConversationKeyStore ConversationKeys { get; init; }
     public required EncryptionSetupLauncher EncryptionSetup { get; init; }
@@ -303,6 +305,7 @@ internal sealed class PhoneServices : IDisposable
             housingGate);
         var confirm = new ConfirmService();
         var deviceLinks = new DeviceLinkWatcher(keyVault, aethernetSession, confirm);
+        var encryptionGuide = new EncryptionGuide(keyVault, aethernetSession, notifications);
         Windows.UrlActions.Configure(confirm);
         var calls = new CallHub(configuration, aethernetSession, notifications, sound, playback, realtimeSignals,
             confirm, installer.Gate("message"));
@@ -420,6 +423,7 @@ internal sealed class PhoneServices : IDisposable
             Aethernet = aethernet,
             KeyVault = keyVault,
             DeviceLinks = deviceLinks,
+            EncryptionGuide = encryptionGuide,
             PeerKeys = peerKeys,
             ConversationKeys = conversationKeys,
             EncryptionSetup = new EncryptionSetupLauncher(),

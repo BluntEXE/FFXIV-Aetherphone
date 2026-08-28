@@ -49,6 +49,47 @@ internal sealed class EncryptionVaultActions : IDisposable
         status = string.Empty;
     }
 
+    public string VerifyEntry = string.Empty;
+
+    public bool VerifyingSavedCode;
+
+    public string? ExpectedVerifyGroup
+    {
+        get
+        {
+            var code = vault.UnsavedRecoveryCode;
+            if (code is null)
+            {
+                return null;
+            }
+
+            var groups = code.Split('-');
+            return groups.Length == 0 ? null : groups[^1];
+        }
+    }
+
+    public bool TryConfirmSavedCode()
+    {
+        var expected = ExpectedVerifyGroup;
+        if (expected is null)
+        {
+            return false;
+        }
+
+        var typed = RecoveryKey.Canonicalize(VerifyEntry);
+        if (!string.Equals(typed, RecoveryKey.Canonicalize(expected), StringComparison.Ordinal))
+        {
+            status = Loc.T(L.Encryption.GuideVerifyWrong);
+            return false;
+        }
+
+        VerifyEntry = string.Empty;
+        VerifyingSavedCode = false;
+        status = string.Empty;
+        vault.AcknowledgeRecoveryCode();
+        return true;
+    }
+
     public string LinkCode => linkCode;
 
     public bool LinkWaiting => linkRequestId.Length > 0;

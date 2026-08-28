@@ -191,6 +191,17 @@ public sealed class EncryptionKeyStoreTests
     }
 
     [Fact]
+    public void A_generated_recovery_code_ends_in_a_group_that_can_be_typed_back()
+    {
+        var code = RecoveryKey.GenerateCode();
+        var groups = code.Split('-');
+
+        Assert.Equal(5, groups.Length);
+        Assert.All(groups, group => Assert.Equal(4, group.Length));
+        Assert.Equal(RecoveryKey.Canonicalize(groups[^1]), RecoveryKey.Canonicalize(groups[^1].ToLowerInvariant()));
+    }
+
+    [Fact]
     public void Recovery_nudge_returns_after_the_snooze_expires()
     {
         var configuration = new Configuration();

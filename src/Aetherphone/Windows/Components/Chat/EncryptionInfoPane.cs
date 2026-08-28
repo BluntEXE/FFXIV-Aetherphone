@@ -1,4 +1,4 @@
-using Aetherphone.Core;
+﻿using Aetherphone.Core;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Localization;
@@ -125,7 +125,7 @@ internal sealed class EncryptionInfoPane : IDisposable
                 DrawLockedSection(ui, theme);
                 break;
             case KeyVaultState.Unlocked:
-                DrawRecoverySection(ui);
+                DrawRecoverySection(ui, theme);
                 break;
         }
     }
@@ -182,27 +182,13 @@ internal sealed class EncryptionInfoPane : IDisposable
         }
     }
 
-    private void DrawRecoverySection(AppSkin ui)
+    private void DrawRecoverySection(AppSkin ui, PhoneTheme theme)
     {
         var scale = UiScale.Current;
         var unsaved = actions.Vault.UnsavedRecoveryCode;
         if (unsaved is not null)
         {
-            DrawSectionLabel(ui, Loc.T(L.Encryption.RecoverySaveTitle));
-            DrawWrapped(ui, Loc.T(L.Encryption.SaveCodeIntro));
-            ImGui.Dummy(new Vector2(0f, 10f * scale));
-            DrawSectionLabel(ui, unsaved);
-            ImGui.Dummy(new Vector2(0f, 10f * scale));
-            if (DrawButton(ui, Loc.T(L.Encryption.RecoveryCopy), false))
-            {
-                ImGui.SetClipboardText(unsaved);
-            }
-
-            if (DrawButton(ui, Loc.T(L.Encryption.RecoverySavedButton), true))
-            {
-                actions.Vault.AcknowledgeRecoveryCode();
-            }
-
+            DrawUnsavedCodeGuide(ui, theme, unsaved, scale);
             return;
         }
 
@@ -265,6 +251,67 @@ internal sealed class EncryptionInfoPane : IDisposable
                    .Push(ImGuiCol.Text, theme.TextStrong))
         {
             ImGui.InputText("##encryptionRecoveryCode", ref actions.CodeEntry, 64);
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, height));
+    }
+
+    private void DrawUnsavedCodeGuide(AppSkin ui, PhoneTheme theme, string code, float scale)
+    {
+        if (!actions.VerifyingSavedCode)
+        {
+            DrawSectionLabel(ui, Loc.T(L.Encryption.RecoverySaveTitle));
+            DrawWrapped(ui, Loc.T(L.Encryption.SaveCodeIntro));
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
+            DrawWrapped(ui, code, ui.TitleInk);
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
+            if (DrawButton(ui, Loc.T(L.Encryption.RecoveryCopy), false))
+            {
+                ImGui.SetClipboardText(code);
+            }
+
+            if (DrawButton(ui, Loc.T(L.Encryption.GuideWroteItDown), true))
+            {
+                actions.VerifyingSavedCode = true;
+                actions.Status = string.Empty;
+            }
+
+            return;
+        }
+
+        DrawSectionLabel(ui, Loc.T(L.Encryption.GuideVerifyTitle));
+        DrawWrapped(ui, Loc.T(L.Encryption.GuideVerifyBody, actions.ExpectedVerifyGroup ?? string.Empty));
+        ImGui.Dummy(new Vector2(0f, 10f * scale));
+        DrawVerifyInput(ui, theme);
+        ImGui.Dummy(new Vector2(0f, 10f * scale));
+        if (DrawButton(ui, Loc.T(L.Encryption.GuideVerifyConfirm), true))
+        {
+            actions.TryConfirmSavedCode();
+        }
+
+        if (DrawButton(ui, Loc.T(L.Encryption.GuideShowAgain), false))
+        {
+            actions.VerifyingSavedCode = false;
+            actions.Status = string.Empty;
+        }
+    }
+
+    private void DrawVerifyInput(AppSkin ui, PhoneTheme theme)
+    {
+        var scale = UiScale.Current;
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        var height = 38f * scale;
+        var drawList = ImGui.GetWindowDrawList();
+        ui.Card(drawList, origin, new Vector2(origin.X + width, origin.Y + height), 9f * scale);
+        ImGui.SetCursorScreenPos(new Vector2(origin.X + 12f * scale,
+            origin.Y + height * 0.5f - ImGui.GetFrameHeight() * 0.5f));
+        ImGui.SetNextItemWidth(width - 24f * scale);
+        using (Dalamud.Interface.Utility.Raii.ImRaii.PushColor(ImGuiCol.FrameBg, new Vector4(0f, 0f, 0f, 0f))
+                   .Push(ImGuiCol.Text, theme.TextStrong))
+        {
+            ImGui.InputText("##encryptionVerifyCode", ref actions.VerifyEntry, 16);
         }
 
         ImGui.SetCursorScreenPos(origin);
