@@ -573,7 +573,7 @@ internal sealed partial class ChirperApp : IResumableApp
                     PhoneIcon.Draw(drawList, iconCenter, active ? PhoneIcons.BellFilled : PhoneIcons.Bell,
                         iconInk, iconSize);
                     DrawBellBadge(iconCenter, social.UnseenCount(Id));
-                    label = Loc.T(L.Chirper.TabAlerts);
+                    label = Loc.T(L.Social.ActivityTitle);
                     break;
                 case HomeTab.Profile:
                     PhoneIcon.Draw(drawList, iconCenter, active ? PhoneIcons.UserFilled : PhoneIcons.User,

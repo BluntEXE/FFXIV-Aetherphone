@@ -3516,7 +3516,6 @@ internal static class L
         public static readonly LocString SuggestedPeople = new("chirper.suggestedPeople", "People");
         public static readonly LocString TabHome = new("chirper.tabHome", "Home");
         public static readonly LocString TabExplore = new("chirper.tabExplore", "Explore");
-        public static readonly LocString TabAlerts = new("chirper.tabAlerts", "Alerts");
         public static readonly LocString TabProfile = new("chirper.tabProfile", "Profile");
         public static readonly LocString LikesTab = new("chirper.likesTab", "Likes");
         public static readonly LocString LikesEmpty = new("chirper.likesEmpty", "Chirps you react to will show up here");
