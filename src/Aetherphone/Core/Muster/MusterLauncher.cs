@@ -1,24 +1,12 @@
+using Aetherphone.Core.Apps;
+
 namespace Aetherphone.Core.Muster;
 
 internal sealed class MusterLauncher
 {
-    private string? pendingMusterId;
+    private readonly LaunchIntent detail = new();
 
-    public void RequestDetail(string musterId)
-    {
-        pendingMusterId = musterId;
-    }
+    public void RequestDetail(string musterId) => detail.Request(musterId);
 
-    public bool TryConsumeDetail(out string musterId)
-    {
-        if (pendingMusterId is null)
-        {
-            musterId = string.Empty;
-            return false;
-        }
-
-        musterId = pendingMusterId;
-        pendingMusterId = null;
-        return true;
-    }
+    public bool TryConsumeDetail(out string musterId) => detail.TryConsume(out musterId);
 }

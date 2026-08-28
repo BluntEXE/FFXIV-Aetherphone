@@ -1,19 +1,12 @@
+using Aetherphone.Core.Apps;
+
 namespace Aetherphone.Core.Video;
 
 internal sealed class AetherStreamLauncher
 {
-    private bool upNextPending;
+    private readonly LaunchFlag upNext = new();
 
-    public void RequestUpNext() => upNextPending = true;
+    public void RequestUpNext() => upNext.Request();
 
-    public bool TryConsumeUpNext()
-    {
-        if (!upNextPending)
-        {
-            return false;
-        }
-
-        upNextPending = false;
-        return true;
-    }
+    public bool TryConsumeUpNext() => upNext.TryConsume();
 }
