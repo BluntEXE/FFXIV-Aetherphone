@@ -10,7 +10,7 @@ namespace Aetherphone.Windows.Components;
 internal static class ComposeFab
 {
     private const float DefaultRadius = 26f;
-    private const float GlowReach = 14f;
+    private const float GlowReach = 10f;
     private const int GlowRings = 10;
     private const float GlowRingAlpha = 0.035f;
     private const float HoverGrow = 1.07f;
