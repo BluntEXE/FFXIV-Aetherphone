@@ -92,7 +92,7 @@ internal sealed partial class MusicApp
             var slug = sortedDjs[keyIndex].DjSlug ?? sortedDjs[keyIndex].DjName;
             sortedDjHomeKeys.Add("music.liveDj.home." + slug);
             sortedDjHomeTitleKeys.Add("music.liveDj.home.title." + slug);
-            sortedDjViewerCounts.Add(sortedDjs[keyIndex].ViewerCount.ToString("N0"));
+            sortedDjViewerCounts.Add(sortedDjs[keyIndex].ViewerCount.ToString("N0", Loc.Culture));
             sortedDjCardKeys.Add("music.djCard." + slug);
             sortedDjCardTitleKeys.Add("music.djCard.title." + slug);
         }
@@ -105,7 +105,7 @@ internal sealed partial class MusicApp
             var slug = sortedDjsAtVenue[keyIndex].DjSlug ?? sortedDjsAtVenue[keyIndex].DjName;
             sortedDjsAtVenueCardKeys.Add("music.djCard." + slug);
             sortedDjsAtVenueCardTitleKeys.Add("music.djCard.title." + slug);
-            sortedDjsAtVenueViewerCounts.Add(sortedDjsAtVenue[keyIndex].ViewerCount.ToString("N0"));
+            sortedDjsAtVenueViewerCounts.Add(sortedDjsAtVenue[keyIndex].ViewerCount.ToString("N0", Loc.Culture));
         }
     }
 
@@ -544,7 +544,7 @@ internal sealed partial class MusicApp
         {
             lastDjDetailKey = djKey;
             cachedDjEventLabel = string.IsNullOrEmpty(dj.EventName) ? string.Empty : "♦ " + dj.EventName;
-            cachedDjViewerCount = dj.ViewerCount.ToString("N0");
+            cachedDjViewerCount = dj.ViewerCount.ToString("N0", Loc.Culture);
         }
 
         using (AppSurface.Begin(body))
