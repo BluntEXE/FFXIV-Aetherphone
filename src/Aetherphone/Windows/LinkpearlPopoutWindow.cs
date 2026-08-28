@@ -69,6 +69,7 @@ internal sealed class LinkpearlPopoutWindow : Window
     private bool attended;
     private bool placePending;
     private bool collapsed;
+    private bool suppressed;
     private bool anchorsBottomEdge;
     private Spring collapseSpring;
     private LinkpearlPopoutState? savedPlacement;
@@ -124,8 +125,24 @@ internal sealed class LinkpearlPopoutWindow : Window
         attended = false;
         savedPlacement = saved;
         placePending = true;
-        IsOpen = true;
+        IsOpen = !suppressed;
         BringToFront();
+    }
+
+    public void SetSuppressed(bool value)
+    {
+        if (suppressed == value)
+        {
+            return;
+        }
+
+        suppressed = value;
+        if (!Bound)
+        {
+            return;
+        }
+
+        IsOpen = !value;
     }
 
     private void ResolvePlacement()
@@ -270,7 +287,15 @@ internal sealed class LinkpearlPopoutWindow : Window
         Collapsed = collapsed,
     };
 
-    public override void OnClose() => owner.OnWindowClosed(this);
+    public override void OnClose()
+    {
+        if (suppressed)
+        {
+            return;
+        }
+
+        owner.OnWindowClosed(this);
+    }
 
     public override void PreDraw()
     {

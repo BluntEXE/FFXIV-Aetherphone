@@ -192,6 +192,22 @@ internal sealed class LinkpearlPopouts : IDisposable
 
     public void OnCollapseChanged() => Persist();
 
+    public bool Suppressed { get; private set; }
+
+    public void SetSuppressed(bool suppressed)
+    {
+        if (Suppressed == suppressed)
+        {
+            return;
+        }
+
+        Suppressed = suppressed;
+        for (var index = 0; index < windows.Length; index++)
+        {
+            windows[index].SetSuppressed(suppressed);
+        }
+    }
+
     public void OpenTell(string name, string world)
     {
         if (name.Length == 0)

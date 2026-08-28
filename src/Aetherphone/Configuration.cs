@@ -296,6 +296,33 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public float LinkpearlPopoutOpacity { get; set; } = 0.96f;
     public float LinkpearlPopoutTextScale { get; set; } = 1f;
     public List<LinkpearlPopoutState> LinkpearlPopouts { get; set; } = new();
+    public bool LinkpearlPopoutTabs { get; set; } = true;
+    public bool LinkpearlPopoutFade { get; set; } = true;
+    public float LinkpearlPopoutIdleOpacity { get; set; } = 0.62f;
+    public bool LinkpearlPopoutOutgoingTells { get; set; } = true;
+    public bool LinkpearlPopoutCloseOnLogout { get; set; }
+    public bool LinkpearlPopoutHideInCombat { get; set; } = true;
+    public bool LinkpearlPopoutHideInDuty { get; set; }
+    public bool LinkpearlPopoutFieldOperationsExempt { get; set; } = true;
+    public bool LinkpearlPopoutReopenAfterCombat { get; set; } = true;
+    public bool LinkpearlHotkeyEnabled { get; set; }
+    public int LinkpearlHotkeyModifier { get; set; }
+    public int LinkpearlHotkeyKey { get; set; }
+    public bool LinkpearlPlayerContextMenu { get; set; } = true;
+    public bool LinkpearlComposerMultiline { get; set; } = true;
+    public int LinkpearlComposerMaxLines { get; set; } = 4;
+    public bool LinkpearlDoubleEnterSend { get; set; }
+    public bool LinkpearlSplitLongMessages { get; set; } = true;
+    public int LinkpearlSplitIntervalMilliseconds { get; set; } = 1000;
+    public string LinkpearlSplitIndicator { get; set; } = ">>";
+    public bool LinkpearlDraftAutosave { get; set; } = true;
+    public Dictionary<string, string> LinkpearlDrafts { get; set; } = new();
+    public List<SentMessage> LinkpearlRecentSent { get; set; } = new();
+    public Dictionary<string, ChannelStyle> LinkpearlChannelStyles { get; set; } = new();
+    public bool LinkpearlHideHandledFromGameChat { get; set; }
+    public bool LinkpearlEmojiShortcodes { get; set; } = true;
+    public bool LinkpearlEmojiPicker { get; set; } = true;
+    public List<string> LinkpearlEmojiFavorites { get; set; } = new();
     public long DevChatLastSeenUnix { get; set; }
     public long AnnouncementsSeenUnix { get; set; }
     public long AnnouncementsNotifiedUnix { get; set; }

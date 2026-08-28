@@ -30,6 +30,9 @@ internal sealed partial class LinkpearlApp
         {
             DrawNotificationSettings(scale);
             DrawPopoutSettings(scale);
+            DrawPresenceSettings(scale);
+            DrawComposerSettings(scale);
+            DrawChannelSettings(scale);
             DrawHistorySettings(scale);
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Xxl * scale));
         }
