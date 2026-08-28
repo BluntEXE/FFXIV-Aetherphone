@@ -79,6 +79,7 @@ internal sealed class ShellOverlayCoordinator
     {
         var banNotice = !loading.IsActive && banOverlay.IsActive;
         var conductActive = !loading.IsActive && !banNotice && conductOverlay.Captures;
+        var helpActive = !loading.IsActive && !banNotice && encryptionHelpOverlay.Captures;
         var setupActive = setup.IsActive;
         var confirming = !loading.IsActive &&
                          (confirmOverlay.CapturesPointer || reportOverlay.CapturesPointer ||
@@ -87,27 +88,28 @@ internal sealed class ShellOverlayCoordinator
         var overlaysCapture = controlCenterCaptures && !director.WantsControlCenter;
         var ringing = !loading.IsActive && incomingOverlay.IsRinging;
         var islandCaptures = !loading.IsActive && !controlCenterCaptures && !ringing && !confirming &&
-                             !setupActive && !conductActive && !banNotice && !DragScrollHost.AnyDragging &&
+                             !setupActive && !conductActive && !helpActive && !banNotice &&
+                             !DragScrollHost.AnyDragging &&
                              (island.CapturesPointer() ||
                               (!director.CapturesPointer &&
                                (banner.CapturesPointer(screen) || shortcutPill.CapturesPointer())));
         var busy = loading.IsActive || overlaysCapture || ringing || confirming || navigation.IsTransitioning ||
-                   setupActive || banNotice || conductActive;
+                   setupActive || banNotice || conductActive || helpActive;
         var shieldBase = loading.IsActive || islandCaptures || controlCenterCaptures || ringing || confirming ||
-                         setupActive || banNotice || conductActive;
+                         setupActive || banNotice || conductActive || helpActive;
         return new ShellOverlayState(setupActive, confirming, islandCaptures, busy, shieldBase);
     }
 
     private void HandleEscape()
     {
-        if (banOverlay.IsActive || conductOverlay.Captures || encryptionHelpOverlay.Captures || setup.IsActive
-            || director.CapturesPointer)
+        if (banOverlay.IsActive || conductOverlay.Captures || setup.IsActive || director.CapturesPointer)
         {
             return;
         }
 
-        if (!confirmOverlay.CapturesPointer && !reportOverlay.CapturesPointer && !shareSheet.CapturesPointer &&
-            !controlCenter.IsActive)
+        var helpActive = encryptionHelpOverlay.Captures;
+        if (!helpActive && !confirmOverlay.CapturesPointer && !reportOverlay.CapturesPointer &&
+            !shareSheet.CapturesPointer && !controlCenter.IsActive)
         {
             return;
         }
@@ -137,6 +139,12 @@ internal sealed class ShellOverlayCoordinator
         if (shareSheet.CapturesPointer)
         {
             shareSheet.Dismiss();
+            return;
+        }
+
+        if (helpActive)
+        {
+            encryptionHelpOverlay.Dismiss();
             return;
         }
 

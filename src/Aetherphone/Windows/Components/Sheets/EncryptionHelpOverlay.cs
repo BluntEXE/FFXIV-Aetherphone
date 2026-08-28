@@ -21,9 +21,11 @@ internal readonly record struct HelpTopic(FontAwesomeIcon Icon, HelpTone Tone, L
 
 internal sealed class EncryptionHelpOverlay
 {
+    private const ImGuiWindowFlags OverlayFlags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse |
+                                                 ImGuiWindowFlags.NoBackground;
+
     private const float RevealSmoothTime = 0.18f;
     private const float MaxDim = 0.74f;
-    private const float MinPanelScale = 0.96f;
     private const float PanelRounding = 28f;
     private const float SideMargin = 14f;
     private const float TopMargin = 52f;
@@ -56,6 +58,7 @@ internal sealed class EncryptionHelpOverlay
     private Spring reveal;
     private bool wasActive;
     private bool scrollTopPending;
+    private int openedFrame;
 
     public EncryptionHelpOverlay(EncryptionHelpService service)
     {
@@ -64,29 +67,50 @@ internal sealed class EncryptionHelpOverlay
 
     public bool Captures => service.Active;
 
+    public void Dismiss()
+    {
+        service.Dismiss();
+    }
+
     public void Draw(Rect screen, PhoneTheme theme)
     {
         var active = service.Active;
         if (active && !wasActive)
         {
             scrollTopPending = true;
+            openedFrame = ImGui.GetFrameCount();
         }
 
         wasActive = active;
-        var shown = reveal.Step(active ? 1f : 0f, RevealSmoothTime, ImGui.GetIO().DeltaTime);
-        if (shown <= 0.001f)
+        var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
+        reveal.Step(active ? 1f : 0f, RevealSmoothTime, delta);
+        if (!active && reveal.IsResting(0f, 0.001f, 0.005f))
         {
+            reveal.SnapTo(0f);
             return;
         }
 
-        var opacity = Math.Clamp(shown, 0f, 1f);
-        var drawList = ImGui.GetWindowDrawList();
-        drawList.AddRectFilled(screen.Min, screen.Max,
-            ImGui.GetColorU32(new Vector4(0f, 0f, 0f, MaxDim * opacity)));
-        DrawPanel(screen, theme, opacity, active);
+        var opacity = Math.Clamp(reveal.Value, 0f, 1f);
+        ImGui.SetCursorScreenPos(screen.Min);
+        using (ImRaii.Child("##encryptionHelpOverlay", screen.Size, false, OverlayFlags))
+        {
+            var drawList = ImGui.GetWindowDrawList();
+            drawList.AddRectFilled(screen.Min, screen.Max,
+                ImGui.GetColorU32(new Vector4(0f, 0f, 0f, MaxDim * opacity)));
+            var panel = DrawPanel(screen, theme, opacity, active);
+            if (!active || opacity <= 0.5f)
+            {
+                return;
+            }
+
+            if (ImGui.GetFrameCount() != openedFrame && UiInteract.ClickedOutside(panel.Min, panel.Max))
+            {
+                service.Dismiss();
+            }
+        }
     }
 
-    private void DrawPanel(Rect screen, PhoneTheme theme, float opacity, bool interactive)
+    private Rect DrawPanel(Rect screen, PhoneTheme theme, float opacity, bool interactive)
     {
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
@@ -114,6 +138,8 @@ internal sealed class EncryptionHelpOverlay
         {
             service.Dismiss();
         }
+
+        return panel;
     }
 
     private static float DrawHeader(Rect panel, PhoneTheme theme, float opacity, float centerX, float innerWidth,
