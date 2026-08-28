@@ -489,6 +489,7 @@ internal sealed class PhoneServices : IDisposable
         HousingReminders.Dispose();
         Housing.Dispose();
         Venues.Dispose();
+        Hunts.Dispose();
         StratsManifest.Dispose();
         StratsGuides.Dispose();
         Musters.Dispose();
