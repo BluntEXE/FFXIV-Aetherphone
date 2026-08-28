@@ -23,9 +23,26 @@ internal sealed class ShortcutIconLibrary
         directory.Create();
 
         var ids = configuration.CustomShortcutIconIds;
-        for (var index = 0; index < ids.Count; index++)
+        var shortcuts = configuration.Shortcuts;
+        var swept = false;
+        for (var index = ids.Count - 1; index >= 0; index--)
         {
-            pathsById[ids[index]] = Path.Combine(directory.FullName, ids[index] + Extension);
+            var id = ids[index];
+            var path = Path.Combine(directory.FullName, id + Extension);
+            if (IsReferenced(shortcuts, id))
+            {
+                pathsById[id] = path;
+                continue;
+            }
+
+            ids.RemoveAt(index);
+            swept = true;
+            DeleteFile(path, id);
+        }
+
+        if (swept)
+        {
+            configuration.Save();
         }
     }
 
@@ -69,6 +86,34 @@ internal sealed class ShortcutIconLibrary
         configuration.CustomShortcutIconIds.Remove(id);
         configuration.Save();
         pathsById.Remove(id);
+        DeleteFile(path, id);
+    }
+
+    public IDalamudTextureWrap? Icon(string id)
+    {
+        if (id.Length == 0)
+        {
+            return null;
+        }
+
+        return pathsById.TryGetValue(id, out var path) ? images.Get(path) : null;
+    }
+
+    private static bool IsReferenced(List<ShortcutEntry> shortcuts, string id)
+    {
+        for (var index = 0; index < shortcuts.Count; index++)
+        {
+            if (shortcuts[index].IconImage == id)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void DeleteFile(string path, string id)
+    {
         try
         {
             if (File.Exists(path))
@@ -80,15 +125,5 @@ internal sealed class ShortcutIconLibrary
         {
             AepLog.Warning(exception, $"[Shortcuts] failed to delete custom icon {id}");
         }
-    }
-
-    public IDalamudTextureWrap? Icon(string id)
-    {
-        if (id.Length == 0)
-        {
-            return null;
-        }
-
-        return pathsById.TryGetValue(id, out var path) ? images.Get(path) : null;
     }
 }
