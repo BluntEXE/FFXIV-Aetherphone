@@ -1,9 +1,10 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Onboarding;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 
-namespace Aetherphone.Windows.Components;
+namespace Aetherphone.Apps.Aethergram;
 
 internal readonly record struct FeedControls(int Selected, bool Refreshed, bool MediaToggled, Rect MediaBounds);
 

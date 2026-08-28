@@ -3,10 +3,11 @@ using Aetherphone.Core.Linkpearl;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 
-namespace Aetherphone.Windows.Components;
+namespace Aetherphone.Apps.YellowPages;
 
 internal readonly struct GroupBubble
 {

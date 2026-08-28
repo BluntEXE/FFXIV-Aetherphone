@@ -3,10 +3,11 @@ using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 
-namespace Aetherphone.Windows.Components;
+namespace Aetherphone.Apps.Aethergram;
 
 internal readonly record struct PhotoTagOverlayResult(bool InputConsumed, string? OpenUserId);
 

@@ -4,10 +4,11 @@ using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 
-namespace Aetherphone.Windows.Components;
+namespace Aetherphone.Apps.Linkpearl;
 
 internal enum InboxRowAction : byte
 {

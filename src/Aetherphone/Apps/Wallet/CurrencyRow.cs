@@ -2,11 +2,12 @@ using Aetherphone.Core;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Wallet;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures;
 using Dalamud.Plugin.Services;
 
-namespace Aetherphone.Windows.Components;
+namespace Aetherphone.Apps.Wallet;
 
 internal static class CurrencyRow
 {

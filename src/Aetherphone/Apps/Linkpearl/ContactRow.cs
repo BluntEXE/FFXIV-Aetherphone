@@ -2,9 +2,10 @@ using Aetherphone.Core;
 using Aetherphone.Core.Contacts;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 
-namespace Aetherphone.Windows.Components;
+namespace Aetherphone.Apps.Linkpearl;
 
 internal static class ContactRow
 {

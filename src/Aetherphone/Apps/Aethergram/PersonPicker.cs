@@ -6,10 +6,11 @@ using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 
-namespace Aetherphone.Windows.Components;
+namespace Aetherphone.Apps.Aethergram;
 
 internal sealed class PersonPicker
 {

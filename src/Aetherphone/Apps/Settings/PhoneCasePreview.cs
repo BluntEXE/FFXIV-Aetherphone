@@ -1,8 +1,9 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 
-namespace Aetherphone.Windows.Components;
+namespace Aetherphone.Apps.Settings;
 
 internal static class PhoneCasePreview
 {

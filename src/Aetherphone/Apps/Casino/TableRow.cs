@@ -1,9 +1,10 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 
-namespace Aetherphone.Windows.Components;
+namespace Aetherphone.Apps.Casino;
 
 internal readonly record struct TableRowView(
     string Name,

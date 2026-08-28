@@ -1,7 +1,8 @@
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 
-namespace Aetherphone.Windows.Components;
+namespace Aetherphone.Apps.Hunts;
 
 internal static class ProgressBar
 {

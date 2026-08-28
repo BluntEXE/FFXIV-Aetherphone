@@ -3,9 +3,10 @@ using Aetherphone.Core.Animation;
 using Aetherphone.Core.Casino;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 
-namespace Aetherphone.Windows.Components;
+namespace Aetherphone.Apps.Casino;
 
 internal sealed class JackpotRail
 {

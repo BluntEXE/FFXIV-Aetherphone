@@ -1,9 +1,10 @@
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 
-namespace Aetherphone.Windows.Components;
+namespace Aetherphone.Apps.Linkpearl;
 
 internal static class QuickAction
 {

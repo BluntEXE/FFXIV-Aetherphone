@@ -6,10 +6,11 @@ using Aetherphone.Core.Coins;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 
-namespace Aetherphone.Windows.Components;
+namespace Aetherphone.Apps.Casino;
 
 internal sealed class CashierDrawer
 {

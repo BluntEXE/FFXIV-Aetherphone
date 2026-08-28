@@ -1,7 +1,8 @@
 using Aetherphone.Core;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 
-namespace Aetherphone.Windows.Components;
+namespace Aetherphone.Apps.Market;
 
 internal static class Sparkline
 {

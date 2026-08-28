@@ -5,11 +5,12 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Aetherphone.Core.Social;
 
-namespace Aetherphone.Windows.Components;
+namespace Aetherphone.Apps.Settings;
 
 internal static class SettingsHero
 {

@@ -3,10 +3,11 @@ using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 
-namespace Aetherphone.Windows.Components;
+namespace Aetherphone.Apps.Coin;
 
 internal static class CoinStreakCard
 {

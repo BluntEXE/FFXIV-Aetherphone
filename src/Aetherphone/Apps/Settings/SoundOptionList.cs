@@ -1,8 +1,9 @@
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 
-namespace Aetherphone.Windows.Components;
+namespace Aetherphone.Apps.Settings;
 
 internal static class SoundOptionList
 {
