@@ -70,14 +70,16 @@ internal sealed class EncryptionVaultActions : IDisposable
 
     public bool TryConfirmSavedCode()
     {
+        var code = vault.UnsavedRecoveryCode;
         var expected = ExpectedVerifyGroup;
-        if (expected is null)
+        if (code is null || expected is null)
         {
             return false;
         }
 
         var typed = RecoveryKey.Canonicalize(VerifyEntry);
-        if (!string.Equals(typed, RecoveryKey.Canonicalize(expected), StringComparison.Ordinal))
+        if (!string.Equals(typed, RecoveryKey.Canonicalize(expected), StringComparison.Ordinal)
+            && !string.Equals(typed, RecoveryKey.Canonicalize(code), StringComparison.Ordinal))
         {
             status = Loc.T(L.Encryption.GuideVerifyWrong);
             return false;

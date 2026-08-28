@@ -250,7 +250,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         if (ThemeButton.Draw(Loc.T(L.Encryption.RecoveryCopy), theme))
         {
             ImGui.SetClipboardText(actions.GeneratedCode);
-            actions.Status = Loc.T(L.Friends.Copied);
+            ShellToast.Show();
         }
 
         ImGui.Dummy(new Vector2(0f, 8f * scale));
@@ -352,7 +352,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
 
             ImGui.Dummy(new Vector2(0f, 8f * scale));
             ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
-            ImGui.InputText("##encryptionVerifySettings", ref actions.VerifyEntry, 16);
+            ImGui.InputText("##encryptionVerifySettings", ref actions.VerifyEntry, 64);
             ImGui.Dummy(new Vector2(0f, 10f * scale));
             if (ThemeButton.Draw(Loc.T(L.Encryption.GuideVerifyConfirm), theme))
             {
@@ -390,6 +390,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         if (ThemeButton.Draw(Loc.T(L.Encryption.RecoveryCopy), theme))
         {
             ImGui.SetClipboardText(code);
+            ShellToast.Show();
         }
 
         ImGui.Dummy(new Vector2(0f, 6f * scale));

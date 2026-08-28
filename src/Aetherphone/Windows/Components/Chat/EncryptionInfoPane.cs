@@ -235,7 +235,7 @@ internal sealed class EncryptionInfoPane : IDisposable
         if (DrawButton(ui, Loc.T(L.Encryption.RecoveryCopy), false))
         {
             ImGui.SetClipboardText(actions.GeneratedCode);
-            actions.Status = Loc.T(L.Friends.Copied);
+            ShellToast.Show();
         }
 
         DrawWrapped(ui, Loc.T(L.Encryption.RecoverySaveBody));
@@ -279,6 +279,7 @@ internal sealed class EncryptionInfoPane : IDisposable
             if (DrawButton(ui, Loc.T(L.Encryption.RecoveryCopy), false))
             {
                 ImGui.SetClipboardText(code);
+                ShellToast.Show();
             }
 
             if (DrawButton(ui, Loc.T(L.Encryption.GuideWroteItDown), true))
@@ -321,7 +322,7 @@ internal sealed class EncryptionInfoPane : IDisposable
         using (Dalamud.Interface.Utility.Raii.ImRaii.PushColor(ImGuiCol.FrameBg, new Vector4(0f, 0f, 0f, 0f))
                    .Push(ImGuiCol.Text, theme.TextStrong))
         {
-            ImGui.InputText("##encryptionVerifyCode", ref actions.VerifyEntry, 16);
+            ImGui.InputText("##encryptionVerifyCode", ref actions.VerifyEntry, 64);
         }
 
         ImGui.SetCursorScreenPos(origin);
