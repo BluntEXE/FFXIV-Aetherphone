@@ -16,9 +16,6 @@ internal sealed partial class ShortcutsApp
     private const float StepCardHeight = 78f;
     private const float SwatchColumns = 6f;
 
-    private ShortcutEntry? draft;
-    private Guid draftId = Guid.Empty;
-    private bool draftPinned;
     private string hexBuffer = string.Empty;
     private int pendingStepRemoval = -1;
 

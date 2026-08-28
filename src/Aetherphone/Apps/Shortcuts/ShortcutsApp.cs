@@ -45,6 +45,17 @@ internal sealed partial class ShortcutsApp : IPhoneApp
     private int activeTab;
     private string libraryQuery = string.Empty;
 
+    private readonly Action<PluginEntry> openPluginDetail;
+    private readonly Action<PluginEntry> pickStepPlugin;
+    private readonly Action<PluginEntry> pickIconPlugin;
+
+    private ShortcutEntry? draft;
+    private Guid draftId = Guid.Empty;
+    private bool draftPinned;
+    private ShortcutEntry? importEntry;
+    private float copiedClock;
+    private string pluginQuery = string.Empty;
+
     public ShortcutsApp(ShortcutStore store, ShortcutRunner runner, ConfirmService confirm)
     {
         this.store = store;

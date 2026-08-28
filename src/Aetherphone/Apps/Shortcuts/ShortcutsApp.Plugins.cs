@@ -14,11 +14,6 @@ internal sealed partial class ShortcutsApp
     private const float PluginRowHeight = 60f;
     private const float CommandRowHeight = 54f;
 
-    private readonly Action<PluginEntry> openPluginDetail;
-    private readonly Action<PluginEntry> pickStepPlugin;
-    private readonly Action<PluginEntry> pickIconPlugin;
-
-    private string pluginQuery = string.Empty;
     private string detailPlugin = string.Empty;
     private bool pickingIcon;
 

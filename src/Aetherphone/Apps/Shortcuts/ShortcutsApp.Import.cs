@@ -13,9 +13,6 @@ internal sealed partial class ShortcutsApp
     private const float ImportRowHeight = 52f;
     private const float CopiedSeconds = 2f;
 
-    private ShortcutEntry? importEntry;
-    private float copiedClock;
-
     private void BeginImport()
     {
         if (WarnIfFull())
