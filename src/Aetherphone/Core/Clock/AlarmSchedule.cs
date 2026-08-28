@@ -1,7 +1,6 @@
-using Aetherphone.Core.Clock;
 using Aetherphone.Core.Localization;
 
-namespace Aetherphone.Apps.Clock;
+namespace Aetherphone.Core.Clock;
 
 internal static class AlarmSchedule
 {

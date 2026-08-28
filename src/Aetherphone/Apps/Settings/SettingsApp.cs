@@ -15,7 +15,7 @@ using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Settings;
 
-internal sealed class SettingsApp : IResumableApp, ISettingsNavigator
+internal sealed class SettingsApp : IResumableApp, ISettingsNavigator, ISpotlightPages
 {
     public string Id => "settings";
     public string DisplayName => Loc.T(L.Apps.Settings);
@@ -212,6 +212,12 @@ internal sealed class SettingsApp : IResumableApp, ISettingsNavigator
     public IReadOnlyList<ISettingsPage> SearchablePages => searchablePages;
 
     public void RequestPage(ISettingsPage page) => pendingPage = page;
+
+    public int SpotlightPageCount => searchablePages.Length;
+
+    public string SpotlightPageTitle(int pageIndex) => searchablePages[pageIndex].Title;
+
+    public void RequestSpotlightPage(int pageIndex) => pendingPage = searchablePages[pageIndex];
 
     private void ConsumePendingPage()
     {

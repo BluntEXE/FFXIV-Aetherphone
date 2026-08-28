@@ -2,7 +2,7 @@ using System.Collections.Frozen;
 using Aetherphone.Core.Localization;
 using Dalamud.Interface;
 
-namespace Aetherphone.Apps.AppStore;
+namespace Aetherphone.Core.Apps;
 
 internal enum StoreCategory
 {
@@ -110,4 +110,22 @@ internal static class AppStoreCatalog
         StoreCategory.Work => L.Store.CategoryWork,
         _ => L.Store.CategoryTools,
     };
+
+    public static bool Matches(string appId, string displayName, string query)
+    {
+        if (query.Length == 0)
+        {
+            return false;
+        }
+
+        if (displayName.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+            appId.Contains(query, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var entry = For(appId);
+        return Loc.T(entry.Subtitle).Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+               Loc.T(Name(entry.Category)).Contains(query, StringComparison.CurrentCultureIgnoreCase);
+    }
 }

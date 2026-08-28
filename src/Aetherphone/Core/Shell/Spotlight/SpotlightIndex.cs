@@ -1,6 +1,3 @@
-using Aetherphone.Apps.AppStore;
-using Aetherphone.Apps.Notes;
-using Aetherphone.Apps.Settings;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Home;
@@ -63,8 +60,8 @@ internal sealed class SpotlightIndex
     private readonly MarketItemIndex marketIndex;
     private readonly MarketLauncher marketLauncher;
     private readonly Configuration configuration;
-    private readonly SettingsApp? settingsApp;
-    private readonly NotesApp? notesApp;
+    private readonly ISpotlightPages? settingsPages;
+    private readonly ISpotlightNotes? noteTarget;
     private readonly List<SpotlightResult> results = new();
     private readonly List<MarketItemRef> marketScratch = new();
     private string lastQuery = string.Empty;
@@ -85,8 +82,8 @@ internal sealed class SpotlightIndex
         this.configuration = configuration;
         for (var index = 0; index < apps.Count; index++)
         {
-            settingsApp ??= apps[index] as SettingsApp;
-            notesApp ??= apps[index] as NotesApp;
+            settingsPages ??= apps[index] as ISpotlightPages;
+            noteTarget ??= apps[index] as ISpotlightNotes;
         }
     }
 
@@ -133,9 +130,9 @@ internal sealed class SpotlightIndex
                 navigation.Open("message");
                 break;
             case SpotlightKind.SettingsPage:
-                if (settingsApp is not null && result.PageIndex < settingsApp.SearchablePages.Count)
+                if (settingsPages is not null && result.PageIndex < settingsPages.SpotlightPageCount)
                 {
-                    settingsApp.RequestPage(settingsApp.SearchablePages[result.PageIndex]);
+                    settingsPages.RequestSpotlightPage(result.PageIndex);
                 }
 
                 navigation.Open("settings");
@@ -145,7 +142,7 @@ internal sealed class SpotlightIndex
                 navigation.Open("messages");
                 break;
             case SpotlightKind.Note:
-                notesApp?.RequestNote(result.NoteId);
+                noteTarget?.RequestNote(result.NoteId);
                 navigation.Open("notes");
                 break;
             case SpotlightKind.MarketItem:
@@ -166,7 +163,7 @@ internal sealed class SpotlightIndex
                 continue;
             }
 
-            if (!AppStoreApp.Matches(app.Id, app.DisplayName, query))
+            if (!AppStoreCatalog.Matches(app.Id, app.DisplayName, query))
             {
                 continue;
             }
@@ -206,22 +203,22 @@ internal sealed class SpotlightIndex
 
     private void CollectSettings(string query)
     {
-        if (settingsApp is null)
+        if (settingsPages is null)
         {
             return;
         }
 
         var added = 0;
-        var pages = settingsApp.SearchablePages;
-        for (var index = 0; index < pages.Count && added < MaxSettings; index++)
+        var pageCount = settingsPages.SpotlightPageCount;
+        for (var index = 0; index < pageCount && added < MaxSettings; index++)
         {
-            var page = pages[index];
-            if (!page.Title.Contains(query, StringComparison.CurrentCultureIgnoreCase))
+            var title = settingsPages.SpotlightPageTitle(index);
+            if (!title.Contains(query, StringComparison.CurrentCultureIgnoreCase))
             {
                 continue;
             }
 
-            results.Add(new SpotlightResult(SpotlightKind.SettingsPage, page.Title, string.Empty, string.Empty,
+            results.Add(new SpotlightResult(SpotlightKind.SettingsPage, title, string.Empty, string.Empty,
                 0, Guid.Empty, index));
             added++;
         }

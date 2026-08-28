@@ -12,7 +12,7 @@ using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Notes;
 
-internal sealed class NotesApp : IResumableApp
+internal sealed class NotesApp : IResumableApp, ISpotlightNotes
 {
     private enum NotesScreen : byte
     {

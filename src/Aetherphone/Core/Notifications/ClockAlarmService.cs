@@ -1,4 +1,3 @@
-using Aetherphone.Apps.Clock;
 using Aetherphone.Core.Clock;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;

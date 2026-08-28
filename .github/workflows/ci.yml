@@ -106,6 +106,21 @@ jobs:
             exit 1
           fi
 
+      # Core holds services and domain, Windows holds the shared toolkit, and Apps
+      # are leaf features that consume both. AppRegistry and WidgetCatalog are the
+      # two composition roots, so they are the only places allowed to name a leaf.
+      - name: Verify layering
+        shell: bash
+        run: |
+          offenders=$(grep -rn '^using Aetherphone\.Apps' src/Aetherphone/Core src/Aetherphone/Windows --include=*.cs \
+            | grep -v '^src/Aetherphone/Core/Apps/AppRegistry.cs:' \
+            | grep -v '^src/Aetherphone/Windows/Widgets/WidgetCatalog.cs:' || true)
+          if [ -n "$offenders" ]; then
+            echo "$offenders"
+            echo "::error::Core and the Windows toolkit must not reach into an app. Invert onto an interface in Core, or move the shared piece down."
+            exit 1
+          fi
+
       # A naming analyzer cannot express this: a private static readonly holding a
       # lookup table is PascalCase while one holding mutable state is camelCase,
       # so any capitalization rule fires on about a thousand correct names. The

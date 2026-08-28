@@ -1,4 +1,3 @@
-using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
@@ -53,18 +52,12 @@ internal static class PlayingCards
 
     public static float RoundingFor(float width) => width * RoundingFraction;
 
-    public static string RankLabel(int rank)
+    private static readonly string[] RankLabels =
     {
-        return rank switch
-        {
-            0 => "A",
-            9 => "10",
-            10 => "J",
-            11 => "Q",
-            12 => "K",
-            _ => GameNumber.Label(rank + 1),
-        };
-    }
+        "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K",
+    };
+
+    public static string RankLabel(int rank) => RankLabels[rank];
 
     public static void DrawFace(ImDrawListPtr drawList, in Rect rect, int card, float rounding, float scale,
         bool shadowed)

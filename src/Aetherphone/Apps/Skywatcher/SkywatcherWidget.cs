@@ -1,4 +1,3 @@
-using Aetherphone.Apps.Skywatcher;
 using Aetherphone.Core;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Game;
@@ -6,9 +5,10 @@ using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
+using Aetherphone.Windows.Widgets;
 using Dalamud.Bindings.ImGui;
 
-namespace Aetherphone.Windows.Widgets;
+namespace Aetherphone.Apps.Skywatcher;
 
 internal sealed class SkywatcherWidget : IHomeWidget
 {

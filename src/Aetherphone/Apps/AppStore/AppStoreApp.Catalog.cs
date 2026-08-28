@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
@@ -175,7 +176,7 @@ internal sealed partial class AppStoreApp
                 return;
             }
 
-            var matches = Collect(app => Matches(app.Id, app.DisplayName, query));
+            var matches = Collect(app => AppStoreCatalog.Matches(app.Id, app.DisplayName, query));
             if (matches.Count == 0)
             {
                 Typography.DrawCentered(new Vector2(origin.X + width * 0.5f, origin.Y + 40f * scale),
@@ -191,21 +192,4 @@ internal sealed partial class AppStoreApp
         }
     }
 
-    internal static bool Matches(string appId, string displayName, string query)
-    {
-        if (query.Length == 0)
-        {
-            return false;
-        }
-
-        if (displayName.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
-            appId.Contains(query, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        var entry = AppStoreCatalog.For(appId);
-        return Loc.T(entry.Subtitle).Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
-               Loc.T(AppStoreCatalog.Name(entry.Category)).Contains(query, StringComparison.CurrentCultureIgnoreCase);
-    }
 }

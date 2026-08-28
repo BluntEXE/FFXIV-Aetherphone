@@ -1,12 +1,12 @@
-using Aetherphone.Apps.Calendar;
 using Aetherphone.Core;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
+using Aetherphone.Windows.Widgets;
 using Dalamud.Bindings.ImGui;
 
-namespace Aetherphone.Windows.Widgets;
+namespace Aetherphone.Apps.Calendar;
 
 internal sealed class CalendarWidget : IHomeWidget
 {
