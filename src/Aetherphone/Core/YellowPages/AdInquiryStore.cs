@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;

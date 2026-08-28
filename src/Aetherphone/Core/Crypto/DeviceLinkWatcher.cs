@@ -1,4 +1,4 @@
-﻿using Aetherphone.Core.Aethernet;
+using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 

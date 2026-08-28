@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using Aetherphone.Core.Localization;
 
 namespace Aetherphone.Core.Crypto;

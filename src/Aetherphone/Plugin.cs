@@ -1,4 +1,4 @@
-﻿using Aetherphone.Core;
+using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Config;
 using Aetherphone.Core.Device;
