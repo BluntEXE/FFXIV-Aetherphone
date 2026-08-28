@@ -1,4 +1,5 @@
 using Aetherphone.Core.ControlCenter;
+using Aetherphone.Core.Home;
 using Dalamud.Interface;
 using Xunit;
 
@@ -7,16 +8,56 @@ namespace Aetherphone.Tests;
 public sealed class ControlLayoutServiceInstallTests
 {
     [Fact]
-    public void FreshInstall_EnablesEveryAvailableModule()
+    public void FreshInstall_ShipsTheDefaultLayoutInOrder()
     {
-        var modules = MakeModules();
+        var defaults = ControlDefaults.Layout;
+        var service = BuildService(DefaultModulesPlus("spare"), new FakeControlConfiguration());
+
+        Assert.Equal(defaults.Length, service.Slots.Count);
+        for (var index = 0; index < defaults.Length; index++)
+        {
+            Assert.Equal(defaults[index].ModuleId, service.Slots[index].Id);
+            Assert.Equal(defaults[index].Span, service.Slots[index].Span);
+        }
+    }
+
+    [Fact]
+    public void FreshInstall_LeavesModulesOutsideTheDefaultsInTheGallery()
+    {
+        var service = BuildService(DefaultModulesPlus("spare"), new FakeControlConfiguration());
+
+        Assert.Equal(-1, SlotIndexOf(service, "spare"));
+        Assert.Contains(service.Hidden(), module => module.Id == "spare");
+    }
+
+    [Fact]
+    public void FreshInstall_PacksTheDefaultLayoutWithoutHoles()
+    {
+        var service = BuildService(DefaultModulesPlus("spare"), new FakeControlConfiguration());
+        var placements = service.Placements;
+
+        Assert.Equal(new GridCell(0, 0), placements[SlotIndexOf(service, "dnd")]);
+        Assert.Equal(new GridCell(1, 0), placements[SlotIndexOf(service, "silent")]);
+        Assert.Equal(new GridCell(2, 0), placements[SlotIndexOf(service, "calls")]);
+        Assert.Equal(new GridCell(3, 0), placements[SlotIndexOf(service, "idle")]);
+        Assert.Equal(new GridCell(0, 1), placements[SlotIndexOf(service, "media")]);
+        Assert.Equal(new GridCell(2, 1), placements[SlotIndexOf(service, "brightness")]);
+        Assert.Equal(new GridCell(3, 1), placements[SlotIndexOf(service, "volume")]);
+        Assert.Equal(new GridCell(0, 3), placements[SlotIndexOf(service, "settings")]);
+        Assert.Equal(new GridCell(1, 3), placements[SlotIndexOf(service, "accent")]);
+        Assert.Equal(4, service.RowsUsed);
+    }
+
+    [Fact]
+    public void FreshInstall_KeepsWorkingWhenAModuleIsMissingFromTheRegistry()
+    {
+        var modules = DefaultModulesPlus();
+        modules.RemoveAll(module => module.Id == "media");
+
         var service = BuildService(modules, new FakeControlConfiguration());
 
-        for (var index = 0; index < modules.Count; index++)
-        {
-            Assert.True(SlotIndexOf(service, modules[index].Id) >= 0,
-                $"Module '{modules[index].Id}' should ship on the grid");
-        }
+        Assert.Equal(ControlDefaults.Layout.Length - 1, service.Slots.Count);
+        Assert.Equal(-1, SlotIndexOf(service, "media"));
     }
 
     [Fact]
@@ -97,14 +138,37 @@ public sealed class ControlLayoutServiceInstallTests
             new FakeControlModule("c"),
         };
 
+    private static List<IControlModule> DefaultModulesPlus(params string[] extraIds)
+    {
+        var defaults = ControlDefaults.Layout;
+        var modules = new List<IControlModule>(defaults.Length + extraIds.Length);
+        for (var index = 0; index < defaults.Length; index++)
+        {
+            modules.Add(new FakeControlModule(defaults[index].ModuleId, defaults[index].Span));
+        }
+
+        for (var index = 0; index < extraIds.Length; index++)
+        {
+            modules.Add(new FakeControlModule(extraIds[index]));
+        }
+
+        return modules;
+    }
+
     private sealed class FakeControlModule : IControlModule
     {
-        public FakeControlModule(string id) => Id = id;
+        public FakeControlModule(string id, ControlSpan span = ControlSpan.Small)
+        {
+            Id = id;
+            DefaultSpan = span;
+            Sizes = new[] { span };
+        }
+
         public string Id { get; }
         public string GalleryLabel => Id;
         public FontAwesomeIcon GalleryIcon => FontAwesomeIcon.Circle;
-        public IReadOnlyList<ControlSpan> Sizes { get; } = new[] { ControlSpan.Small };
-        public ControlSpan DefaultSpan => ControlSpan.Small;
+        public IReadOnlyList<ControlSpan> Sizes { get; }
+        public ControlSpan DefaultSpan { get; }
         public void Draw(in ControlModuleContext context) { }
     }
 
