@@ -614,7 +614,9 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             return false;
         }
 
-        return EncVersionOf(message) != 1 || store.DecryptionState(messageId).State == DmBodyState.Decrypted;
+        var revealState = store.DecryptionState(messageId).State;
+        return EncVersionOf(message) != 1
+            || revealState is DmBodyState.Decrypted or DmBodyState.Remembered;
     }
 
     protected void BeginEdit(string messageId)

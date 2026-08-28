@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
@@ -108,9 +108,11 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
 
     public VelvetStore(AethernetSession session, VelvetClient client, AccountClient account, SafetyClient safety,
         MediaClient media, NotificationService notifications, Configuration configuration, KeyVault vault,
-        ConversationKeyStore keys, PhoneVisibility visibility, RealtimeSignalBus signals, AppInstaller installer,
+        ConversationKeyStore keys, DecryptedHistoryStore chatHistory, PhoneVisibility visibility,
+        RealtimeSignalBus signals, AppInstaller installer,
         VelvetNotInterestedArchive notInterestedArchive)
-        : base("Velvet", session, safety, media, notifications, vault, keys, visibility, installer.Gate("velvet"))
+        : base("Velvet", session, safety, media, notifications, vault, keys, chatHistory, visibility,
+            installer.Gate("velvet"))
     {
         this.client = client;
         this.account = account;

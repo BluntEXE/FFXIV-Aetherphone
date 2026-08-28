@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
@@ -26,8 +26,9 @@ internal sealed class GramDmStore : ChatThreadStoreBase<GramMessageDto, GramThre
 
     public GramDmStore(AethernetSession session, GramDmClient client, SocialClient social, SafetyClient safety,
         MediaClient media, NotificationService notifications, KeyVault vault, ConversationKeyStore keys,
-        PhoneVisibility visibility, RealtimeSignalBus signals, AppInstaller installer)
-        : base("AethergramDm", session, safety, media, notifications, vault, keys, visibility,
+        DecryptedHistoryStore chatHistory, PhoneVisibility visibility, RealtimeSignalBus signals,
+        AppInstaller installer)
+        : base("AethergramDm", session, safety, media, notifications, vault, keys, chatHistory, visibility,
             installer.Gate("aethergram"))
     {
         this.client = client;

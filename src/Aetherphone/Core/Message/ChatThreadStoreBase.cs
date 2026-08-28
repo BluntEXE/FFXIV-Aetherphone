@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
@@ -85,7 +85,8 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     private string? lastAccountId;
 
     protected ChatThreadStoreBase(string logTag, AethernetSession session, SafetyClient safety, MediaClient media,
-        NotificationService notifications, KeyVault vault, ConversationKeyStore keys, PhoneVisibility visibility,
+        NotificationService notifications, KeyVault vault, ConversationKeyStore keys, DecryptedHistoryStore chatHistory,
+        PhoneVisibility visibility,
         AppGate gate)
     {
         this.session = session;
@@ -97,7 +98,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         this.logTag = logTag;
         this.gate = gate;
         work = new StoreWork(logTag);
-        cipher = new MessageCipher(vault, keys);
+        cipher = new MessageCipher(vault, keys, chatHistory);
         messageOrder = CompareByCreatedAt;
         inboxCadence = new PollCadence(visibility, ForegroundInboxPollInterval, BackgroundInboxPollInterval);
         vault.Changed += OnVaultChanged;

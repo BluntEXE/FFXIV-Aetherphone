@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
@@ -44,14 +44,15 @@ internal sealed class AdInquiryStore : IDisposable
     private readonly ConcurrentDictionary<string, string> scopeCache = new(StringComparer.Ordinal);
 
     public AdInquiryStore(AethernetSession session, YellowPagesClient client, SafetyClient safety, KeyVault vault,
-        ConversationKeyStore keys, PhoneVisibility visibility, RealtimeSignalBus signals, AppGate gate)
+        ConversationKeyStore keys, DecryptedHistoryStore chatHistory, PhoneVisibility visibility,
+        RealtimeSignalBus signals, AppGate gate)
     {
         this.session = session;
         this.client = client;
         this.safety = safety;
         this.keys = keys;
         this.vault = vault;
-        cipher = new MessageCipher(vault, keys);
+        cipher = new MessageCipher(vault, keys, chatHistory);
         this.signals = signals;
         this.gate = gate;
         cadence = new PollCadence(visibility, ForegroundPollInterval, BackgroundPollInterval);

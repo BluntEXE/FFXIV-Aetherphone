@@ -11,6 +11,7 @@ namespace Aetherphone.Windows.Components;
 internal sealed class EncryptionInfoPane : IDisposable
 {
     private readonly EncryptionVaultActions actions;
+    private bool helpOpen;
 
     public EncryptionInfoPane(KeyVault vault, ConfirmService confirm)
     {
@@ -30,6 +31,7 @@ internal sealed class EncryptionInfoPane : IDisposable
         DrawHero(ui, theme, signedIn, encrypted);
         DrawSummary(ui, signedIn, encrypted);
         DrawVaultSection(ui, theme);
+        DrawTroubleshooting(ui);
         DrawStatus(ui);
     }
 
@@ -42,6 +44,7 @@ internal sealed class EncryptionInfoPane : IDisposable
         else
         {
             DrawVaultSection(ui, theme);
+            DrawTroubleshooting(ui);
         }
 
         DrawStatus(ui);
@@ -316,6 +319,37 @@ internal sealed class EncryptionInfoPane : IDisposable
 
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height));
+    }
+
+    private void DrawTroubleshooting(AppSkin ui)
+    {
+        var scale = UiScale.Current;
+        ImGui.Dummy(new Vector2(0f, 14f * scale));
+        if (DrawButton(ui, Loc.T(helpOpen ? L.Encryption.HelpTitle : L.Encryption.HelpOpen), false))
+        {
+            helpOpen = !helpOpen;
+        }
+
+        if (!helpOpen)
+        {
+            return;
+        }
+
+        ImGui.Dummy(new Vector2(0f, 10f * scale));
+        DrawWrapped(ui, Loc.T(L.Encryption.HelpIntro));
+        DrawHelpEntry(ui, L.Encryption.HelpDecryptingTitle, L.Encryption.HelpDecryptingBody, scale);
+        DrawHelpEntry(ui, L.Encryption.HelpLockedTitle, L.Encryption.HelpLockedBody, scale);
+        DrawHelpEntry(ui, L.Encryption.HelpOlderKeyTitle, L.Encryption.HelpOlderKeyBody, scale);
+        DrawHelpEntry(ui, L.Encryption.HelpUnreadableTitle, L.Encryption.HelpUnreadableBody, scale);
+        DrawHelpEntry(ui, L.Encryption.HelpDamagedTitle, L.Encryption.HelpDamagedBody, scale);
+        DrawHelpEntry(ui, L.Encryption.HelpPreventTitle, L.Encryption.HelpPreventBody, scale);
+    }
+
+    private static void DrawHelpEntry(AppSkin ui, LocString title, LocString body, float scale)
+    {
+        ImGui.Dummy(new Vector2(0f, 12f * scale));
+        DrawSectionLabel(ui, Loc.T(title));
+        DrawWrapped(ui, Loc.T(body));
     }
 
     private void DrawStatus(AppSkin ui)

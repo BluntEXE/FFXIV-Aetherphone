@@ -1,4 +1,4 @@
-using Aetherphone.Apps.Velvet.Kit;
+﻿using Aetherphone.Apps.Velvet.Kit;
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Animation;
@@ -94,6 +94,7 @@ internal sealed partial class VelvetShell : IResumableApp
         Configuration configuration, PhotoLibrary library, HttpService http, RemoteImageCache images,
         NotificationService notifications, VelvetLauncher launcher, SocialLauncher socialLauncher, GameData gameData,
         SocialNotificationService social, KeyVault keyVault, ConversationKeyStore conversationKeys,
+        DecryptedHistoryStore chatHistory,
         PhoneVisibility visibility, RealtimeSignalBus realtimeSignals, WallpaperImageCache wallpaperImages,
         ConfirmService confirm, TranslationService translation, ReportService report, ConductGateService conduct, AppInstaller installer)
     {
@@ -101,7 +102,7 @@ internal sealed partial class VelvetShell : IResumableApp
         var velvetArchiveDir = new DirectoryInfo(Path.Combine(Plugin.PluginInterface.ConfigDirectory.FullName, "Velvet"));
         var notInterestedArchive = new VelvetNotInterestedArchive(velvetArchiveDir);
         store = new VelvetStore(session, net.Velvet, net.Account, net.Safety, net.Media, notifications, configuration,
-            keyVault, conversationKeys, visibility, realtimeSignals, installer, notInterestedArchive);
+            keyVault, conversationKeys, chatHistory, visibility, realtimeSignals, installer, notInterestedArchive);
         commentMentions = new MentionAutocomplete(store.NewMentionSuggestions());
         stories = new StoryPresenter(session, net.Grams, net.Media, images, lodestone, VelvetArt.StoryRing, VelvetTheme.Palette,
             new StoryConfirmLabels(L.Velvet.DeleteConfirm, L.Velvet.DeleteCancel, L.Velvet.Saving), confirm,

@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Aetherphone.Core.Localization;
 
 namespace Aetherphone.Core.Crypto;
@@ -10,6 +10,7 @@ internal enum DmBodyState : byte
     Pending = 2,
     NoKey = 3,
     Malformed = 4,
+    Remembered = 5,
 }
 
 internal readonly record struct DmDecryptedBody(DmBodyState State, string Text, string? FrankingKey, bool Verified)
@@ -31,15 +32,17 @@ internal sealed class MessageCipher
 {
     private readonly KeyVault vault;
     private readonly ConversationKeyStore keys;
+    private readonly DecryptedHistoryStore? history;
     private readonly ConcurrentDictionary<string, DmDecryptedBody> decryptedBodies = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, (long AtUnix, string Text)> previewCache = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, int> generationByMessage = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, byte> olderKeyScopes = new(StringComparer.Ordinal);
 
-    public MessageCipher(KeyVault vault, ConversationKeyStore keys)
+    public MessageCipher(KeyVault vault, ConversationKeyStore keys, DecryptedHistoryStore? history = null)
     {
         this.vault = vault;
         this.keys = keys;
+        this.history = history;
     }
 
     public bool IsUnlocked => vault.State == KeyVaultState.Unlocked;
@@ -161,7 +164,7 @@ internal sealed class MessageCipher
     public DmDecryptedBody ResolveBody(string scope, string messageId, string body, string senderId, string? commitmentTag)
     {
         if (decryptedBodies.TryGetValue(messageId, out var cached)
-            && cached.State is DmBodyState.Decrypted or DmBodyState.Malformed)
+            && cached.State is DmBodyState.Decrypted or DmBodyState.Malformed or DmBodyState.Remembered)
         {
             return cached;
         }
@@ -186,6 +189,16 @@ internal sealed class MessageCipher
                     Loc.T(L.Encryption.OlderKeyPlaceholder), null, false),
                 _ => new DmDecryptedBody(DmBodyState.Malformed, Loc.T(L.Encryption.DamagedPlaceholder), null, false),
             };
+        }
+
+        if (resolved.State == DmBodyState.Decrypted)
+        {
+            history?.Remember(messageId, resolved.Text);
+        }
+        else if (resolved.State is DmBodyState.NoKey or DmBodyState.Pending
+                 && history is not null && history.TryGet(messageId, out var remembered))
+        {
+            resolved = new DmDecryptedBody(DmBodyState.Remembered, remembered, null, false);
         }
 
         RecordGeneration(messageId, generation);
