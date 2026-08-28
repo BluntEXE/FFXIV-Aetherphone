@@ -1,0 +1,191 @@
+using System.Buffers.Binary;
+using System.Runtime.CompilerServices;
+using System.Reflection;
+using Aetherphone.Core;
+using Aetherphone.Core.Localization;
+using Aetherphone.Windows.Components;
+using Xunit;
+
+namespace Aetherphone.Tests;
+
+public sealed class IconFontCoverageTests
+{
+    [Fact]
+    public void TablerIconsProvidesEveryGlyphPhoneIconsDeclares()
+    {
+        var covered = TablerCodepoints();
+        var declared = DeclaredIconCodepoints();
+
+        Assert.NotEmpty(declared);
+        for (var index = 0; index < declared.Count; index++)
+        {
+            var declaration = declared[index];
+            Assert.True(covered.Contains(declaration.Codepoint),
+                $"PhoneIcons.{declaration.Name} is U+{declaration.Codepoint:X4} but TablerIcons.ttf has no glyph there.");
+        }
+    }
+
+    [Fact]
+    public void TheSeededIconRangeMatchesTheFontFile()
+    {
+        var covered = TablerCodepoints();
+        var lowest = int.MaxValue;
+        var highest = int.MinValue;
+        foreach (var codepoint in covered)
+        {
+            lowest = Math.Min(lowest, codepoint);
+            highest = Math.Max(highest, codepoint);
+        }
+
+        Assert.Equal(lowest, ConstantValue("FirstTablerCodepoint"));
+        Assert.Equal(highest, ConstantValue("LastTablerCodepoint"));
+    }
+
+    [Fact]
+    public void AFreshInstallComposesAnIconRangeTheFontCanSatisfy()
+    {
+        var service = (FontService)RuntimeHelpers.GetUninitializedObject(typeof(FontService));
+        Field("iconCoverage").SetValue(service, new GlyphCoverage());
+        Field("learnedIcons").SetValue(service, new HashSet<ushort>());
+
+        typeof(FontService).GetMethod("ComposeIconRanges", BindingFlags.NonPublic | BindingFlags.Instance)!
+            .Invoke(service, null);
+
+        var composed = new GlyphCoverage();
+        composed.AddRanges((ushort[])Field("iconRanges").GetValue(service)!);
+
+        var covered = TablerCodepoints();
+        foreach (var codepoint in covered)
+        {
+            Assert.True(composed.Contains(codepoint),
+                $"A fresh install asks the atlas for a range that omits U+{codepoint:X4}, which TablerIcons.ttf supplies.");
+        }
+    }
+
+    private static FieldInfo Field(string name)
+    {
+        var field = typeof(FontService).GetField(name, BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(field);
+        return field!;
+    }
+
+    private static int ConstantValue(string name)
+    {
+        var field = typeof(FontService).GetField(name, BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(field);
+        return (int)field!.GetRawConstantValue()!;
+    }
+
+    private static List<(string Name, int Codepoint)> DeclaredIconCodepoints()
+    {
+        var declared = new List<(string Name, int Codepoint)>();
+        var fields = typeof(PhoneIcons).GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+        for (var index = 0; index < fields.Length; index++)
+        {
+            var field = fields[index];
+            if (field.FieldType != typeof(string))
+            {
+                continue;
+            }
+
+            var glyph = (string)field.GetRawConstantValue()!;
+            Assert.Equal(1, glyph.Length);
+            declared.Add((field.Name, glyph[0]));
+        }
+
+        return declared;
+    }
+
+    private static HashSet<int> TablerCodepoints()
+    {
+        var font = File.ReadAllBytes(TablerIconPath());
+        var cmap = TableOffset(font, "cmap");
+        var subtableCount = BinaryPrimitives.ReadUInt16BigEndian(font.AsSpan(cmap + 2));
+        var codepoints = new HashSet<int>();
+        for (var index = 0; index < subtableCount; index++)
+        {
+            var record = cmap + 4 + 8 * index;
+            var subtable = cmap + (int)BinaryPrimitives.ReadUInt32BigEndian(font.AsSpan(record + 4));
+            if (BinaryPrimitives.ReadUInt16BigEndian(font.AsSpan(subtable)) == 4)
+            {
+                ReadFormatFour(font, subtable, codepoints);
+            }
+        }
+
+        Assert.NotEmpty(codepoints);
+        return codepoints;
+    }
+
+    private static void ReadFormatFour(byte[] font, int subtable, HashSet<int> codepoints)
+    {
+        var segmentCount = BinaryPrimitives.ReadUInt16BigEndian(font.AsSpan(subtable + 6)) / 2;
+        var endCodes = subtable + 14;
+        var startCodes = endCodes + segmentCount * 2 + 2;
+        var deltas = startCodes + segmentCount * 2;
+        var rangeOffsets = deltas + segmentCount * 2;
+        for (var segment = 0; segment < segmentCount; segment++)
+        {
+            var start = BinaryPrimitives.ReadUInt16BigEndian(font.AsSpan(startCodes + segment * 2));
+            var end = BinaryPrimitives.ReadUInt16BigEndian(font.AsSpan(endCodes + segment * 2));
+            if (start > end || end == 0xFFFF)
+            {
+                continue;
+            }
+
+            var delta = BinaryPrimitives.ReadInt16BigEndian(font.AsSpan(deltas + segment * 2));
+            var rangeOffsetAddress = rangeOffsets + segment * 2;
+            var rangeOffset = BinaryPrimitives.ReadUInt16BigEndian(font.AsSpan(rangeOffsetAddress));
+            for (var codepoint = start; codepoint <= end; codepoint++)
+            {
+                if (rangeOffset == 0)
+                {
+                    if ((ushort)(codepoint + delta) != 0)
+                    {
+                        codepoints.Add(codepoint);
+                    }
+
+                    continue;
+                }
+
+                var glyphAddress = rangeOffsetAddress + rangeOffset + (codepoint - start) * 2;
+                if (BinaryPrimitives.ReadUInt16BigEndian(font.AsSpan(glyphAddress)) != 0)
+                {
+                    codepoints.Add(codepoint);
+                }
+            }
+        }
+    }
+
+    private static int TableOffset(byte[] font, string tag)
+    {
+        var tableCount = BinaryPrimitives.ReadUInt16BigEndian(font.AsSpan(4));
+        for (var index = 0; index < tableCount; index++)
+        {
+            var record = 12 + 16 * index;
+            if (font[record] == tag[0] && font[record + 1] == tag[1] && font[record + 2] == tag[2] &&
+                font[record + 3] == tag[3])
+            {
+                return (int)BinaryPrimitives.ReadUInt32BigEndian(font.AsSpan(record + 8));
+            }
+        }
+
+        throw new InvalidDataException($"TablerIcons.ttf has no '{tag}' table.");
+    }
+
+    private static string TablerIconPath()
+    {
+        var directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+        while (!string.IsNullOrEmpty(directory))
+        {
+            var candidate = Path.Combine(directory, "src", "Aetherphone", "Fonts", "TablerIcons.ttf");
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            directory = Path.GetDirectoryName(directory)!;
+        }
+
+        throw new FileNotFoundException("Could not locate src/Aetherphone/Fonts/TablerIcons.ttf from the test assembly.");
+    }
+}
