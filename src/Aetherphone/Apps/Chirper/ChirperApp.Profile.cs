@@ -138,6 +138,11 @@ internal sealed partial class ChirperApp
             ImGui.GetColorU32(BannerScrim), 0u, 0u);
         drawList.AddRectFilledMultiColor(new Vector2(min.X, max.Y - 56f * scale), max, 0u, 0u,
             ImGui.GetColorU32(ChirperInk.BackdropTop), ImGui.GetColorU32(ChirperInk.BackdropTop));
+        if (user.BannerUrl is { Length: > 0 } bannerUrl && UiInteract.HoverClick(min, max))
+        {
+            photoViewer.Open(this, () => MediaTexture(bannerUrl));
+        }
+
         if (user.IsMe)
         {
             var badgeRadius = 15f * scale;
