@@ -3509,6 +3509,7 @@ internal static class L
         public static readonly LocString Regions = new("chirper.regions", "Regions");
         public static readonly LocString Done = new("chirper.done", "Done");
         public static readonly LocString ActivityAll = new("chirper.activityAll", "All");
+        public static readonly LocString ReactionsAll = new("chirper.reactionsAll", "All");
         public static readonly LocString ActivityMentions = new("chirper.activityMentions", "Mentions");
         public static readonly LocString HandleAvailable = new("chirper.handleAvailable", "Available");
         public static readonly LocString NameLabel = new("chirper.nameLabel", "Name");

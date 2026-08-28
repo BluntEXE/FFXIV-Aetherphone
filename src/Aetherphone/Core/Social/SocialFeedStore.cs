@@ -72,6 +72,9 @@ internal abstract class SocialFeedStore : IDisposable
     private volatile bool userListFailed;
     private UserListKind userListKind;
     private volatile string? userListSourceId;
+    private volatile Dictionary<string, int>? userListReactionKinds;
+    private volatile int[]? userListReactionCounts;
+    private volatile int userListReactionFilter = -1;
     private int userListGeneration;
     private readonly FeedLane<PostDto> taggedLane = new(ByNewestFirst);
     private volatile string? taggedUserId;
@@ -143,6 +146,9 @@ internal abstract class SocialFeedStore : IDisposable
         userListCursor = null;
         userListLoading = false;
         userListFailed = false;
+        userListReactionKinds = null;
+        userListReactionCounts = null;
+        userListReactionFilter = -1;
         savedLane.Clear();
         likedLane.Clear();
         followRequests = Array.Empty<UserDto>();
@@ -201,6 +207,14 @@ internal abstract class SocialFeedStore : IDisposable
     public bool UserListLoadingMore => userListLoadingMore;
     public bool HasMoreUserList => userListCursor is not null;
     public bool UserListFailed => userListFailed;
+    public int[]? UserListReactionCounts => userListReactionCounts;
+    public int UserListReactionFilter => userListReactionFilter;
+
+    public int ReactionKindOf(string userId)
+    {
+        var kinds = userListReactionKinds;
+        return kinds is not null && kinds.TryGetValue(userId, out var kind) ? kind : -1;
+    }
     public UserDto[] FollowRequests => followRequests;
     public bool FollowRequestsLoading => followRequestsLoading;
     public bool FollowRequestsLoadingMore => followRequestsLoadingMore;
@@ -1177,7 +1191,7 @@ internal abstract class SocialFeedStore : IDisposable
 
     public void EnsureUserList(string sourceId, UserListKind kind)
     {
-        if (userListKey == UserListKeyFor(sourceId, kind))
+        if (userListKey == UserListKeyFor(sourceId, kind, userListReactionFilter))
         {
             return;
         }
@@ -1185,9 +1199,26 @@ internal abstract class SocialFeedStore : IDisposable
         OpenUserList(sourceId, kind);
     }
 
-    public void OpenUserList(string sourceId, UserListKind kind)
+    public void FilterUserListByReaction(int reactionKind)
     {
-        var key = UserListKeyFor(sourceId, kind);
+        var sourceId = userListSourceId;
+        if (sourceId is null || userListReactionFilter == reactionKind)
+        {
+            return;
+        }
+
+        userListReactionFilter = reactionKind;
+        OpenUserList(sourceId, userListKind);
+    }
+
+    public void OpenUserList(string sourceId, UserListKind kind, int reactionFilter = -1)
+    {
+        if (userListSourceId != sourceId || userListKind != kind)
+        {
+            userListReactionFilter = reactionFilter;
+        }
+
+        var key = UserListKeyFor(sourceId, kind, userListReactionFilter);
         if (userListKey == key && userListLoading)
         {
             return;
@@ -1224,6 +1255,11 @@ internal abstract class SocialFeedStore : IDisposable
             {
                 userListResults = page.Items;
                 userListCursor = page.NextCursor;
+                userListReactionKinds = page.ReactionKinds;
+                if (page.ReactionCounts is not null)
+                {
+                    userListReactionCounts = page.ReactionCounts;
+                }
             }
         }, () =>
         {
@@ -1257,10 +1293,29 @@ internal abstract class SocialFeedStore : IDisposable
 
             userListResults = CopyOnWrite.AppendPageById(userListResults, page.Items);
             userListCursor = page.NextCursor;
+            userListReactionKinds = MergeReactionKinds(userListReactionKinds, page.ReactionKinds);
         }, () => userListLoadingMore = false);
     }
 
-    private static string UserListKeyFor(string sourceId, UserListKind kind) => $"{(int)kind}:{sourceId}";
+    private static Dictionary<string, int>? MergeReactionKinds(Dictionary<string, int>? existing,
+        Dictionary<string, int>? incoming)
+    {
+        if (incoming is null || incoming.Count == 0)
+        {
+            return existing;
+        }
+
+        var merged = existing is null ? new Dictionary<string, int>(incoming.Count) : new Dictionary<string, int>(existing);
+        foreach (var pair in incoming)
+        {
+            merged[pair.Key] = pair.Value;
+        }
+
+        return merged;
+    }
+
+    private static string UserListKeyFor(string sourceId, UserListKind kind, int reactionFilter) =>
+        $"{(int)kind}:{sourceId}:{reactionFilter}";
 
     private async Task<UserListPage?> FetchUserListPageAsync(
         UserListKind kind, string sourceId, string? cursor, CancellationToken token) =>
@@ -1269,7 +1324,8 @@ internal abstract class SocialFeedStore : IDisposable
             UserListKind.Followers => await client.FollowersAsync(sourceId, cursor, token).ConfigureAwait(false),
             UserListKind.Following => await client.FollowingAsync(sourceId, cursor, token).ConfigureAwait(false),
             UserListKind.Mutuals => await client.MutualFollowersAsync(sourceId, cursor, token).ConfigureAwait(false),
-            _ => await client.PostLikersAsync(sourceId, cursor, token).ConfigureAwait(false),
+            _ => await client.PostLikersAsync(sourceId, cursor, token, userListReactionFilter)
+                .ConfigureAwait(false),
         };
 
     public void UpdateProfile(string? displayName, string? handle, string? bio, Action<bool, string> onResult)

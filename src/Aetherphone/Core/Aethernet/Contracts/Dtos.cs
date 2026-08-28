@@ -233,7 +233,11 @@ internal sealed record TagSearchResult(TagSummaryDto[] Tags);
 
 internal sealed record FeatureFlagsDto(bool Music, Dictionary<string, bool>? Apps);
 
-internal sealed record UserListPage(UserDto[] Items, string? NextCursor);
+internal sealed record UserListPage(
+    UserDto[] Items,
+    string? NextCursor,
+    Dictionary<string, int>? ReactionKinds = null,
+    int[]? ReactionCounts = null);
 
 internal sealed record UploadUrlRequest(string ContentType, string Scope);
 

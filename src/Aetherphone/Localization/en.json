@@ -2010,6 +2010,7 @@
   "chirper.regions": "Regions",
   "chirper.done": "Done",
   "chirper.activityAll": "All",
+  "chirper.reactionsAll": "All",
   "chirper.activityMentions": "Mentions",
   "chirper.handleAvailable": "Available",
   "chirper.nameLabel": "Name",
