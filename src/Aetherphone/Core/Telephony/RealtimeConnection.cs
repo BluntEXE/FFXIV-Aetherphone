@@ -258,11 +258,11 @@ internal sealed class RealtimeConnection : IDisposable
         var trimmed = baseUrl.TrimEnd('/');
         if (trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
-            trimmed = "wss://" + trimmed.Substring("https://".Length);
+            trimmed = string.Concat("wss://", trimmed.AsSpan("https://".Length));
         }
         else if (trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
         {
-            trimmed = "ws://" + trimmed.Substring("http://".Length);
+            trimmed = string.Concat("ws://", trimmed.AsSpan("http://".Length));
         }
 
         return new Uri(trimmed + "/rt");

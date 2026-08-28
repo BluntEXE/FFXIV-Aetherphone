@@ -125,10 +125,10 @@ internal static class RichText
             return null;
         }
 
-        var hasMention = mentions.Length > 0 && text.IndexOf('@') >= 0;
+        var hasMention = mentions.Length > 0 && text.Contains('@');
         var hasLink = text.Length >= 7 && HasLinkCandidate(text);
         var hasEmoji = EmojiScanner.MightContain(text);
-        var hasTag = scanHashtags && text.IndexOf('#') >= 0;
+        var hasTag = scanHashtags && text.Contains('#');
         if (!hasMention && !hasLink && !hasEmoji && !hasTag)
         {
             return null;

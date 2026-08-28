@@ -52,7 +52,7 @@ internal static class RecoveryKey
                     builder.Append('V');
                     break;
                 default:
-                    if (Alphabet.IndexOf(upper) >= 0)
+                    if (Alphabet.Contains(upper))
                     {
                         builder.Append(upper);
                     }

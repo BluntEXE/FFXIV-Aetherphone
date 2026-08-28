@@ -235,7 +235,7 @@ internal static class ArenaDiagramView
             return Tank;
         }
 
-        if (job.StartsWith("H", StringComparison.Ordinal))
+        if (job.StartsWith('H'))
         {
             return Healer;
         }

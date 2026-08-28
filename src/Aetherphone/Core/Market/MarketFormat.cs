@@ -63,7 +63,7 @@ internal static class MarketFormat
             return cached;
         }
 
-        var clipped = value.Substring(0, maxLength - 1) + "…";
+        var clipped = string.Concat(value.AsSpan(0, maxLength - 1), "…");
         ClipCache.TryAdd(key, clipped);
         return clipped;
     }

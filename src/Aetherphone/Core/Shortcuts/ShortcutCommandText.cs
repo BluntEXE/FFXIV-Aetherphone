@@ -63,7 +63,7 @@ internal static class ShortcutCommandText
 
     private static string StripInlineWait(string line, ref float wait)
     {
-        if (!line.EndsWith(">", StringComparison.Ordinal))
+        if (!line.EndsWith('>'))
         {
             return line;
         }
