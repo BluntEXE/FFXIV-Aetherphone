@@ -772,14 +772,45 @@ internal sealed partial class MusicApp
             }
 
             liveDjSocialLinks.Clear();
-            if (!string.IsNullOrEmpty(dj.TwitchUrl))     liveDjSocialLinks.Add(("Twitch",    FontAwesomeIcon.Tv,        dj.TwitchUrl!));
-            if (!string.IsNullOrEmpty(dj.Twitter))       liveDjSocialLinks.Add(("Twitter",   FontAwesomeIcon.Feather,   dj.Twitter!));
-            if (!string.IsNullOrEmpty(dj.Bluesky))       liveDjSocialLinks.Add(("Bluesky",   FontAwesomeIcon.Cloud,     dj.Bluesky!));
-            if (!string.IsNullOrEmpty(dj.Instagram))     liveDjSocialLinks.Add(("Instagram", FontAwesomeIcon.Camera,    dj.Instagram!));
-            if (!string.IsNullOrEmpty(dj.Youtube))       liveDjSocialLinks.Add(("YouTube",   FontAwesomeIcon.Play,      dj.Youtube!));
-            if (!string.IsNullOrEmpty(dj.Tiktok))        liveDjSocialLinks.Add(("TikTok",    FontAwesomeIcon.Music,     dj.Tiktok!));
-            if (!string.IsNullOrEmpty(dj.Website))       liveDjSocialLinks.Add(("Website",   FontAwesomeIcon.Globe,     dj.Website!));
-            if (!string.IsNullOrEmpty(dj.MusicPlatform)) liveDjSocialLinks.Add(("Music",     FontAwesomeIcon.Headphones, dj.MusicPlatform!));
+            if (!string.IsNullOrEmpty(dj.TwitchUrl))
+            {
+                liveDjSocialLinks.Add(("Twitch",    FontAwesomeIcon.Tv,        dj.TwitchUrl!));
+            }
+
+            if (!string.IsNullOrEmpty(dj.Twitter))
+            {
+                liveDjSocialLinks.Add(("Twitter",   FontAwesomeIcon.Feather,   dj.Twitter!));
+            }
+
+            if (!string.IsNullOrEmpty(dj.Bluesky))
+            {
+                liveDjSocialLinks.Add(("Bluesky",   FontAwesomeIcon.Cloud,     dj.Bluesky!));
+            }
+
+            if (!string.IsNullOrEmpty(dj.Instagram))
+            {
+                liveDjSocialLinks.Add(("Instagram", FontAwesomeIcon.Camera,    dj.Instagram!));
+            }
+
+            if (!string.IsNullOrEmpty(dj.Youtube))
+            {
+                liveDjSocialLinks.Add(("YouTube",   FontAwesomeIcon.Play,      dj.Youtube!));
+            }
+
+            if (!string.IsNullOrEmpty(dj.Tiktok))
+            {
+                liveDjSocialLinks.Add(("TikTok",    FontAwesomeIcon.Music,     dj.Tiktok!));
+            }
+
+            if (!string.IsNullOrEmpty(dj.Website))
+            {
+                liveDjSocialLinks.Add(("Website",   FontAwesomeIcon.Globe,     dj.Website!));
+            }
+
+            if (!string.IsNullOrEmpty(dj.MusicPlatform))
+            {
+                liveDjSocialLinks.Add(("Music",     FontAwesomeIcon.Headphones, dj.MusicPlatform!));
+            }
 
             if (liveDjSocialLinks.Count > 0)
             {

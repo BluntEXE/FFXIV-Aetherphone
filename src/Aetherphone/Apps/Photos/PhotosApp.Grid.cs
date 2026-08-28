@@ -220,7 +220,9 @@ internal sealed partial class PhotosApp
         using (ImRaii.Child("##modifyAlbumSheet", body.Size, false, ImGuiWindowFlags.NoBackground))
         {
             using (ImRaii.PushColor(ImGuiCol.Text, ui.MutedInk))
+            {
                 Typography.Plain(label);
+            }
 
             var origin = ImGui.GetCursorScreenPos();
             var width = ImGui.GetContentRegionAvail().X;
@@ -270,7 +272,9 @@ internal sealed partial class PhotosApp
             {
                 ImGui.Dummy(new Vector2(0f, 10f * scale));
                 using (ImRaii.PushColor(ImGuiCol.Text, ui.Palette.Accent))
+                {
                     Typography.Wrapped(Loc.T(L.Photos.AlbumExists));
+                }
             }
         }
     }

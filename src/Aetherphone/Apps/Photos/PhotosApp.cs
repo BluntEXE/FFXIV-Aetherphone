@@ -51,7 +51,7 @@ internal sealed partial class PhotosApp : IPhoneApp
     private readonly Dictionary<string, List<string>> customAlbumPhotos = new(StringComparer.OrdinalIgnoreCase);
     private readonly DropdownMenu albumMenu = new();
     private readonly Dictionary<string, int> customAlbumIds = new(StringComparer.OrdinalIgnoreCase);
-    private Dictionary<int, string[]> cachedCustomAlbumPaths = new();
+    private readonly Dictionary<int, string[]> cachedCustomAlbumPaths = new();
     private int nextCustomAlbumId = FirstCustomAlbumId;
     private string newAlbumDraft = string.Empty;
     private string renameAlbumDraft = string.Empty;
@@ -59,7 +59,7 @@ internal sealed partial class PhotosApp : IPhoneApp
     private DropdownMenu.Item[]? customAlbumMenuItemsCache;
     private string? customAlbumMenuItemsLocale;
     private int? pickerMembershipAlbumKey;
-    private HashSet<string> pickerMembership = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> pickerMembership = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, int> pickerSelectionOrder = new(StringComparer.OrdinalIgnoreCase);
     private DropdownMenu.Item[]? photoMenuItemsCache;
     private string? photoMenuItemsLocale;
@@ -253,7 +253,10 @@ internal sealed partial class PhotosApp : IPhoneApp
         customAlbumOrder.AddRange(configuration.CustomAlbumOrder);
         customAlbumPhotos.Clear();
         foreach (var entry in configuration.CustomAlbumPhotos)
+        {
             customAlbumPhotos[entry.Key] = new List<string>(entry.Value);
+        }
+
         customAlbumIds.Clear();
         nextCustomAlbumId = FirstCustomAlbumId;
     }
@@ -480,7 +483,9 @@ internal sealed partial class PhotosApp : IPhoneApp
     private int GetOrAssignCustomAlbumId(string name)
     {
         if (customAlbumIds.TryGetValue(name, out var id))
+        {
             return id;
+        }
 
         id = nextCustomAlbumId++;
         customAlbumIds[name] = id;

@@ -59,7 +59,7 @@ internal sealed class VideoEngine : IDisposable
 
     private MpvRenderer? renderer;
     private ShaderResourceView? screenView;
-    private CancellationTokenSource lifetime = new();
+    private readonly CancellationTokenSource lifetime = new();
     private DateTime lastYouTubeLoad = DateTime.MinValue;
     private int pendingVolume = 60;
     private volatile bool active;

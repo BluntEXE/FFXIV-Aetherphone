@@ -53,8 +53,8 @@ internal static class DxHandler
 	{
 		try
 		{
-			GfxKernel.Device* device = GfxKernel.Device.Instance();
-			nint swapChainPtr = device is null || device->SwapChain is null
+			var device = GfxKernel.Device.Instance();
+			var swapChainPtr = device is null || device->SwapChain is null
 				? 0
 				: (nint)device->SwapChain->DXGISwapChain;
 			if (swapChainPtr == 0)
@@ -63,8 +63,8 @@ internal static class DxHandler
 				return false;
 			}
 
-			nint* vtable = *(nint**)swapChainPtr;
-			nint presentAddress = vtable[8];
+			var vtable = *(nint**)swapChainPtr;
+			var presentAddress = vtable[8];
 
 			if (TryInstallPresentHook(presentAddress))
 			{
@@ -83,9 +83,9 @@ internal static class DxHandler
 
 	private static unsafe string DescribePrologue(nint presentAddress)
 	{
-		byte* prologue = (byte*)presentAddress;
+		var prologue = (byte*)presentAddress;
 		var hex = new StringBuilder(PrologueDumpBytes * 3);
-		for (int byteIndex = 0; byteIndex < PrologueDumpBytes; byteIndex++)
+		for (var byteIndex = 0; byteIndex < PrologueDumpBytes; byteIndex++)
 		{
 			hex.Append(prologue[byteIndex].ToString("X2"));
 			hex.Append(' ');
@@ -134,9 +134,9 @@ internal static class DxHandler
 
 		lock (_drainLock)
 		{
-			foreach (string key in _pendingRenderWork.Keys)
+			foreach (var key in _pendingRenderWork.Keys)
 			{
-				if (_pendingRenderWork.TryRemove(key, out Action? work))
+				if (_pendingRenderWork.TryRemove(key, out var work))
 				{
 					try
 					{

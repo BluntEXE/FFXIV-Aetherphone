@@ -122,7 +122,7 @@ internal sealed class UiSoundPlayer : IDisposable
         try
         {
             using var reader = SoundEffectPlayer.OpenReader(path);
-            ISampleProvider samples = reader.ToSampleProvider();
+            var samples = reader.ToSampleProvider();
             if (samples.WaveFormat.SampleRate != SampleRate)
             {
                 samples = new WdlResamplingSampleProvider(samples, SampleRate);

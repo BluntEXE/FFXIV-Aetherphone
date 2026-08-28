@@ -12,7 +12,7 @@ internal ref struct ScreenLayer
 
     private readonly Rect rect;
     private ImGuiWindowPtr window;
-    private InputShield shield;
+    private readonly InputShield shield;
     private bool open;
 
     private ScreenLayer(Rect rect, ImGuiWindowPtr window, InputShield shield)

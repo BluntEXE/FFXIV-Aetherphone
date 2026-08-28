@@ -82,7 +82,7 @@ internal sealed class CallAudioController
             return;
         }
 
-        Span<int> present = participants.Length <= 16
+        var present = participants.Length <= 16
             ? stackalloc int[participants.Length]
             : new int[participants.Length];
         var presentCount = 0;

@@ -277,7 +277,7 @@ internal sealed class ConductGateOverlay
             ? 0f
             : Typography.MeasureWrappedBlock(leadText, TextStyles.Subheadline, innerWidth).Y;
 
-        Span<float> itemHeights = section.Items.Length > 0 ? stackalloc float[section.Items.Length] : default;
+        var itemHeights = section.Items.Length > 0 ? stackalloc float[section.Items.Length] : default;
         var itemsHeight = 0f;
         for (var index = 0; index < section.Items.Length; index++)
         {

@@ -111,7 +111,7 @@ internal sealed partial class MessageApp
 
     private void DrawDirectReceipts(ChatMessageDto message, float scale)
     {
-        long? readAt = message.ReadAtUnix;
+        var readAt = message.ReadAtUnix;
         if (readAt is null)
         {
             var members = store.Members;

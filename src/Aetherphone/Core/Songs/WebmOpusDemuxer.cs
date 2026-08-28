@@ -264,7 +264,7 @@ internal sealed class WebmOpusDemuxer
             throw new InvalidDataException("Invalid Matroska vint in block header.");
         }
 
-        ulong value = (ulong)(first & (mask - 1));
+        var value = (ulong)(first & (mask - 1));
         for (var index = 1; index < length; index++)
         {
             value = (value << 8) | buffer[offset + index];

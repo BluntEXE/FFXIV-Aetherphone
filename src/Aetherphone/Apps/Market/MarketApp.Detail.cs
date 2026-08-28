@@ -316,7 +316,7 @@ internal sealed partial class MarketApp
         var origin = ImGui.GetCursorScreenPos();
         var height = 60f * scale;
         var graph = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
-        Span<float> values = count <= 64 ? stackalloc float[count] : new float[count];
+        var values = count <= 64 ? stackalloc float[count] : new float[count];
         var cursor = 0;
         for (var saleIndex = sales.Length - 1; saleIndex >= 0; saleIndex--)
         {

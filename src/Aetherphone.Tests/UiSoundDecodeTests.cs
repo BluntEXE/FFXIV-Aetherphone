@@ -25,7 +25,7 @@ public sealed class UiSoundDecodeTests
     private static float DecodePeak(string path)
     {
         using var reader = SoundEffectPlayer.OpenReader(path);
-        ISampleProvider samples = reader.ToSampleProvider();
+        var samples = reader.ToSampleProvider();
         if (samples.WaveFormat.SampleRate != SampleRate)
         {
             samples = new WdlResamplingSampleProvider(samples, SampleRate);

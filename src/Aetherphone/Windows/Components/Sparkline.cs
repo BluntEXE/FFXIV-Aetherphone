@@ -37,7 +37,7 @@ internal static class Sparkline
         var stepX = area.Width / (count - 1);
         var usableHeight = area.Height - 2f;
         var baseY = area.Max.Y;
-        Span<Vector2> points = count <= 128 ? stackalloc Vector2[count] : new Vector2[count];
+        var points = count <= 128 ? stackalloc Vector2[count] : new Vector2[count];
         for (var index = 0; index < count; index++)
         {
             var normalized = (values[index] - min) / range;

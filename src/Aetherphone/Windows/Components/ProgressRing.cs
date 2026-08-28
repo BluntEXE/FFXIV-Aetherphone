@@ -50,7 +50,11 @@ internal static class ProgressRing
     public static void Fill(Vector2 c, float r, float thickness, float fraction, Vector4 col)
     {
         fraction = Math.Clamp(fraction, 0f, 1f);
-        if (fraction <= 0.0001f) return;
+        if (fraction <= 0.0001f)
+        {
+            return;
+        }
+
         Arc(c, r, thickness, Top, Top + fraction * MathF.PI * 2f, ImGui.GetColorU32(col));
     }
 
@@ -146,7 +150,10 @@ internal static class ProgressRing
         var accent = Accent.Violet;
         var thickness = 4.5f * UiScale.Current;
         if (enabled)
+        {
             Glow(c, radius, accent, 0.85f + (hovered ? 1.0f : 0f) + 0.55f * Pulse.Wave(Pulse.Breath));
+        }
+
         dl.AddCircleFilled(c, radius - thickness * 0.5f,
             ImGui.GetColorU32(enabled
                 ? Vector4.Lerp(ChromeInk.CardBackground, accent, hovered ? 0.30f : 0.15f)
@@ -159,8 +166,16 @@ internal static class ProgressRing
         CenterIcon(c + nudge, glyph, glyphCol, radius * (enabled ? 0.78f : 0.62f));
         ImGui.SetCursorScreenPos(min);
         ImGui.Dummy(max - min);
-        if (!enabled) return false;
-        if (hovered) ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        if (!enabled)
+        {
+            return false;
+        }
+
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
         return UiInteract.Click(min, max, hovered);
     }
 }

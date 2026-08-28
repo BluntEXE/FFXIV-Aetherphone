@@ -54,7 +54,7 @@ public sealed class NameEffectSyncTests
     [Fact]
     public void EveryKindTheClientKnowsHasAServerKey()
     {
-        foreach (NameEffectKind kind in Enum.GetValues<NameEffectKind>())
+        foreach (var kind in Enum.GetValues<NameEffectKind>())
         {
             var matched = false;
             for (var index = 0; index < ServerEffectKeys.Length; index++)
@@ -127,7 +127,7 @@ public sealed class NameEffectSyncTests
     [Fact]
     public void EveryRoleEffectIsEitherASignatureOrColourDifferentiated()
     {
-        foreach (RoleKind role in Enum.GetValues<RoleKind>())
+        foreach (var role in Enum.GetValues<RoleKind>())
         {
             var roleEffect = NameEffects.KindFor(role);
             if (roleEffect == NameEffectKind.None)

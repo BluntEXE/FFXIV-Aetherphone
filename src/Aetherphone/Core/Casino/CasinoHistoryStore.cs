@@ -164,7 +164,7 @@ internal sealed class CasinoHistoryStore : IDisposable
         }
 
         var appendCount = 0;
-        Span<bool> keep = incoming.Length <= 64 ? stackalloc bool[incoming.Length] : new bool[incoming.Length];
+        var keep = incoming.Length <= 64 ? stackalloc bool[incoming.Length] : new bool[incoming.Length];
         for (var incomingIndex = 0; incomingIndex < incoming.Length; incomingIndex++)
         {
             var duplicate = false;
