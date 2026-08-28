@@ -1,6 +1,6 @@
 using Dalamud.Interface.Textures.TextureWraps;
 
-namespace Aetherphone.Core;
+namespace Aetherphone.Core.Media;
 
 internal sealed class FileTextureCache
 {

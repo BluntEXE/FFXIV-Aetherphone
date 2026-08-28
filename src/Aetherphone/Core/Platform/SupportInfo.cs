@@ -1,9 +1,8 @@
 using System.Text;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Localization;
-using Aetherphone.Core.Platform;
 
-namespace Aetherphone.Core;
+namespace Aetherphone.Core.Platform;
 
 internal static class SupportInfo
 {

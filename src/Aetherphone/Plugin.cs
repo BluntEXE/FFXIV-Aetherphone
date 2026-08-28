@@ -1,5 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Config;
 using Aetherphone.Core.Device;
 using Aetherphone.Core.Emoji;
 using Aetherphone.Core.Emote;

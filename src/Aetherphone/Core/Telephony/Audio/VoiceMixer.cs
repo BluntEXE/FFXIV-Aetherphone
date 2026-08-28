@@ -1,3 +1,5 @@
+using Aetherphone.Core.Audio;
+using Aetherphone.Core.Playback;
 using Concentus;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;

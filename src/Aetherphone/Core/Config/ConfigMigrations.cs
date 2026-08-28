@@ -1,4 +1,4 @@
-namespace Aetherphone.Core;
+namespace Aetherphone.Core.Config;
 
 internal static class ConfigMigrations
 {

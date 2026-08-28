@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 
-namespace Aetherphone.Core;
+namespace Aetherphone.Core.Audio;
 
 internal static class AudioOutputFactory
 {

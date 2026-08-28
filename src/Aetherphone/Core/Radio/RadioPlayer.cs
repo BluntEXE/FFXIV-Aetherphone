@@ -1,3 +1,4 @@
+using Aetherphone.Core.Audio;
 using System.Linq;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;

@@ -1,3 +1,4 @@
+using Aetherphone.Core.Media;
 using Dalamud.Interface.Textures.TextureWraps;
 
 namespace Aetherphone.Core.Hunts;

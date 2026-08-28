@@ -10,6 +10,7 @@ using Aetherphone.Core.Media;
 using Aetherphone.Core.Message;
 using Aetherphone.Core.Net;
 using Aetherphone.Core.Notifications;
+using Aetherphone.Core.Runtime;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows.Components;

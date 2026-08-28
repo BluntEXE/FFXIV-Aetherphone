@@ -1,4 +1,4 @@
-namespace Aetherphone.Core;
+namespace Aetherphone.Core.Config;
 
 internal sealed class SettingsSnapshotStore<TSnapshot> where TSnapshot : class
 {

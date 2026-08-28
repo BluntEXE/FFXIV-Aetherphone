@@ -1,6 +1,7 @@
 using System.Globalization;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Config;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Notifications;

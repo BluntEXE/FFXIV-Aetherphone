@@ -1,5 +1,4 @@
 using Aetherphone.Core;
-using Aetherphone.Core.Net;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
@@ -7,7 +6,9 @@ using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Message;
+using Aetherphone.Core.Net;
 using Aetherphone.Core.Notifications;
+using Aetherphone.Core.Runtime;
 using Aetherphone.Windows.Components;
 
 namespace Aetherphone.Apps.Message;

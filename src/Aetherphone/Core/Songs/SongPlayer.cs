@@ -1,4 +1,5 @@
 using System.Linq;
+using Aetherphone.Core.Audio;
 using Aetherphone.Core.Net;
 using NAudio.MediaFoundation;
 using NAudio.Wave;

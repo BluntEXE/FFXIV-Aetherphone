@@ -1,6 +1,6 @@
 using Dalamud.Plugin.Services;
 
-namespace Aetherphone.Core;
+namespace Aetherphone.Core.Runtime;
 
 internal sealed class PendingFrameworkAction
 {

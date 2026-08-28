@@ -1,3 +1,4 @@
+using Aetherphone.Core.Game;
 using Dalamud.Game.Gui.NamePlate;
 
 namespace Aetherphone.Core.Video;

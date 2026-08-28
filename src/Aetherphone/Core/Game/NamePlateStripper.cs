@@ -1,6 +1,6 @@
 using Dalamud.Game.Gui.NamePlate;
 
-namespace Aetherphone.Core;
+namespace Aetherphone.Core.Game;
 
 internal static class NamePlateStripper
 {
