@@ -198,7 +198,7 @@ internal sealed partial class GamesApp : IPhoneApp
             var anchor = new Vector2(context.Content.Center.X, context.Content.Min.Y + 96f * UiScale.Current);
             if (award.Granted && award.Amount > 0)
             {
-                coinFloats.Spawn(Loc.T(L.Coin.CheckInReward, award.Amount.ToString("N0", Loc.Culture)), anchor);
+                coinFloats.Spawn(Loc.T(L.Coin.CheckInReward, NumberText.Group(award.Amount)), anchor);
                 coins.AbsorbLocalAward(award.Balance);
             }
             else if (award.Reason == "too_short")

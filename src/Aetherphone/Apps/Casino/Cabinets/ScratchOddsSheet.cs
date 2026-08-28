@@ -70,7 +70,7 @@ internal sealed class ScratchOddsSheet
         ImGui.Dummy(new Vector2(width, introBlock.Y + 10f * scale));
 
         var priceLine = Loc.T(L.Casino.ScratchPrice) + ": "
-            + ScratchRules.Prices[tier].ToString("N0", Loc.Culture);
+            + NumberText.Group(ScratchRules.Prices[tier]);
         var priceOrigin = ImGui.GetCursorScreenPos();
         Typography.Draw(drawList, priceOrigin, priceLine, ui.TitleInk, TextStyles.SubheadlineEmphasized);
         ImGui.Dummy(new Vector2(width, 26f * scale));
@@ -92,7 +92,7 @@ internal sealed class ScratchOddsSheet
             ScratchSymbolArt.Draw(drawList, prizeIndex, new Vector2(rowOrigin.X + 18f * scale, rowCenterY),
                 13f * scale);
             Typography.Draw(drawList, new Vector2(rowOrigin.X + 44f * scale, rowCenterY - 9f * scale),
-                table[prizeIndex].Chips.ToString("N0", Loc.Culture), ui.TitleInk, TextStyles.SubheadlineEmphasized);
+                NumberText.Group(table[prizeIndex].Chips), ui.TitleInk, TextStyles.SubheadlineEmphasized);
             var chance = Loc.T(L.Casino.ScratchOddsChanceValue, ChancePercent(table[prizeIndex].CountPerMillion));
             var chanceSize = Typography.Measure(chance, TextStyles.Subheadline);
             Typography.Draw(drawList, new Vector2(rowOrigin.X + width - chanceSize.X, rowCenterY - 9f * scale),

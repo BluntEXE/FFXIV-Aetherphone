@@ -168,5 +168,5 @@ internal static class CurrencyRow
         drawList.AddImageRounded(texture.Handle, min, max, Vector2.Zero, Vector2.One, 0xFFFFFFFFu, 7f * scale);
     }
 
-    private static string Format(long amount) => amount.ToString("N0", Loc.Culture);
+    private static string Format(long amount) => NumberText.Group(amount);
 }

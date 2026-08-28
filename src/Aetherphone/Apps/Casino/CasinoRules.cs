@@ -233,7 +233,7 @@ internal static class CasinoRules
 
     private static string Number(long value)
     {
-        return value.ToString("N0", Loc.Culture);
+        return NumberText.Group(value);
     }
 
     private static string Range(long low, long high)

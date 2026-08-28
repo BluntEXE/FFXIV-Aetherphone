@@ -636,8 +636,8 @@ internal sealed class InventoryApp : IPhoneApp
         drawList.AddLine(tip, new Vector2(tip.X - size, tip.Y + size), packed, thickness);
     }
 
-    private static string FormatCount(int value) => value.ToString("N0", Loc.Culture);
-    private static string FormatGil() => InventoryGil.Read().ToString("N0", Loc.Culture);
+    private static string FormatCount(int value) => NumberText.Group(value);
+    private static string FormatGil() => NumberText.Group(InventoryGil.Read());
 
     public void Dispose()
     {

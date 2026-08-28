@@ -29,7 +29,7 @@ internal static class AdText
 
     public static string Gil(long value)
     {
-        return value.ToString("N0", Loc.Culture);
+        return NumberText.Group(value);
     }
 
     public static string PriceLine(AdDto ad)

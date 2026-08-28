@@ -73,7 +73,7 @@ internal static class CoinHero
         var textLeft = min.X + inset;
         var available = width - inset * 2f - height * 0.34f;
         balanceRoll.Update((int)wallet.Balance, delta);
-        var amountText = balanceRoll.Display.ToString("N0", Loc.Culture);
+        var amountText = NumberText.Group(balanceRoll.Display);
         var tallestHeight = Typography.Measure(amountText, BalanceMaxScale, FontWeight.Bold).Y;
         var restScale = Typography.FitScale(amountText, available - CurrencyGlyph.Reserve(tallestHeight),
             BalanceMaxScale, BalanceMinScale, FontWeight.Bold);
@@ -92,11 +92,11 @@ internal static class CoinHero
             Typography.FitText(Loc.T(L.Coin.Balance), width - inset * 2f, TextStyles.Headline),
             Palette.WithAlpha(Ink, 0.82f), TextStyles.Headline);
 
-        var statsText = Loc.T(L.Coin.EarnedLifetime) + " " + wallet.LifetimeEarned.ToString("N0", Loc.Culture);
+        var statsText = Loc.T(L.Coin.EarnedLifetime) + " " + NumberText.Group(wallet.LifetimeEarned);
         if (wallet.LifetimeSpent > 0)
         {
             statsText += "  ·  " + Loc.T(L.Coin.SpentLifetime) + " "
-                + wallet.LifetimeSpent.ToString("N0", Loc.Culture);
+                + NumberText.Group(wallet.LifetimeSpent);
         }
 
         Typography.Draw(drawList, new Vector2(textLeft, max.Y - 26f * scale),
@@ -145,8 +145,8 @@ internal static class CoinHero
         var shown = Math.Clamp(capFill.Step(target, CapFillSmoothSeconds, delta), 0f, 1f);
         ProgressRing.Fill(ringCenter, radius, thickness, shown, accent);
 
-        var earnedText = wallet.EarnedToday.ToString("N0", Loc.Culture);
-        var capText = "/ " + wallet.DailyCap.ToString("N0", Loc.Culture);
+        var earnedText = NumberText.Group(wallet.EarnedToday);
+        var capText = "/ " + NumberText.Group(wallet.DailyCap);
         var earnedSize = Typography.Measure(earnedText, TextStyles.Title2);
         var capSize = Typography.Measure(capText, TextStyles.Caption1);
         var blockTop = ringCenter.Y - (earnedSize.Y + capSize.Y + 2f * scale) * 0.5f;

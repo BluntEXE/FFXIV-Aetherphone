@@ -370,7 +370,7 @@ internal sealed partial class CasinoApp
 
     private void AskCashOut(Core.Aethernet.Contracts.CasinoSittingDto sitting)
     {
-        var stackText = sitting.Stack.ToString("N0", Loc.Culture);
+        var stackText = NumberText.Group(sitting.Stack);
         confirm.Ask(new Core.Confirm.ConfirmRequest
         {
             Title = Loc.T(L.Casino.CashOutConfirmTitle, stackText),

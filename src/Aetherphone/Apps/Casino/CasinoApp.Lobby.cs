@@ -64,10 +64,10 @@ internal sealed partial class CasinoApp
         var coinBalance = coins.Wallet?.Balance ?? 0;
 
         DrawBalanceColumn(drawList, left, min.Y, columnWidth, Loc.T(L.Casino.ChipsRow),
-            stack.ToString("N0", Loc.Culture), stack > 0 ? ui.Accent : ui.MutedInk, CurrencyKind.Chips, false,
+            NumberText.Group(stack), stack > 0 ? ui.Accent : ui.MutedInk, CurrencyKind.Chips, false,
             scale);
         DrawBalanceColumn(drawList, right - columnWidth, min.Y, columnWidth, Loc.T(L.Casino.WalletRow),
-            coinBalance.ToString("N0", Loc.Culture), ui.TitleInk, CurrencyKind.Coins, true, scale);
+            NumberText.Group(coinBalance), ui.TitleInk, CurrencyKind.Coins, true, scale);
 
         var dividerY = min.Y + 62f * scale;
         drawList.AddLine(new Vector2(left, dividerY), new Vector2(right, dividerY),
@@ -229,7 +229,7 @@ internal sealed partial class CasinoApp
     {
         var minimum = MinimumStakeOf(gameId);
         return minimum > 0
-            ? Loc.T(L.Casino.MinimumStake, minimum.ToString("N0", Loc.Culture))
+            ? Loc.T(L.Casino.MinimumStake, NumberText.Group(minimum))
             : string.Empty;
     }
 

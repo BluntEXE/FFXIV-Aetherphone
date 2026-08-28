@@ -160,7 +160,7 @@ internal static class HousingFormat
     }
 
     public static string Price(long gil) =>
-        gil <= 0L ? Loc.T(L.Housing.NotReported) : Loc.T(L.Housing.PriceGil, gil.ToString("N0", Loc.Culture));
+        gil <= 0L ? Loc.T(L.Housing.NotReported) : Loc.T(L.Housing.PriceGil, NumberText.Group(gil));
 
     public static string Entries(int? entries) =>
         entries is { } count ? count.ToString(Loc.Culture) : Loc.T(L.Housing.NotReported);

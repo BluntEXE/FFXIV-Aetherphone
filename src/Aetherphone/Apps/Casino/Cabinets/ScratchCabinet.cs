@@ -212,7 +212,7 @@ internal sealed class ScratchCabinet
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.25f)), Metrics.Stroke.Hairline);
         Typography.Draw(drawList, new Vector2(min.X + 16f * scale, y + 7f * scale), Loc.T(L.Casino.SlotsChips),
             ui.MutedInk, TextStyles.Caption1);
-        var stackText = DisplayStack(state).ToString("N0", Loc.Culture);
+        var stackText = NumberText.Group(DisplayStack(state));
         CurrencyGlyph.DrawAmount(drawList, new Vector2(min.X + 16f * scale, y + 21f * scale), stackText,
             CurrencyKind.Chips, ui.TitleInk, TextStyles.SubheadlineEmphasized);
         return y + height;
@@ -331,7 +331,7 @@ internal sealed class ScratchCabinet
             prizeRoll.Update((int)celebrationPrize, delta);
             Typography.DrawCentered(drawList, center with { Y = center.Y - 14f * scale },
                 Loc.T(L.Casino.ScratchWinBanner), Gold, TextStyles.FootnoteEmphasized);
-            var amount = "+" + ((long)prizeRoll.Display).ToString("N0", Loc.Culture);
+            var amount = "+" + NumberText.Group((long)prizeRoll.Display);
             Typography.DrawCentered(drawList, center with { Y = center.Y + 8f * scale }, amount, Gold,
                 TextStyles.Title2.Scale * prizeRoll.PopScale, TextStyles.Title2.Weight);
             return y + height;
@@ -433,7 +433,7 @@ internal sealed class ScratchCabinet
         var blocked = state.StakesPaused || state.Draining;
         var scratching = playback.Phase == ScratchPhase.Scratching;
         var canBuy = !play.RoundInFlight && !scratching && !blocked && !lowStack;
-        var priceText = price.ToString("N0", Loc.Culture);
+        var priceText = NumberText.Group(price);
         var label = playback.RevealComplete
             ? Loc.T(L.Casino.ScratchAnotherFor, priceText)
             : Loc.T(L.Casino.ScratchBuyFor, priceText);

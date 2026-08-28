@@ -469,7 +469,7 @@ internal sealed partial class ActivityApp : IPhoneApp
         return value.ToString(Loc.Culture);
     }
 
-    private static string Number(long value) => value.ToString("N0", Loc.Culture);
+    private static string Number(long value) => NumberText.Group(value);
 
     public void Dispose()
     {

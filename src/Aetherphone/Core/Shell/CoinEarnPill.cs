@@ -79,7 +79,7 @@ internal sealed class CoinEarnPill : IDisposable
     {
         var scale = UiScale.Current;
         var accent = AppAccents.For("coin");
-        var title = Loc.T(L.Coin.RollupTitle, shownDelta.ToString("N0", Loc.Culture));
+        var title = Loc.T(L.Coin.RollupTitle, NumberText.Group(shownDelta));
 
         var titleHeight = Typography.Measure(title, TextStyles.FootnoteEmphasized).Y;
         var iconSize = titleHeight * 0.98f;

@@ -71,7 +71,7 @@ internal sealed class JackpotRail
 
         var coins = CasinoChipLots.CoinsFor(chips);
         potRoll.Update((int)coins, delta);
-        var amountText = potRoll.Display.ToString("N0", Loc.Culture);
+        var amountText = NumberText.Group(potRoll.Display);
         var available = width - inset * 2f;
         var tallestHeight = Typography.Measure(amountText, AmountMaxScale, FontWeight.Bold).Y;
         var restScale = Typography.FitScale(amountText, available - CurrencyGlyph.Reserve(tallestHeight),

@@ -61,8 +61,8 @@ internal static class CoinEarnRow
         var tileCenter = new Vector2(min.X + inset + tileSize * 0.5f, (min.Y + max.Y) * 0.5f);
         IconTile.DrawApp(drawList, appId, tileCenter, tileSize, IconTile.Surface(AppAccents.For(appId)));
 
-        var progress = rule.EarnedThisPeriod.ToString("N0", Loc.Culture) + " / "
-            + rule.PeriodCap.ToString("N0", Loc.Culture);
+        var progress = NumberText.Group(rule.EarnedThisPeriod) + " / "
+            + NumberText.Group(rule.PeriodCap);
         var progressSize = Typography.Measure(progress, TextStyles.SubheadlineEmphasized);
         var checkSize = complete ? 11f * scale : 0f;
         var checkPad = complete ? 6f * scale : 0f;

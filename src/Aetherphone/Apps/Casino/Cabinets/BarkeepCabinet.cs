@@ -576,7 +576,7 @@ internal sealed class BarkeepCabinet
             }
 
             payoutRoll.Update((int)result.Payout, delta);
-            var amount = "+" + ((long)payoutRoll.Display).ToString("N0", Loc.Culture);
+            var amount = "+" + NumberText.Group((long)payoutRoll.Display);
             Typography.DrawCentered(drawList, new Vector2(left + width * 0.5f, y + 8f * scale), amount, Gold,
                 TextStyles.Title1.Scale * payoutRoll.PopScale, TextStyles.Title1.Weight);
             y += 44f * scale;
@@ -687,7 +687,7 @@ internal sealed class BarkeepCabinet
         var sitting = state.Sitting;
         var seated = sitting is not null;
         var blocked = state.StakesPaused || state.Draining;
-        var entryText = BarkeepRules.EntryChips.ToString("N0", Loc.Culture);
+        var entryText = NumberText.Group(BarkeepRules.EntryChips);
 
         var wagerTitle = Loc.T(L.Casino.BarkeepWagerTitle);
         var wagerHint = Loc.T(L.Casino.BarkeepWagerHint, entryText);

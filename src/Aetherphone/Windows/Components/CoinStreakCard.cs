@@ -47,7 +47,7 @@ internal static class CoinStreakCard
 
         var textLeft = tileCenter.X + tileSize * 0.5f + 12f * scale;
         var textWidth = MathF.Max(40f * scale, buttonRect.Min.X - 10f * scale - textLeft);
-        var title = Loc.T(L.Coin.StreakDays, wallet.StreakDays.ToString("N0", Loc.Culture));
+        var title = Loc.T(L.Coin.StreakDays, NumberText.Group(wallet.StreakDays));
         var titleSize = Typography.Measure(title, TextStyles.SubheadlineEmphasized);
         var hint = wallet.CheckInAvailable ? Loc.T(L.Coin.StreakClaim) : Loc.T(L.Coin.StreakNext);
         var hintSize = Typography.Measure(hint, TextStyles.Footnote);

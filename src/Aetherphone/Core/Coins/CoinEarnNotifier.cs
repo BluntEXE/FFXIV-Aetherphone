@@ -45,7 +45,7 @@ internal sealed class CoinEarnNotifier : IDisposable
 
             body.Append(Loc.T(CoinRuleLabels.For(entries[index].RuleId)));
             body.Append(" +");
-            body.Append(entries[index].Amount.ToString("N0", Loc.Culture));
+            body.Append(NumberText.Group(entries[index].Amount));
             named++;
         }
 
@@ -67,7 +67,7 @@ internal sealed class CoinEarnNotifier : IDisposable
 
         notifications.Notify(new PhoneNotification(
             "coin",
-            Loc.T(L.Coin.RollupTitle, delta.ToString("N0", Loc.Culture)),
+            Loc.T(L.Coin.RollupTitle, NumberText.Group(delta)),
             Loc.T(L.Coin.RollupBody, body.ToString()),
             DateTime.Now,
             AppAccents.For("coin"),

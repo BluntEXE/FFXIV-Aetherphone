@@ -106,7 +106,7 @@ internal static class ChipStack
             column++;
         }
 
-        var label = amount.ToString("N0", Loc.Culture);
+        var label = NumberText.Group(amount);
         Typography.DrawCentered(drawList, new Vector2(baseCenter.X, baseCenter.Y + radius + LabelGap * scale + 6f * scale),
             label, ink, TextStyles.Caption2);
     }

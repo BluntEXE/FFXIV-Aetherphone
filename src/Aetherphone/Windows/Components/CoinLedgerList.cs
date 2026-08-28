@@ -48,7 +48,7 @@ internal static class CoinLedgerList
                 }
 
                 var appId = entry.App.Length == 0 ? "coin" : entry.App;
-                var amountText = (entry.Amount >= 0 ? "+" : "") + entry.Amount.ToString("N0", Loc.Culture);
+                var amountText = (entry.Amount >= 0 ? "+" : "") + NumberText.Group(entry.Amount);
                 SettingsRow.AppLink(card.NextRow(), appId, AppAccents.For(appId),
                     Loc.T(CoinRuleLabels.For(entry.RuleId)), amountText, theme, entry.Id);
             }

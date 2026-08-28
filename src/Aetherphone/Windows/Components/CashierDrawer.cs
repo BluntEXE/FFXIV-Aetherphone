@@ -287,14 +287,14 @@ internal sealed class CashierDrawer
         Material.EdgeSquircle(drawList, min, max, 16f * scale, scale);
 
         var rowY = min.Y + CardPad * scale;
-        var balanceText = (wallet?.Balance ?? 0).ToString("N0", Loc.Culture);
+        var balanceText = NumberText.Group(wallet?.Balance ?? 0);
         DrawSummaryRow(drawList, ui, Loc.T(L.Casino.WalletRow), balanceText, CurrencyKind.Coins, left, rowY,
             innerWidth, scale, ui.TitleInk);
         rowY += SummaryRowHeight * scale;
 
         if (sittingOpen)
         {
-            var stackText = (state?.Sitting?.Stack ?? 0).ToString("N0", Loc.Culture);
+            var stackText = NumberText.Group(state?.Sitting?.Stack ?? 0);
             DrawSummaryRow(drawList, ui, Loc.T(L.Casino.ChipsRow), stackText, CurrencyKind.Chips, left, rowY,
                 innerWidth, scale, ui.Accent);
             rowY += SummaryRowHeight * scale;
@@ -303,8 +303,8 @@ internal sealed class CashierDrawer
         var net = state?.NetLossToday ?? 0;
         var tonight = net switch
         {
-            > 0 => Loc.T(L.Casino.TonightDown, net.ToString("N0", Loc.Culture)),
-            < 0 => Loc.T(L.Casino.TonightUp, (-net).ToString("N0", Loc.Culture)),
+            > 0 => Loc.T(L.Casino.TonightDown, NumberText.Group(net)),
+            < 0 => Loc.T(L.Casino.TonightUp, NumberText.Group(-net)),
             _ => Loc.T(L.Casino.TonightEven),
         };
         Typography.Draw(drawList, new Vector2(left + CardPad * scale, rowY + 2f * scale), tonight, ui.MutedInk,
@@ -428,7 +428,7 @@ internal sealed class CashierDrawer
         var busy = store.MovingMoney;
         var label = amountValid
             ? Loc.T(sittingOpen ? L.Casino.TopUpFor : L.Casino.BuyInFor,
-                amount.ToString("N0", Loc.Culture))
+                NumberText.Group(amount))
             : Loc.T(L.Casino.NotEnoughCoins);
         var confirmRect = new Rect(new Vector2(left, y), new Vector2(left + innerWidth, y + PillHeight * scale));
         var canConfirm = interactive && amountValid && !busy;
@@ -465,8 +465,8 @@ internal sealed class CashierDrawer
         var chipInk = affordable ? (selected ? ui.Accent : ui.TitleInk) : Palette.WithAlpha(ui.MutedInk, 0.6f);
         var costInk = Palette.WithAlpha(ui.MutedInk, affordable ? 1f : 0.6f);
         var glyphAlpha = affordable ? 1f : 0.45f;
-        var chipText = chips.ToString("N0", Loc.Culture);
-        var costText = Loc.T(L.Casino.LotCost, CasinoChipLots.CoinsFor(chips).ToString("N0", Loc.Culture));
+        var chipText = NumberText.Group(chips);
+        var costText = Loc.T(L.Casino.LotCost, NumberText.Group(CasinoChipLots.CoinsFor(chips)));
         var chipSize = CurrencyGlyph.MeasureAmount(chipText, TextStyles.SubheadlineEmphasized);
         var costSize = CurrencyGlyph.MeasureAmount(costText, TextStyles.Caption1);
         var stackHeight = chipSize.Y + costSize.Y;
@@ -480,7 +480,7 @@ internal sealed class CashierDrawer
 
     private void AskStake(bool sittingOpen, long amount)
     {
-        var amountText = amount.ToString("N0", Loc.Culture);
+        var amountText = NumberText.Group(amount);
         if (sittingOpen)
         {
             confirm.Ask(new ConfirmRequest
@@ -509,7 +509,7 @@ internal sealed class CashierDrawer
     private void DrawCashOut(ImDrawListPtr drawList, AppSkin ui, CasinoSittingDto sitting,
         float left, float y, float innerWidth, float scale, bool interactive)
     {
-        var stackText = sitting.Stack.ToString("N0", Loc.Culture);
+        var stackText = NumberText.Group(sitting.Stack);
         var rect = new Rect(new Vector2(left, y), new Vector2(left + innerWidth, y + PillHeight * scale));
         var canCashOut = interactive && !store.MovingMoney;
         if (RawPill(drawList, rect, Loc.T(L.Casino.CashOutFor, stackText), false, canCashOut, ui, scale))

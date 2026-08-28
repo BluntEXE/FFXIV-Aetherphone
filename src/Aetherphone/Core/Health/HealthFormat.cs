@@ -133,7 +133,7 @@ internal static class HealthFormat
         return (long)Math.Floor(Sane(onFootYalms) / stride);
     }
 
-    public static string Number(long value) => value.ToString("N0", Culture);
+    public static string Number(long value) => NumberText.Group(value);
 
     public static string Duration(double seconds)
     {

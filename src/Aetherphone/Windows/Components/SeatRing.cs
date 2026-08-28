@@ -197,7 +197,7 @@ internal static class SeatRing
         Typography.DrawCentered(drawList, new Vector2(center.X, center.Y + radius + 8f * scale), name,
             dimmed ? style.MutedInk : style.BodyInk, TextStyles.Caption2);
         Typography.DrawCentered(drawList, new Vector2(center.X, center.Y + radius + 21f * scale),
-            seat.Stack.ToString("N0", Loc.Culture), dimmed ? style.MutedInk : style.Money, TextStyles.Caption2);
+            NumberText.Group(seat.Stack), dimmed ? style.MutedInk : style.Money, TextStyles.Caption2);
 
         if (!seat.Connected)
         {

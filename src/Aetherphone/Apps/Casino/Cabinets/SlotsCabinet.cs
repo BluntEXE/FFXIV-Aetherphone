@@ -249,7 +249,7 @@ internal sealed class SlotsCabinet
         var label = Loc.T(L.Casino.SlotsChips);
         Typography.Draw(drawList, new Vector2(min.X + 16f * scale, y + 7f * scale), label, ui.MutedInk,
             TextStyles.Caption1);
-        var stackText = DisplayStack(state).ToString("N0", Loc.Culture);
+        var stackText = NumberText.Group(DisplayStack(state));
         CurrencyGlyph.DrawAmount(drawList, new Vector2(min.X + 16f * scale, y + 21f * scale), stackText,
             CurrencyKind.Chips, ui.TitleInk, TextStyles.SubheadlineEmphasized);
 
@@ -296,7 +296,7 @@ internal sealed class SlotsCabinet
             Palette.WithAlpha(Gold, 0.85f), TextStyles.Caption1);
 
         jackpotRoll.Update((int)CasinoChipLots.CoinsFor(jackpot), delta);
-        var amount = jackpotRoll.Display.ToString("N0", Loc.Culture);
+        var amount = NumberText.Group(jackpotRoll.Display);
         var amountHeight = Typography.Measure(amount, TextStyles.SubheadlineEmphasized).Y;
         var reserve = CurrencyGlyph.Reserve(amountHeight);
         var fitted = Typography.FitText(amount, pillWidth - 32f * scale - reserve,
@@ -577,7 +577,7 @@ internal sealed class SlotsCabinet
             var pulse = 0.78f + 0.22f * Pulse.Wave(Pulse.Fast);
             Typography.DrawCentered(drawList, center with { Y = center.Y - 16f * scale },
                 Loc.T(L.Casino.JackpotWon), Palette.WithAlpha(Gold, pulse), TextStyles.Title1);
-            var coins = CasinoChipLots.CoinsFor(playback.Jackpot).ToString("N0", Loc.Culture);
+            var coins = NumberText.Group(CasinoChipLots.CoinsFor(playback.Jackpot));
             Typography.DrawCentered(drawList, center with { Y = center.Y + 16f * scale },
                 Loc.T(L.Casino.JackpotWonAmount, coins), Gold, TextStyles.SubheadlineEmphasized);
             DrawSkip(drawList, ui, left, y, width, scale);
@@ -594,7 +594,7 @@ internal sealed class SlotsCabinet
                     Loc.T(L.Casino.SlotsBigWin), Gold, TextStyles.FootnoteEmphasized);
             }
 
-            var amount = "+" + ((long)winRoll.Display).ToString("N0", Loc.Culture);
+            var amount = "+" + NumberText.Group((long)winRoll.Display);
             Typography.DrawCentered(drawList, center with { Y = center.Y + (bigWin ? 4f : -4f) * scale }, amount,
                 Gold, TextStyles.Title1.Scale * winRoll.PopScale, TextStyles.Title1.Weight);
             if (playback.CapApplied && playback.Phase == SlotsPlaybackPhase.Finished)

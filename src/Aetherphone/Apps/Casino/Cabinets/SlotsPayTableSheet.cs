@@ -92,7 +92,7 @@ internal sealed class SlotsPayTableSheet
             for (var column = 0; column < 3; column++)
             {
                 var pay = SlotsRules.LinePays[symbol, column] * stake;
-                var text = pay > 0 ? pay.ToString("N0", Loc.Culture) : "-";
+                var text = pay > 0 ? NumberText.Group(pay) : "-";
                 var ink = pay > 0 ? ui.TitleInk : ui.MutedInk;
                 DrawPayCell(drawList, new Vector2(ColumnCenterX(rowOrigin.X, width, column, scale), rowCenterY),
                     text, ink, TextStyles.SubheadlineEmphasized, columnWidth);
@@ -106,9 +106,9 @@ internal sealed class SlotsPayTableSheet
             Loc.T(L.Casino.SlotsWildNote));
         DrawNamedNote(ui, drawList, width, scale, SlotsRules.ScatterSymbol, Loc.T(L.Casino.SlotsScatterName),
             Loc.T(L.Casino.SlotsScatterNote,
-                (SlotsRules.ScatterPays[3] * stake).ToString("N0", Loc.Culture),
-                (SlotsRules.ScatterPays[4] * stake).ToString("N0", Loc.Culture),
-                (SlotsRules.ScatterPays[5] * stake).ToString("N0", Loc.Culture),
+                NumberText.Group(SlotsRules.ScatterPays[3] * stake),
+                NumberText.Group(SlotsRules.ScatterPays[4] * stake),
+                NumberText.Group(SlotsRules.ScatterPays[5] * stake),
                 GameNumber.Label(SlotsRules.FreeSpinAwards[3]),
                 GameNumber.Label(SlotsRules.FreeSpinAwards[4]),
                 GameNumber.Label(SlotsRules.FreeSpinAwards[5])));
