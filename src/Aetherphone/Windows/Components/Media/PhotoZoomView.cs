@@ -18,7 +18,6 @@ internal sealed class PhotoZoomView
     private const float ButtonRadiusUnits = 17f;
     private const float ButtonGapUnits = 10f;
     private const float ButtonMarginUnits = 12f;
-    private const float PopOutGapUnits = 18f;
 
     public const float ControlBandUnits = 52f;
 
@@ -157,7 +156,7 @@ internal sealed class PhotoZoomView
         var centerY = controls.Max.Y - radius - margin;
         var inCenter = new Vector2(controls.Max.X - radius - margin, centerY);
         var outCenter = new Vector2(inCenter.X - radius * 2f - gap, centerY);
-        var popOutCenter = new Vector2(outCenter.X - radius * 2f - PopOutGapUnits * scale, centerY);
+        var popOutCenter = new Vector2(controls.Min.X + radius + margin, centerY);
         if (ZoomButton(inCenter, radius, true, targetZoom < MaxZoom - 0.01f, theme, scale))
         {
             ZoomAround(stage, stage.Center, targetZoom * ButtonStep, size);
