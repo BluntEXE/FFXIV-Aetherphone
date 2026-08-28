@@ -134,7 +134,7 @@ internal sealed partial class ShortcutsApp : IPhoneApp
                 DrawImport(area, scale);
                 return;
             case ShortcutsScreen.CustomIcon:
-                DrawCustomIconPicker(area, scale);
+                DrawCustomIconPicker(area);
                 return;
             default:
                 DrawHome(area, scale);

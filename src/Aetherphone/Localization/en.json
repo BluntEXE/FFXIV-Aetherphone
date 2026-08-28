@@ -4452,7 +4452,6 @@
   "shortcuts.pluginIcon": "Plugin icon",
   "shortcuts.pluginIconNone": "None",
   "shortcuts.customIcon": "Custom image",
-  "shortcuts.customIconNone": "None",
   "shortcuts.customIconTitle": "Choose Image",
   "shortcuts.customIconMoveAndScale": "Move and Scale",
   "shortcuts.customIconUse": "Use",

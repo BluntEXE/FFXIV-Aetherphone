@@ -21,7 +21,7 @@ internal sealed partial class ShortcutsApp
         router.Push(ShortcutsScreen.CustomIcon);
     }
 
-    private void DrawCustomIconPicker(Rect content, float scale)
+    private void DrawCustomIconPicker(Rect content)
     {
         if (draft is null)
         {
@@ -68,6 +68,7 @@ internal sealed partial class ShortcutsApp
                 AepLog.Warning(exception, "[Shortcuts] failed to bake a custom icon");
                 iconSaving = false;
                 iconFailed = true;
+                iconBakeDraft = null;
             }
         });
     }

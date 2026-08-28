@@ -379,7 +379,6 @@ internal static class L
         public static readonly LocString PluginIcon = new("shortcuts.pluginIcon", "Plugin icon");
         public static readonly LocString PluginIconNone = new("shortcuts.pluginIconNone", "None");
         public static readonly LocString CustomIcon = new("shortcuts.customIcon", "Custom image");
-        public static readonly LocString CustomIconNone = new("shortcuts.customIconNone", "None");
         public static readonly LocString CustomIconTitle = new("shortcuts.customIconTitle", "Choose Image");
         public static readonly LocString CustomIconMoveAndScale = new("shortcuts.customIconMoveAndScale", "Move and Scale");
         public static readonly LocString CustomIconUse = new("shortcuts.customIconUse", "Use");
