@@ -3499,6 +3499,17 @@ internal static class L
         public static readonly LocString Expand = new("linkpearl.expand", "Expand");
         public static readonly LocString CollapseAllPopouts = new("linkpearl.collapseAllPopouts", "Collapse all pop-outs ({0})");
         public static readonly LocString ExpandAllPopouts = new("linkpearl.expandAllPopouts", "Expand all pop-outs ({0})");
+        public static readonly LocString PopoutTabs = new("linkpearl.popoutTabs", "Group chats as tabs");
+        public static readonly LocString PopoutTabsHint = new("linkpearl.popoutTabsHint", "Drag a pop-out onto another to merge them into one window.");
+        public static readonly LocString PopoutOutgoingTells = new("linkpearl.popoutOutgoingTells", "Pop up tells you send too");
+        public static readonly LocString PopoutCloseOnLogout = new("linkpearl.popoutCloseOnLogout", "Close pop-outs when you log out");
+        public static readonly LocString PopoutFade = new("linkpearl.popoutFade", "Fade while you are away from it");
+        public static readonly LocString PopoutIdleOpacity = new("linkpearl.popoutIdleOpacity", "Idle opacity");
+        public static readonly LocString WindowTabs = new("linkpearl.windowTabs", "Tabs in this window");
+        public static readonly LocString AddTab = new("linkpearl.addTab", "Add a conversation");
+        public static readonly LocString MoveTabOut = new("linkpearl.moveTabOut", "Move to its own window");
+        public static readonly LocString CloseTab = new("linkpearl.closeTab", "Close this tab");
+        public static readonly LocString PopoutTabLimit = new("linkpearl.popoutTabLimit", "A pop-out holds up to {0} conversations.");
     }
 
     internal static class Character
