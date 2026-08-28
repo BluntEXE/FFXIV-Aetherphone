@@ -3084,6 +3084,9 @@ internal static class L
         public static readonly LocString HelpUnreadableBody = new("encryption.helpUnreadableBody", "The key is still saved here, Windows just refuses to open it. This happens when the game runs as a different Windows user, as administrator when it usually is not, or after Windows was reinstalled. Start the game the way you normally do and it should unlock itself.");
         public static readonly LocString HelpDamagedTitle = new("encryption.helpDamagedTitle", "It says This message is damaged");
         public static readonly LocString HelpDamagedBody = new("encryption.helpDamagedBody", "That single message did not arrive intact. It cannot be repaired, but it does not affect the rest of the chat or your key.");
+        public static readonly LocString HelpEyebrow = new("encryption.helpEyebrow", "Encrypted chats");
+        public static readonly LocString HelpNeverTitle = new("encryption.helpNeverTitle", "Never do this first");
+        public static readonly LocString HelpNeverBody = new("encryption.helpNeverBody", "Creating a new key is the one action that cannot be undone. It gets you chatting again, but every older message stays unreadable unless you kept the recovery code from before. Try unlocking from another PC or with a code first, and only create a new key when nothing else is left.");
         public static readonly LocString HelpPreventTitle = new("encryption.helpPreventTitle", "So this never happens again");
         public static readonly LocString HelpPreventBody = new("encryption.helpPreventBody", "Keep a recovery code saved, and keep every code you have ever generated: each one opens only the key it was made for. Messages you have already read stay readable on this PC even if the key is lost.");
         public static readonly LocString DamagedPlaceholder = new("encryption.damagedPlaceholder", "This message is damaged");

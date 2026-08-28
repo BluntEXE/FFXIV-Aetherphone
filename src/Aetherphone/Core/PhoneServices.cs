@@ -127,6 +127,8 @@ internal sealed class PhoneServices : IDisposable
     public required EncryptionGuide EncryptionGuide { get; init; }
 
     public required DecryptedHistoryStore ChatHistory { get; init; }
+
+    public required EncryptionHelpService EncryptionHelp { get; init; }
     public required PeerKeyDirectory PeerKeys { get; init; }
     public required ConversationKeyStore ConversationKeys { get; init; }
     public required EncryptionSetupLauncher EncryptionSetup { get; init; }
@@ -245,6 +247,7 @@ internal sealed class PhoneServices : IDisposable
         var aethernet = new AethernetApi(http, aethernetSession);
         var keyVault = new KeyVault(configuration, aethernetSession, aethernet.Keys);
         var chatHistory = new DecryptedHistoryStore(configDirectory, aethernetSession);
+        var encryptionHelp = new EncryptionHelpService();
         var badgeCatalog = new Social.BadgeCatalogStore(aethernetSession, aethernet.Account);
         var frameCatalog = new Social.FrameCatalogStore(aethernetSession, aethernet.Account);
         var loadoutStore = new Social.LoadoutStore(aethernetSession, aethernet.Account);
@@ -428,6 +431,7 @@ internal sealed class PhoneServices : IDisposable
             DeviceLinks = deviceLinks,
             EncryptionGuide = encryptionGuide,
             ChatHistory = chatHistory,
+            EncryptionHelp = encryptionHelp,
             PeerKeys = peerKeys,
             ConversationKeys = conversationKeys,
             EncryptionSetup = new EncryptionSetupLauncher(),

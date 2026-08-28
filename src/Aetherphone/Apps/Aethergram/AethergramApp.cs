@@ -1,4 +1,4 @@
-using Aetherphone.Core;
+﻿using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
@@ -90,6 +90,7 @@ internal sealed partial class AethergramApp : IResumableApp
     private readonly TranslationService translation;
     private readonly ReportService report;
     private readonly WallpaperImageCache wallpaperImages;
+    internal readonly EncryptionHelpService encryptionHelp;
     private readonly ActionSheet postSheet = new();
     private readonly DropdownMenu mediaFilterMenu = new();
     private readonly DropdownMenu overflowMenu = new();
@@ -175,7 +176,7 @@ internal sealed partial class AethergramApp : IResumableApp
         PhoneVisibility visibility, RealtimeSignalBus realtimeSignals,
         WallpaperImageCache wallpaperImages, ConfirmService confirm, TranslationService translation,
         ReportService report, ConductGateService conduct,
-        AppInstaller installer)
+        AppInstaller installer, EncryptionHelpService encryptionHelp)
     {
         this.translation = translation;
         store = new AethergramStore(session, net.Account, net.Social, net.Grams, net.Safety, net.Media, realtimeSignals);
@@ -204,6 +205,7 @@ internal sealed partial class AethergramApp : IResumableApp
         this.confirm = confirm;
         this.report = report;
         this.wallpaperImages = wallpaperImages;
+        this.encryptionHelp = encryptionHelp;
         activityFeed = new SocialActivityFeed(SocialActivity.AethergramApp, session, net.Account);
         loadOlderActivity = activityFeed.LoadOlder;
         router = new ViewRouter<AethergramRoute>(AethergramRoute.Home);

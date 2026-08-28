@@ -1,4 +1,4 @@
-using Aetherphone.Core;
+﻿using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
@@ -24,7 +24,7 @@ internal sealed partial class AethergramApp
 
         public ThreadView(AethergramApp app)
             : base(app.dmStore, app.ui, app.images, app.lodestone, app.http, app.library, app.configuration,
-                app.confirm, app.report, app.translation, app.wallpaperImages, ThreadPollSeconds,
+                app.confirm, app.report, app.translation, app.wallpaperImages, app.encryptionHelp, ThreadPollSeconds,
                 TypingSendSeconds)
         {
             this.app = app;

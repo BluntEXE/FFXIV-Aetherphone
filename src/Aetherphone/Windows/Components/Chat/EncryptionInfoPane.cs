@@ -11,11 +11,14 @@ namespace Aetherphone.Windows.Components;
 internal sealed class EncryptionInfoPane : IDisposable
 {
     private readonly EncryptionVaultActions actions;
-    private bool helpOpen;
+    private readonly EncryptionHelpService help;
+    private bool restoreEntryOpen;
+    private bool escrowsChecked;
 
-    public EncryptionInfoPane(KeyVault vault, ConfirmService confirm)
+    public EncryptionInfoPane(KeyVault vault, ConfirmService confirm, EncryptionHelpService help)
     {
         actions = new EncryptionVaultActions(vault, confirm);
+        this.help = help;
     }
 
     public void DrawBody(AppSkin ui, PhoneTheme theme, bool signedIn, bool encrypted)
@@ -28,9 +31,11 @@ internal sealed class EncryptionInfoPane : IDisposable
             return;
         }
 
+        EnsureEscrowsChecked();
         DrawHero(ui, theme, signedIn, encrypted);
         DrawSummary(ui, signedIn, encrypted);
         DrawVaultSection(ui, theme);
+        DrawRestoreOlderSection(ui, theme);
         DrawTroubleshooting(ui);
         DrawStatus(ui);
     }
@@ -43,7 +48,9 @@ internal sealed class EncryptionInfoPane : IDisposable
         }
         else
         {
+            EnsureEscrowsChecked();
             DrawVaultSection(ui, theme);
+            DrawRestoreOlderSection(ui, theme);
             DrawTroubleshooting(ui);
         }
 
@@ -321,35 +328,57 @@ internal sealed class EncryptionInfoPane : IDisposable
         ImGui.Dummy(new Vector2(width, height));
     }
 
-    private void DrawTroubleshooting(AppSkin ui)
+    private void EnsureEscrowsChecked()
     {
-        var scale = UiScale.Current;
-        ImGui.Dummy(new Vector2(0f, 14f * scale));
-        if (DrawButton(ui, Loc.T(helpOpen ? L.Encryption.HelpTitle : L.Encryption.HelpOpen), false))
-        {
-            helpOpen = !helpOpen;
-        }
-
-        if (!helpOpen)
+        if (escrowsChecked)
         {
             return;
         }
 
-        ImGui.Dummy(new Vector2(0f, 10f * scale));
-        DrawWrapped(ui, Loc.T(L.Encryption.HelpIntro));
-        DrawHelpEntry(ui, L.Encryption.HelpDecryptingTitle, L.Encryption.HelpDecryptingBody, scale);
-        DrawHelpEntry(ui, L.Encryption.HelpLockedTitle, L.Encryption.HelpLockedBody, scale);
-        DrawHelpEntry(ui, L.Encryption.HelpOlderKeyTitle, L.Encryption.HelpOlderKeyBody, scale);
-        DrawHelpEntry(ui, L.Encryption.HelpUnreadableTitle, L.Encryption.HelpUnreadableBody, scale);
-        DrawHelpEntry(ui, L.Encryption.HelpDamagedTitle, L.Encryption.HelpDamagedBody, scale);
-        DrawHelpEntry(ui, L.Encryption.HelpPreventTitle, L.Encryption.HelpPreventBody, scale);
+        escrowsChecked = true;
+        actions.RefreshArchivedEscrows();
     }
 
-    private static void DrawHelpEntry(AppSkin ui, LocString title, LocString body, float scale)
+    private void DrawRestoreOlderSection(AppSkin ui, PhoneTheme theme)
     {
-        ImGui.Dummy(new Vector2(0f, 12f * scale));
-        DrawSectionLabel(ui, Loc.T(title));
-        DrawWrapped(ui, Loc.T(body));
+        if (!actions.HasArchivedEscrows)
+        {
+            return;
+        }
+
+        var scale = UiScale.Current;
+        ImGui.Dummy(new Vector2(0f, 16f * scale));
+        DrawSectionLabel(ui, Loc.T(L.Encryption.RestoreOlderTitle));
+        DrawWrapped(ui, Loc.T(L.Encryption.RestoreOlderBody));
+        ImGui.Dummy(new Vector2(0f, 10f * scale));
+        if (!restoreEntryOpen)
+        {
+            if (DrawButton(ui, Loc.T(L.Encryption.RestoreOlderButton), false) && !actions.Busy)
+            {
+                actions.CodeEntry = string.Empty;
+                restoreEntryOpen = true;
+            }
+
+            return;
+        }
+
+        DrawCodeInput(ui, theme);
+        ImGui.Dummy(new Vector2(0f, 10f * scale));
+        if (DrawButton(ui, Loc.T(L.Encryption.RestoreOlderConfirm), true)
+            && !actions.Busy && RecoveryKey.Canonicalize(actions.CodeEntry).Length > 0)
+        {
+            actions.BeginRestorePreviousKeys();
+        }
+    }
+
+    private void DrawTroubleshooting(AppSkin ui)
+    {
+        var scale = UiScale.Current;
+        ImGui.Dummy(new Vector2(0f, 16f * scale));
+        if (DrawButton(ui, Loc.T(L.Encryption.HelpOpen), false))
+        {
+            help.Open();
+        }
     }
 
     private void DrawStatus(AppSkin ui)

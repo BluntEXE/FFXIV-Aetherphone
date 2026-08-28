@@ -1,4 +1,4 @@
-using Aetherphone.Core.Apps;
+﻿using Aetherphone.Core.Apps;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
@@ -42,6 +42,7 @@ internal sealed class ShellOverlayCoordinator
     private readonly ReportOverlay reportOverlay;
     private readonly ShareSheet shareSheet;
     private readonly ConductGateOverlay conductOverlay;
+    private readonly EncryptionHelpOverlay encryptionHelpOverlay;
     private readonly OnboardingDirector director;
     private readonly SetupOverlay setup;
 
@@ -50,7 +51,8 @@ internal sealed class ShellOverlayCoordinator
         ShortcutRunPill shortcutPill, CoinEarnPill coinPill, CoinEarnFloats coinFloats,
         IncomingCallOverlay incomingOverlay, BanOverlay banOverlay,
         ConfirmOverlay confirmOverlay, ReportOverlay reportOverlay, ShareSheet shareSheet,
-        ConductGateOverlay conductOverlay, OnboardingDirector director, SetupOverlay setup)
+        ConductGateOverlay conductOverlay, EncryptionHelpOverlay encryptionHelpOverlay,
+        OnboardingDirector director, SetupOverlay setup)
     {
         this.coinPill = coinPill;
         this.coinFloats = coinFloats;
@@ -68,6 +70,7 @@ internal sealed class ShellOverlayCoordinator
         this.reportOverlay = reportOverlay;
         this.shareSheet = shareSheet;
         this.conductOverlay = conductOverlay;
+        this.encryptionHelpOverlay = encryptionHelpOverlay;
         this.director = director;
         this.setup = setup;
     }
@@ -97,7 +100,8 @@ internal sealed class ShellOverlayCoordinator
 
     private void HandleEscape()
     {
-        if (banOverlay.IsActive || conductOverlay.Captures || setup.IsActive || director.CapturesPointer)
+        if (banOverlay.IsActive || conductOverlay.Captures || encryptionHelpOverlay.Captures || setup.IsActive
+            || director.CapturesPointer)
         {
             return;
         }
@@ -212,6 +216,7 @@ internal sealed class ShellOverlayCoordinator
         confirmOverlay.Draw(screen, theme);
         director.Draw(screen, theme);
         conductOverlay.Draw(screen, theme);
+        encryptionHelpOverlay.Draw(screen, theme);
         banOverlay.Draw(screen, theme);
         coinFloats.Draw(screen, theme, delta);
         SealScreen(chassis, theme, seals);

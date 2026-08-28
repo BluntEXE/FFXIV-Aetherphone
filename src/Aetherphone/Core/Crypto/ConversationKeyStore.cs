@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
 
@@ -552,6 +552,7 @@ internal sealed class ConversationKeyStore
         const string chatPrefix = "chat:";
         const string velvetPrefix = "velvet:";
         const string gramPrefix = "gram:";
+        const string adPrefix = "ads:";
         bool accepted;
         if (scopeId.StartsWith(chatPrefix, StringComparison.Ordinal))
         {
@@ -579,6 +580,17 @@ internal sealed class ConversationKeyStore
             }
 
             accepted = await client.AddGramWrapsAsync(otherId, request, CancellationToken.None).ConfigureAwait(false);
+        }
+        else if (scopeId.StartsWith(adPrefix, StringComparison.Ordinal))
+        {
+            var otherId = OtherIdFromPairKey(scopeId[adPrefix.Length..], myUserId);
+            if (otherId is null)
+            {
+                AepLog.Warning($"[Crypto] self repair skipped for {scopeId}; the pair key does not contain this user.");
+                return;
+            }
+
+            accepted = await client.AddAdWrapsAsync(otherId, request, CancellationToken.None).ConfigureAwait(false);
         }
         else
         {
