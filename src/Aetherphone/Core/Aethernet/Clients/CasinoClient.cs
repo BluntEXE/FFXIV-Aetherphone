@@ -1,5 +1,4 @@
 using Aetherphone.Core.Aethernet.Contracts;
-using Aetherphone.Core.Casino;
 using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.Aethernet.Clients;
@@ -214,10 +213,10 @@ internal sealed class CasinoClient
     }
 
     public Task<CasinoBlackjackActionResultDto?> SendBlackjackActionAsync(string roomId, string handId,
-        int actionCount, string action, string clientActionId, CancellationToken token,
+        int actionCount, string action, string clientActionId, bool isWager, CancellationToken token,
         Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync(BlackjackActions.IsWager(action) ? BlackjackWagerPath : BlackjackActionPath,
+        return net.PostAsync(isWager ? BlackjackWagerPath : BlackjackActionPath,
             new CasinoBlackjackActionRequest(roomId, handId, actionCount, action, clientActionId),
             AethernetJsonContext.Default.CasinoBlackjackActionRequest,
             AethernetJsonContext.Default.CasinoBlackjackActionResultDto, token, null, onFailure);

@@ -1,9 +1,9 @@
+using Aetherphone.Core.Net;
 using System.Collections.Concurrent;
-using Aetherphone.Core.Media;
 using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Plugin.Services;
 
-namespace Aetherphone.Core.Net;
+namespace Aetherphone.Core.Media;
 
 internal readonly struct MediaResult
 {

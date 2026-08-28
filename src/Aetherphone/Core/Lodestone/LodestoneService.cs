@@ -1,4 +1,5 @@
 using Aetherphone.Core.Game;
+using Aetherphone.Core.Media;
 using Aetherphone.Core.Net;
 using NetStone;
 using NetStone.Model.Parseables.Search.Character;

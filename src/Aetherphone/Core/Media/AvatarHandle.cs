@@ -1,6 +1,6 @@
 using Dalamud.Interface.Textures.TextureWraps;
 
-namespace Aetherphone.Core.Lodestone;
+namespace Aetherphone.Core.Media;
 
 internal enum AvatarLoadState : byte
 {

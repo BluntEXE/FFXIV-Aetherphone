@@ -420,7 +420,7 @@ internal sealed class CasinoRoomsStore : IDisposable
         work.Run("blackjack action", async token =>
         {
             var result = await casino
-                .SendBlackjackActionAsync(roomId, handId, actionSeq, verb, actionId, token)
+                .SendBlackjackActionAsync(roomId, handId, actionSeq, verb, actionId, BlackjackActions.IsWager(verb), token)
                 .ConfigureAwait(false);
             if (result is null)
             {

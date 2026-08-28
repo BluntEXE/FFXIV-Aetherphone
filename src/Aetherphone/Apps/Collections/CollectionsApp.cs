@@ -4,6 +4,7 @@ using Aetherphone.Core.Collections;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
+using Aetherphone.Core.Media;
 using Aetherphone.Core.Net;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;

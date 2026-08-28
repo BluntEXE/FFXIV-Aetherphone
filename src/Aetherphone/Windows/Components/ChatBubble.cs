@@ -1,6 +1,7 @@
 using Aetherphone.Core.Animation;
-using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Linkpearl;
+using Aetherphone.Core.Lodestone;
+using Aetherphone.Core.Media;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
