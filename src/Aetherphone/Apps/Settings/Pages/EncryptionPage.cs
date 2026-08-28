@@ -403,7 +403,8 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
 
     private void DrawRestoreOlderSection(PhoneTheme theme)
     {
-        if (!actions.HasArchivedEscrows)
+        var olderKeysHeldHere = actions.Vault.OlderKeysHeldHere;
+        if (!actions.HasArchivedEscrows && olderKeysHeldHere == 0)
         {
             return;
         }
@@ -419,6 +420,15 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
         {
             Typography.Wrapped(Loc.T(L.Encryption.RestoreOlderBody));
+            if (olderKeysHeldHere > 0)
+            {
+                Typography.Wrapped(Loc.T(L.Encryption.OlderKeysHeldHere, olderKeysHeldHere));
+            }
+        }
+
+        if (!actions.HasArchivedEscrows)
+        {
+            return;
         }
 
         ImGui.Dummy(new Vector2(0f, 8f * scale));

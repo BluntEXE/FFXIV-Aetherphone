@@ -58,6 +58,8 @@ internal sealed class KeyVault : IDisposable
 
     private const int MissingServerKeyConfirmations = 2;
 
+    private const int MaxRetiredKeys = 8;
+
     public KeyVault(Configuration configuration, AethernetSession session, KeysClient client)
     {
         this.configuration = configuration;
@@ -100,6 +102,8 @@ internal sealed class KeyVault : IDisposable
     public string? MyUserId => session.CurrentUser?.Id;
 
     public bool RecoveryConfigured => serverBundle?.PrivateKey is not null;
+
+    public int OlderKeysHeldHere => recoveredPreviousKeys.Length;
 
     public bool IsRefreshing => refreshing;
 
@@ -340,8 +344,8 @@ internal sealed class KeyVault : IDisposable
             }
 
             ClearKey();
-            privateKey = imported;
             StoreLocalCache(pkcs8, accountId);
+            AdoptPrivateKey(imported);
             CryptographicOperations.ZeroMemory(pkcs8);
             LocalKeyUnreadable = false;
             AepLog.Info("[Encryption] a recovery code restored this account's key on this device.");
@@ -416,8 +420,8 @@ internal sealed class KeyVault : IDisposable
             }
 
             ClearKey();
-            privateKey = imported;
             StoreLocalCache(pkcs8, accountId);
+            AdoptPrivateKey(imported);
             CryptographicOperations.ZeroMemory(pkcs8);
             linkEphemeral = null;
             LocalKeyUnreadable = false;
@@ -729,7 +733,7 @@ internal sealed class KeyVault : IDisposable
         await PromotePendingKeyAsync(accountId).ConfigureAwait(false);
         serverBundle = stored;
         ClearKey();
-        privateKey = identity;
+        AdoptPrivateKey(identity);
         if (escrow is not null)
         {
             HoldRecoveryCode(accountId, code);
@@ -753,7 +757,7 @@ internal sealed class KeyVault : IDisposable
             return false;
         }
 
-        privateKey = imported;
+        AdoptPrivateKey(imported);
         return true;
     }
 
@@ -812,7 +816,7 @@ internal sealed class KeyVault : IDisposable
             "[Encryption] a key that reached the server but had not finished saving locally was recovered on this device.");
         await PromotePendingKeyAsync(accountId).ConfigureAwait(false);
         ClearKey();
-        privateKey = pending;
+        AdoptPrivateKey(pending);
         return true;
     }
 
@@ -902,7 +906,6 @@ internal sealed class KeyVault : IDisposable
         }
 
         serverBundle = stored;
-        privateKey = existingKey;
         if (pkcs8 is not null)
         {
             if (accountId is not null)
@@ -912,6 +915,8 @@ internal sealed class KeyVault : IDisposable
 
             CryptographicOperations.ZeroMemory(pkcs8);
         }
+
+        AdoptPrivateKey(existingKey);
 
         if (escrow is not null && accountId is not null)
         {
@@ -980,13 +985,6 @@ internal sealed class KeyVault : IDisposable
             return;
         }
 
-        var displaced = ReadStoredBlob(userId);
-        if (displaced.Length > 0 && !string.Equals(displaced, pending, StringComparison.Ordinal))
-        {
-            configuration.EncryptionKeyCachePrevious = displaced;
-            configuration.EncryptionKeyCachePreviousUserId = userId;
-        }
-
         WriteStoredBlob(pending, userId);
         ClearPendingKey();
         await configuration.SaveNowAsync().ConfigureAwait(false);
@@ -995,9 +993,130 @@ internal sealed class KeyVault : IDisposable
 
     private void WriteStoredBlob(string protectedBlob, string userId)
     {
+        RetireStoredBlob(ReadStoredBlob(userId), userId);
         configuration.EncryptionKeysByUserId[userId] = protectedBlob;
         configuration.EncryptionKeyCache = protectedBlob;
         configuration.EncryptionKeyCacheUserId = userId;
+    }
+
+    private void RetireStoredBlob(string displaced, string userId)
+    {
+        if (displaced.Length == 0)
+        {
+            return;
+        }
+
+        if (!configuration.EncryptionRetiredKeysByUserId.TryGetValue(userId, out var retired))
+        {
+            retired = new List<string>();
+            configuration.EncryptionRetiredKeysByUserId[userId] = retired;
+        }
+
+        if (IsAlreadyRetired(retired, displaced, userId))
+        {
+            return;
+        }
+
+        retired.Add(displaced);
+        while (retired.Count > MaxRetiredKeys)
+        {
+            retired.RemoveAt(0);
+        }
+
+        AepLog.Info(
+            $"[Encryption] the key this device is replacing was archived here, so chats sealed to it can still be opened ({retired.Count} kept).");
+    }
+
+    private static bool IsAlreadyRetired(List<string> retired, string displaced, string userId)
+    {
+        var imported = ImportBlob(displaced, userId, out _);
+        var displacedPublicKey = imported is null ? null : CryptoBox.TryExportPublicKey(imported);
+        for (var index = 0; index < retired.Count; index++)
+        {
+            if (string.Equals(retired[index], displaced, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            if (displacedPublicKey is null)
+            {
+                continue;
+            }
+
+            var archived = ImportBlob(retired[index], userId, out _);
+            if (archived is not null
+                && string.Equals(CryptoBox.TryExportPublicKey(archived), displacedPublicKey, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void AdoptPrivateKey(EcPrivateKey key)
+    {
+        privateKey = key;
+        LoadRetiredKeys();
+    }
+
+    private void LoadRetiredKeys()
+    {
+        var userId = MyUserId;
+        if (userId is null)
+        {
+            return;
+        }
+
+        AdoptLegacyRetiredKey(userId);
+        if (!configuration.EncryptionRetiredKeysByUserId.TryGetValue(userId, out var retired) || retired.Count == 0)
+        {
+            return;
+        }
+
+        var knownPublicKeys = CollectKnownPublicKeys();
+        var loaded = new List<EcPrivateKey>();
+        for (var index = 0; index < retired.Count; index++)
+        {
+            var imported = ImportBlob(retired[index], userId, out _);
+            var publicKey = imported is null ? null : CryptoBox.TryExportPublicKey(imported);
+            if (imported is null || publicKey is null || !knownPublicKeys.Add(publicKey))
+            {
+                continue;
+            }
+
+            loaded.Add(imported);
+        }
+
+        if (loaded.Count == 0)
+        {
+            return;
+        }
+
+        var merged = new EcPrivateKey[recoveredPreviousKeys.Length + loaded.Count];
+        recoveredPreviousKeys.CopyTo(merged, 0);
+        for (var index = 0; index < loaded.Count; index++)
+        {
+            merged[recoveredPreviousKeys.Length + index] = loaded[index];
+        }
+
+        recoveredPreviousKeys = merged;
+        AepLog.Info(
+            $"[Encryption] {loaded.Count} archived key(s) on this device were loaded, so chats sealed to them still open.");
+    }
+
+    private void AdoptLegacyRetiredKey(string userId)
+    {
+        if (configuration.EncryptionKeyCachePrevious.Length == 0
+            || !string.Equals(configuration.EncryptionKeyCachePreviousUserId, userId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        RetireStoredBlob(configuration.EncryptionKeyCachePrevious, userId);
+        configuration.EncryptionKeyCachePrevious = string.Empty;
+        configuration.EncryptionKeyCachePreviousUserId = string.Empty;
+        configuration.Save();
     }
 
     private void ClearPendingKey()

@@ -342,7 +342,8 @@ internal sealed class EncryptionInfoPane : IDisposable
 
     private void DrawRestoreOlderSection(AppSkin ui, PhoneTheme theme)
     {
-        if (!actions.HasArchivedEscrows)
+        var olderKeysHeldHere = actions.Vault.OlderKeysHeldHere;
+        if (!actions.HasArchivedEscrows && olderKeysHeldHere == 0)
         {
             return;
         }
@@ -351,6 +352,16 @@ internal sealed class EncryptionInfoPane : IDisposable
         ImGui.Dummy(new Vector2(0f, 16f * scale));
         DrawSectionLabel(ui, Loc.T(L.Encryption.RestoreOlderTitle));
         DrawWrapped(ui, Loc.T(L.Encryption.RestoreOlderBody));
+        if (olderKeysHeldHere > 0)
+        {
+            DrawWrapped(ui, Loc.T(L.Encryption.OlderKeysHeldHere, olderKeysHeldHere));
+        }
+
+        if (!actions.HasArchivedEscrows)
+        {
+            return;
+        }
+
         ImGui.Dummy(new Vector2(0f, 10f * scale));
         if (!restoreEntryOpen)
         {

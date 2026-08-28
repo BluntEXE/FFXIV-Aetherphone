@@ -175,6 +175,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public string EncryptionKeyCachePrevious { get; set; } = string.Empty;
     public string EncryptionKeyCachePreviousUserId { get; set; } = string.Empty;
     public Dictionary<string, string> EncryptionKeysByUserId { get; set; } = new();
+    public Dictionary<string, List<string>> EncryptionRetiredKeysByUserId { get; set; } = new();
     public bool EncryptionKeyStoreMigrated { get; set; }
     public string PendingRecoveryCode { get; set; } = string.Empty;
     public string PendingRecoveryCodeUserId { get; set; } = string.Empty;
