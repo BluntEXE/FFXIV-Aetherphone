@@ -8,6 +8,14 @@ The whole phone is one Dalamud window (src/Aetherphone/Windows/PhoneWindow.cs) r
 
 Colors and surfaces come from `AppSkin` and `AppPalette` (per-app skin) or `PhoneTheme` (system chrome); see [App framework](app-framework.md) for how an app receives them.
 
+## How the folder is laid out
+
+The 182 files are grouped by kind: `Primitives` (drawing, text, tokens, motion), `Layout` (surfaces, headers, scrolling, lists), `Fields` (inputs and buttons), `Sheets` (sheets, dialogs, overlays), `Chrome` (device body, tiles, badges), `Media` (photos, emoji, stories, card art), `Chat`, `Notify`, and `Skin`.
+
+**Every file in every one of those folders declares the same flat namespace, `Aetherphone.Windows.Components`**, so consuming the toolkit stays a single `using` no matter how many components a screen draws. This is the one place in the tree where a namespace deliberately does not follow its folder, and the "Verify namespace matches folder" CI guard checks that subtree against the flat namespace instead. Sub-namespacing was measured before it was rejected: it would have added 792 `using` lines across 424 files, and the busiest drawing files would have needed five to nine imports each. The folders are for finding things; the namespace is the contract.
+
+A component used by exactly one app does not belong here. It lives in that app, and 25 of them were moved out for that reason.
+
 ## Key files
 
 | Path | Role |

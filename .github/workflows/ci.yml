@@ -137,22 +137,35 @@ jobs:
           fi
 
       # ManagedDoom is a vendored port and keeps its own layout.
+      #
+      # Windows/Components is the one deliberate exception. Its folders group 182
+      # files by kind so the toolkit is navigable, while every file keeps the flat
+      # Aetherphone.Windows.Components namespace so consuming it stays one import.
+      # Sub-namespacing was measured first: it would have added 792 using lines
+      # across 424 files, and the files that draw the most would have needed five
+      # to nine imports each. The rule for that subtree is therefore the inverse,
+      # every file declares exactly the one namespace, and it is checked as such.
       - name: Verify namespace matches folder
         shell: bash
         run: |
+          toolkit='^src/Aetherphone/Windows/Components/'
           offenders=""
           while IFS= read -r file; do
-            expected=$(dirname "${file#src/}" | tr '/' '.')
             actual=$(grep -m1 -oP '^namespace \K[A-Za-z0-9_.]+(?=\s*;)' "$file" || true)
+            if [[ "$file" =~ $toolkit ]]; then
+              expected="Aetherphone.Windows.Components"
+            else
+              expected=$(dirname "${file#src/}" | tr '/' '.')
+            fi
             if [ -z "$actual" ]; then
               offenders+="$file: no file-scoped namespace"$'\n'
             elif [ "$actual" != "$expected" ]; then
-              offenders+="$file: declares $actual, folder implies $expected"$'\n'
+              offenders+="$file: declares $actual, expected $expected"$'\n'
             fi
           done < <(git ls-files -- src | grep '\.cs$' | grep -v '^src/ManagedDoom/')
           if [ -n "$offenders" ]; then
             printf '%s' "$offenders"
-            echo "::error::A file-scoped namespace must match the folder path. Move the file or fix the namespace."
+            echo "::error::A file-scoped namespace must match the folder path, except under Windows/Components which is one flat namespace. Move the file or fix the namespace."
             exit 1
           fi
 
