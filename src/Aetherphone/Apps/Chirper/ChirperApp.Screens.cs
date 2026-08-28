@@ -87,7 +87,8 @@ internal sealed partial class ChirperApp
             var hitMax = chipCenter + new Vector2(hitHalf, hitHalf);
             var hovered = UiInteract.Hover(hitMin, hitMax);
             drawList.AddCircleFilled(chipCenter, chipRadius, ImGui.GetColorU32(hovered ? BackChipHover : BackChipFill), 32);
-            ChirperIcons.ChevronLeft.Stroke(drawList, chipCenter, 17f * scale, ImGui.GetColorU32(ChirperInk.TitleInk), 2.4f);
+            PhoneIcon.Draw(drawList, chipCenter, PhoneIcons.ChevronLeft,
+                ChirperInk.TitleInk, 17f * scale);
             if (hovered)
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -135,7 +136,8 @@ internal sealed partial class ChirperApp
             var hitHalf = 22f * scale;
             var hovered = UiInteract.Hover(chipCenter - new Vector2(hitHalf, hitHalf), chipCenter + new Vector2(hitHalf, hitHalf));
             drawList.AddCircleFilled(chipCenter, chipRadius, ImGui.GetColorU32(hovered ? BackChipHover : BackChipFill), 32);
-            ChirperIcons.ChevronLeft.Stroke(drawList, chipCenter, 17f * scale, ImGui.GetColorU32(ChirperInk.TitleInk), 2.4f);
+            PhoneIcon.Draw(drawList, chipCenter, PhoneIcons.ChevronLeft,
+                ChirperInk.TitleInk, 17f * scale);
             if (hovered)
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -154,7 +156,8 @@ internal sealed partial class ChirperApp
         var fieldMax = new Vector2(area.Max.X - 14f * scale, rowCenterY + fieldHeight * 0.5f);
         Squircle.Fill(drawList, fieldMin, fieldMax, 12f * scale, ImGui.GetColorU32(SearchFieldFill));
         Squircle.Stroke(drawList, fieldMin, fieldMax, 12f * scale, ImGui.GetColorU32(SearchFieldStroke), 1f);
-        ChirperIcons.Search(drawList, new Vector2(fieldMin.X + 19f * scale, rowCenterY), 15f * scale, ChirperInk.MutedInk, 2.2f);
+        PhoneIcon.Draw(drawList, new Vector2(fieldMin.X + 19f * scale, rowCenterY), PhoneIcons.Search,
+            ChirperInk.MutedInk, 15f * scale);
         ImGui.SetCursorScreenPos(new Vector2(fieldMin.X + 32f * scale, rowCenterY - ImGui.GetFrameHeight() * 0.5f));
         ImGui.SetNextItemWidth(fieldMax.X - fieldMin.X - 40f * scale);
         var hint = Loc.T(L.Chirper.SearchHint);
@@ -269,8 +272,8 @@ internal sealed partial class ChirperApp
             : Loc.Plural(L.Chirper.Posts, summary.Posts);
         Typography.Draw(drawList, new Vector2(textLeft, textTop + nameHeight + 2f * scale),
             Typography.FitText(count, textWidth, TagCountStyle), ChirperInk.MutedInk, TagCountStyle);
-        ChirperIcons.ChevronRight.Stroke(drawList, new Vector2(chevronLeft, origin.Y + height * 0.5f), 14f * scale,
-            ImGui.GetColorU32(ChirperInk.FaintInk), 2.4f);
+        PhoneIcon.Draw(drawList, new Vector2(chevronLeft, origin.Y + height * 0.5f), PhoneIcons.ChevronRight,
+            ChirperInk.FaintInk, 14f * scale);
         if (UiInteract.Click(origin, rowMax, hovered))
         {
             OpenHashtag(summary.Tag, summary.PostsToday);
@@ -586,16 +589,16 @@ internal sealed partial class ChirperApp
             case SocialActivity.TypeLike:
             case SocialActivity.TypeCommentLike:
                 drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.LikeRed), 20);
-                ChirperIcons.HeartFilled(drawList, center, iconSize, ChirperInk.White);
+                PhoneIcon.Draw(drawList, center, PhoneIcons.HeartFilled, ChirperInk.White, iconSize);
                 break;
             case SocialActivity.TypeRepost:
             case SocialActivity.TypeQuote:
                 drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.RechirpGreen), 20);
-                ChirperIcons.Rechirp.Stroke(drawList, center, iconSize, ink, 2.8f);
+                PhoneIcon.Draw(drawList, center, PhoneIcons.Repeat, ink, iconSize);
                 break;
             case SocialActivity.TypeComment:
                 drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.AccentLink), 20);
-                ChirperIcons.Reply.Stroke(drawList, center, iconSize, ink, 2.6f);
+                PhoneIcon.Draw(drawList, center, PhoneIcons.MessageCircle, ink, iconSize);
                 break;
             case SocialActivity.TypeMention:
             case SocialActivity.TypeCommentMention:
@@ -608,11 +611,11 @@ internal sealed partial class ChirperApp
             case SocialActivity.TypeConnectRequest:
             case SocialActivity.TypeConnectAccept:
                 drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.AccentLink), 20);
-                ChirperIcons.Plus.Stroke(drawList, center, iconSize, ink, 3.2f);
+                PhoneIcon.Draw(drawList, center, PhoneIcons.Plus, ink, iconSize);
                 break;
             default:
                 drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.MutedInk), 20);
-                ChirperIcons.Bell.Stroke(drawList, center, iconSize, ink, 2.6f);
+                PhoneIcon.Draw(drawList, center, PhoneIcons.Bell, ink, iconSize);
                 break;
         }
     }
@@ -712,7 +715,7 @@ internal sealed partial class ChirperApp
             listDrawList.AddCircleFilled(badgeCenter, badgeRadius + 3f * scale, ImGui.GetColorU32(ChirperInk.BackdropTop), 32);
             Squircle.FillCircleVerticalGradient(listDrawList, badgeCenter, badgeRadius, ImGui.GetColorU32(ChirperInk.Accent),
                 ImGui.GetColorU32(ChirperInk.AccentDeep));
-            ChirperIcons.CameraBadge(listDrawList, badgeCenter, 13f * scale, ChirperInk.White);
+            PhoneIcon.Draw(listDrawList, badgeCenter, PhoneIcons.Camera, ChirperInk.White, 13f * scale);
             var avatarExtent = new Vector2(avatarRadius + 4f * scale, avatarRadius + 4f * scale);
             if (UiInteract.HoverClick(avatarCenter - avatarExtent, avatarCenter + avatarExtent))
             {
@@ -758,7 +761,8 @@ internal sealed partial class ChirperApp
             if (showAvailable)
             {
                 var checkCenter = new Vector2(cardRight - innerPad - availableSize.X - 9f * scale, handleRowTop + rowHeight * 0.5f);
-                ChirperIcons.Check.Stroke(listDrawList, checkCenter, 13f * scale, ImGui.GetColorU32(ChirperInk.RechirpGreen), 2.6f);
+                PhoneIcon.Draw(listDrawList, checkCenter, PhoneIcons.Check,
+                    ChirperInk.RechirpGreen, 13f * scale);
                 Typography.Draw(listDrawList, new Vector2(cardRight - innerPad - availableSize.X, handleRowTop + (rowHeight - availableSize.Y) * 0.5f),
                     availableLabel, ChirperInk.RechirpGreen, EditHintStyle);
             }

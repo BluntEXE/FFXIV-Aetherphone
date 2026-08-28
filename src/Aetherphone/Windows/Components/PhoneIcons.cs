@@ -1,0 +1,35 @@
+namespace Aetherphone.Windows.Components;
+
+internal static class PhoneIcons
+{
+    public const string AdjustmentsHorizontal = "\uE600";
+    public const string Bell = "\uE601";
+    public const string Camera = "\uE602";
+    public const string Check = "\uE603";
+    public const string ChevronLeft = "\uE604";
+    public const string ChevronRight = "\uE605";
+    public const string Clock = "\uE606";
+    public const string Dots = "\uE607";
+    public const string EyeOff = "\uE608";
+    public const string Feather = "\uE609";
+    public const string Heart = "\uE60A";
+    public const string Home = "\uE60B";
+    public const string MessageCircle = "\uE60C";
+    public const string MoodPlus = "\uE60D";
+    public const string MoodSmile = "\uE60E";
+    public const string Photo = "\uE60F";
+    public const string Pin = "\uE610";
+    public const string Plus = "\uE611";
+    public const string Quote = "\uE612";
+    public const string Refresh = "\uE613";
+    public const string Repeat = "\uE614";
+    public const string Search = "\uE615";
+    public const string Share = "\uE616";
+    public const string User = "\uE617";
+    public const string X = "\uE618";
+    public const string BellFilled = "\uE619";
+    public const string HeartFilled = "\uE61A";
+    public const string HomeFilled = "\uE61B";
+    public const string PinFilled = "\uE61C";
+    public const string UserFilled = "\uE61D";
+}

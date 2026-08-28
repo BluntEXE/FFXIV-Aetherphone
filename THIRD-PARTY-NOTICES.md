@@ -20,6 +20,9 @@ Bold) are redistributed unmodified.
 
 The application icons under `src/Aetherphone/Icons/` are derived from
 [Tabler Icons](https://tabler.io/icons) (recolored and rasterized to PNG).
+`src/Aetherphone/Fonts/TablerIcons.ttf` is a 30 glyph subset of the same
+project's webfont, remapped into a private codepoint range; see
+`tools/icon-font/` for the generator.
 
 - Homepage: https://tabler.io/icons
 - Source: https://github.com/tabler/tabler-icons
@@ -209,6 +212,7 @@ once at the end of this section:
 | Component | Version | Copyright / project |
 | --- | --- | --- |
 | Tabler Icons (rasterized) | n/a | 2020-2026 Paweł Kuna (https://github.com/tabler/tabler-icons) |
+| Tabler Icons webfont (subset) | 3.46.0 | 2020-2026 Paweł Kuna (https://github.com/tabler/tabler-icons) |
 | emojibase-data (catalog metadata) | 15.x | Miles Johnson (https://github.com/milesj/emojibase) |
 | NAudio.Core / NAudio.WinMM / NAudio.Wasapi | 2.3.0 | Mark Heath (https://github.com/naudio/NAudio) |
 | NetStone | 1.4.1 | 2024 goaaats, Koenari (https://github.com/xivapi/NetStone) |

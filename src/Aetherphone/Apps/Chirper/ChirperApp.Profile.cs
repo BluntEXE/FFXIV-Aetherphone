@@ -147,7 +147,7 @@ internal sealed partial class ChirperApp
             var badgeHovered = UiInteract.Hover(badgeCenter - badgeExtent, badgeCenter + badgeExtent);
             drawList.AddCircleFilled(badgeCenter, badgeRadius,
                 ImGui.GetColorU32(badgeHovered ? new Vector4(0f, 0f, 0f, 0.65f) : new Vector4(0f, 0f, 0f, 0.45f)), 32);
-            ChirperIcons.CameraBadge(drawList, badgeCenter, 15f * scale, ChirperInk.White);
+            PhoneIcon.Draw(drawList, badgeCenter, PhoneIcons.Camera, ChirperInk.White, 15f * scale);
             if (badgeHovered)
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -171,7 +171,8 @@ internal sealed partial class ChirperApp
             var hovered = UiInteract.Hover(hitMin, hitMax);
             drawList.AddCircleFilled(chipCenter, chipRadius,
                 ImGui.GetColorU32(hovered ? new Vector4(0f, 0f, 0f, 0.6f) : new Vector4(0f, 0f, 0f, 0.4f)), 32);
-            ChirperIcons.ChevronLeft.Stroke(drawList, chipCenter, 17f * scale, ImGui.GetColorU32(ChirperInk.White), 2.4f);
+            PhoneIcon.Draw(drawList, chipCenter, PhoneIcons.ChevronLeft,
+                ChirperInk.White, 17f * scale);
             if (hovered)
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -282,7 +283,8 @@ internal sealed partial class ChirperApp
             : SocialRegion.Resolve(user.Region, user.World, gameData);
         if (regionCode.Length > 0)
         {
-            ChirperIcons.Pin(drawList, new Vector2(cursorX + iconSize * 0.5f, centerY), iconSize, ChirperInk.MutedInk);
+            PhoneIcon.Draw(drawList, new Vector2(cursorX + iconSize * 0.5f, centerY), PhoneIcons.Pin,
+                ChirperInk.MutedInk, iconSize);
             cursorX += iconSize + 5f * scale;
             var regionSize = Typography.Measure(regionCode, ProfileMetaStyle);
             Typography.Draw(drawList, new Vector2(cursorX, top), regionCode, ChirperInk.MutedInk, ProfileMetaStyle);
@@ -294,7 +296,8 @@ internal sealed partial class ChirperApp
             var clock = SocialTimeZone.ClockLabel(offsetMinutes);
             var clockFitted = Typography.FitText(clock, MathF.Max(1f, right - cursorX - iconSize - 5f * scale),
                 ProfileMetaStyle);
-            ChirperIcons.Clock(drawList, new Vector2(cursorX + iconSize * 0.5f, centerY), iconSize, ChirperInk.MutedInk);
+            PhoneIcon.Draw(drawList, new Vector2(cursorX + iconSize * 0.5f, centerY), PhoneIcons.Clock,
+                ChirperInk.MutedInk, iconSize);
             cursorX += iconSize + 5f * scale;
             Typography.Draw(drawList, new Vector2(cursorX, top), clockFitted, ChirperInk.MutedInk, ProfileMetaStyle);
             cursorX += Typography.Measure(clockFitted, ProfileMetaStyle).X + 14f * scale;
@@ -378,7 +381,7 @@ internal sealed partial class ChirperApp
         drawList.AddCircleFilled(moreCenter, moreRadius,
             ImGui.GetColorU32(moreHovered ? ChirperInk.ChipHover : GlassPillFill), 32);
         drawList.AddCircle(moreCenter, moreRadius, ImGui.GetColorU32(ChirperInk.ChipStroke), 32, 1f);
-        ChirperIcons.Dots(drawList, moreCenter, 16f * scale, GlassPillInk);
+        PhoneIcon.Draw(drawList, moreCenter, PhoneIcons.Dots, GlassPillInk, 16f * scale);
         if (moreHovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -852,7 +855,8 @@ internal sealed partial class ChirperApp
         var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
         var featherSize = 26f * scale;
         var featherCenter = new Vector2(area.Min.X + CellPadX * scale + featherSize * 0.5f, rowCenterY);
-        ChirperIcons.Feather.Stroke(drawList, featherCenter, featherSize, ImGui.GetColorU32(ChirperInk.AccentLink), 2f);
+        PhoneIcon.Draw(drawList, featherCenter, PhoneIcons.Feather,
+            ChirperInk.AccentLink, featherSize);
         var titleLeft = featherCenter.X + featherSize * 0.5f + 12f * scale;
         var buttonRadius = TopBarButtonRadius * scale;
         var refreshCenter = new Vector2(area.Max.X - CellPadX * scale - buttonRadius, rowCenterY);
@@ -911,11 +915,11 @@ internal sealed partial class ChirperApp
         var ink = highlighted ? ChirperInk.MineInk : GlassPillInk;
         if (filter)
         {
-            ChirperIcons.Sliders.Stroke(drawList, center, 18f * scale, ImGui.GetColorU32(ink), 2f);
+            PhoneIcon.Draw(drawList, center, PhoneIcons.AdjustmentsHorizontal, ink, 18f * scale);
         }
         else
         {
-            ChirperIcons.Refresh.Stroke(drawList, center, 18f * scale, ImGui.GetColorU32(ink), 2.1f);
+            PhoneIcon.Draw(drawList, center, PhoneIcons.Refresh, ink, 18f * scale);
         }
 
         HoverTooltip.Show(new Rect(center - extent, center + extent), tooltip, HoverLabelSide.Below);

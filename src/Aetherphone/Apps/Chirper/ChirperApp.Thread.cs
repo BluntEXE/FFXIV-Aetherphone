@@ -107,8 +107,8 @@ internal sealed partial class ChirperApp
         var hitMin = backCenter - new Vector2(hitHalf, hitHalf);
         var hitMax = backCenter + new Vector2(hitHalf, hitHalf);
         var hovered = UiInteract.Hover(hitMin, hitMax);
-        ChirperIcons.ChevronLeft.Stroke(drawList, backCenter, 20f * scale,
-            ImGui.GetColorU32(hovered ? ChirperInk.White : ChirperInk.TitleInk), 2.2f);
+        PhoneIcon.Draw(drawList, backCenter, PhoneIcons.ChevronLeft,
+            hovered ? ChirperInk.White : ChirperInk.TitleInk, 20f * scale);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -155,7 +155,8 @@ internal sealed partial class ChirperApp
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        ChirperIcons.Dots(drawList, moreCenter, 16f * scale, moreHovered ? ChirperInk.Accent : ChirperInk.MutedInk);
+        PhoneIcon.Draw(drawList, moreCenter, PhoneIcons.Dots,
+            moreHovered ? ChirperInk.Accent : ChirperInk.MutedInk, 16f * scale);
         HoverTooltip.Show(new Rect(moreCenter - moreExtent, moreCenter + moreExtent), Loc.T(L.Chirper.More),
             HoverLabelSide.Above);
         if (UiInteract.Click(moreCenter - moreExtent, moreCenter + moreExtent, moreHovered))
@@ -360,7 +361,8 @@ internal sealed partial class ChirperApp
         }
         else
         {
-            ChirperIcons.React(drawList, reactCenter, 21f * scale, reactHovered ? ChirperInk.Warning : ChirperInk.MutedInk, false);
+            PhoneIcon.Draw(drawList, reactCenter, PhoneIcons.MoodSmile,
+                reactHovered ? ChirperInk.Warning : ChirperInk.MutedInk, 21f * scale);
         }
 
         if (reactHovered)
@@ -410,13 +412,13 @@ internal sealed partial class ChirperApp
         switch (glyph)
         {
             case ActionGlyph.Reply:
-                ChirperIcons.Reply.Stroke(drawList, iconCenter, iconSize, packed, 1.9f);
+                PhoneIcon.Draw(drawList, iconCenter, PhoneIcons.MessageCircle, packed, iconSize);
                 break;
             case ActionGlyph.Rechirp:
-                ChirperIcons.Rechirp.Stroke(drawList, iconCenter, iconSize, packed, 2.1f);
+                PhoneIcon.Draw(drawList, iconCenter, PhoneIcons.Repeat, packed, iconSize);
                 break;
             default:
-                ChirperIcons.Share.Stroke(drawList, iconCenter, iconSize, packed, 1.9f);
+                PhoneIcon.Draw(drawList, iconCenter, PhoneIcons.Share, packed, iconSize);
                 break;
         }
 
@@ -553,7 +555,8 @@ internal sealed partial class ChirperApp
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             }
 
-            ChirperIcons.Dots(drawList, moreCenter, 15f * scale, moreHovered ? ChirperInk.Accent : ChirperInk.MutedInk);
+            PhoneIcon.Draw(drawList, moreCenter, PhoneIcons.Dots,
+                moreHovered ? ChirperInk.Accent : ChirperInk.MutedInk, 15f * scale);
             HoverTooltip.Show(new Rect(moreCenter - moreExtent, moreCenter + moreExtent), Loc.T(L.Chirper.More),
                 HoverLabelSide.Above);
             if (UiInteract.Click(moreCenter - moreExtent, moreCenter + moreExtent, moreHovered))
@@ -663,8 +666,8 @@ internal sealed partial class ChirperApp
         var replyMin = new Vector2(left, top);
         var replyMax = new Vector2(left + slot, top + height);
         var replyHovered = UiInteract.Hover(replyMin, replyMax);
-        ChirperIcons.Reply.Stroke(drawList, new Vector2(left + iconSize * 0.5f, centerY), iconSize,
-            ImGui.GetColorU32(replyHovered ? ChirperInk.AccentLink : ChirperInk.MutedInk), 1.9f);
+        PhoneIcon.Draw(drawList, new Vector2(left + iconSize * 0.5f, centerY), PhoneIcons.MessageCircle,
+            replyHovered ? ChirperInk.AccentLink : ChirperInk.MutedInk, iconSize);
         HoverTooltip.Show(new Rect(replyMin, replyMax), Loc.T(L.Chirper.Reply), HoverLabelSide.Above);
         if (replyHovered)
         {
@@ -691,11 +694,11 @@ internal sealed partial class ChirperApp
         var heartInk = comment.Liked || heartHovered ? ChirperInk.LikeRed : ChirperInk.MutedInk;
         if (comment.Liked)
         {
-            ChirperIcons.HeartFilled(drawList, heartCenter, iconSize, heartInk);
+            PhoneIcon.Draw(drawList, heartCenter, PhoneIcons.HeartFilled, heartInk, iconSize);
         }
         else
         {
-            ChirperIcons.Heart.Stroke(drawList, heartCenter, iconSize, ImGui.GetColorU32(heartInk), 2f);
+            PhoneIcon.Draw(drawList, heartCenter, PhoneIcons.Heart, heartInk, iconSize);
         }
 
         if (likeCount.Length > 0)
@@ -718,8 +721,8 @@ internal sealed partial class ChirperApp
         var shareMin = new Vector2(right - slot, top);
         var shareMax = new Vector2(right, top + height);
         var shareHovered = UiInteract.Hover(shareMin, shareMax);
-        ChirperIcons.Share.Stroke(drawList, new Vector2(right - iconSize * 0.5f - 8f * scale, centerY), iconSize,
-            ImGui.GetColorU32(shareHovered ? ChirperInk.AccentLink : ChirperInk.MutedInk), 1.9f);
+        PhoneIcon.Draw(drawList, new Vector2(right - iconSize * 0.5f - 8f * scale, centerY), PhoneIcons.Share,
+            shareHovered ? ChirperInk.AccentLink : ChirperInk.MutedInk, iconSize);
         HoverTooltip.Show(new Rect(shareMin, shareMax), Loc.T(L.Chirper.CopyChirp), HoverLabelSide.Above);
         if (shareHovered)
         {

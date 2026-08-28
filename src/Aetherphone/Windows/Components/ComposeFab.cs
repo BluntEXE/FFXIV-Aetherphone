@@ -20,7 +20,7 @@ internal static class ComposeFab
 
     public static bool Draw(Rect area, string childId, Vector4 accent, string glyph, string tooltip,
         string? anchorKey = null, Vector4? gradientBottom = null, float radiusUnscaled = DefaultRadius,
-        VectorIcon? vectorGlyph = null)
+        bool phoneGlyph = false)
     {
         var scale = UiScale.Current;
         var radius = radiusUnscaled * scale;
@@ -57,9 +57,9 @@ internal static class ComposeFab
                 ImGui.GetColorU32(hovered ? Palette.Mix(accent, White, 0.12f) : accent), 32);
         }
 
-        if (vectorGlyph is not null)
+        if (phoneGlyph)
         {
-            vectorGlyph.Stroke(drawList, center, radius * 0.82f, ImGui.GetColorU32(White), 1.9f);
+            PhoneIcon.Draw(drawList, center, glyph, White, radius * 0.82f);
         }
         else
         {
