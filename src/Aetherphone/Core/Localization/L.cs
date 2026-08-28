@@ -1659,6 +1659,8 @@ internal static class L
             new("changelog.r1013.11",
                 "Improved CPU and memory use while the phone is open: app icons, gradient artwork, call state and font checks are cached instead of being rebuilt every frame, and artwork is shared between apps instead of kept twice"),
             new("changelog.r1013.12",
+                "Improved performance in text heavy screens: wrapped text, formatted clocks and numbers and icon labels are measured once and reused instead of being rebuilt every frame, so long chats and feeds scroll more smoothly"),
+            new("changelog.r1013.13",
                 "Improved the animation when the phone turns into landscape mode: the whole device rotates over a short ramp with the screen fading across the halfway point, instead of stretching through a square shape"),
         };
 
