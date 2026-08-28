@@ -72,7 +72,7 @@ internal sealed partial class ChirperApp
     private volatile int editOutcome;
 
     private float DrawScreenHeader(Rect area, string title, float trailingReserve = 0f, string subtitle = "",
-        bool showBack = true)
+        bool showBack = true, TextStyle? titleStyle = null)
     {
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
@@ -103,18 +103,19 @@ internal sealed partial class ChirperApp
         }
 
         var titleRight = area.Max.X - CellPadX * scale - trailingReserve;
-        var titleHeight = Typography.LineHeight(ScreenTitleStyle);
-        var fitted = Typography.FitText(title, MathF.Max(1f, titleRight - titleLeft), ScreenTitleStyle);
+        var style = titleStyle ?? ScreenTitleStyle;
+        var titleHeight = Typography.LineHeight(style);
+        var fitted = Typography.FitText(title, MathF.Max(1f, titleRight - titleLeft), style);
         if (subtitle.Length == 0)
         {
             Typography.Draw(drawList, new Vector2(titleLeft, rowCenterY - titleHeight * 0.5f), fitted,
-                ChirperInk.TitleInk, ScreenTitleStyle);
+                ChirperInk.TitleInk, style);
         }
         else
         {
             var subtitleHeight = Typography.LineHeight(ScreenSubtitleStyle);
             var blockTop = rowCenterY - (titleHeight + subtitleHeight) * 0.5f;
-            Typography.Draw(drawList, new Vector2(titleLeft, blockTop), fitted, ChirperInk.TitleInk, ScreenTitleStyle);
+            Typography.Draw(drawList, new Vector2(titleLeft, blockTop), fitted, ChirperInk.TitleInk, style);
             Typography.Draw(drawList, new Vector2(titleLeft, blockTop + titleHeight),
                 Typography.FitText(subtitle, MathF.Max(1f, titleRight - titleLeft), ScreenSubtitleStyle),
                 ChirperInk.MutedInk, ScreenSubtitleStyle);
@@ -553,7 +554,8 @@ internal sealed partial class ChirperApp
     private void DrawActivity(Rect area, bool root = false)
     {
         var scale = UiScale.Current;
-        DrawScreenHeader(area, Loc.T(L.Social.ActivityTitle), 0f, string.Empty, !root);
+        DrawScreenHeader(area, Loc.T(L.Social.ActivityTitle), 0f, string.Empty, !root,
+            root ? WordmarkStyle : ScreenTitleStyle);
         var rowTop = area.Min.Y + AppHeader.Height * scale;
         var row = new Rect(new Vector2(area.Min.X, rowTop), new Vector2(area.Max.X, rowTop + FeedTabRowHeight * scale));
         var picked = DrawUnderlineTabs(row, Loc.T(L.Chirper.ActivityAll), Loc.T(L.Chirper.ActivityMentions),
@@ -603,8 +605,15 @@ internal sealed partial class ChirperApp
         var half = row.Width * 0.5f;
         var leftRect = new Rect(row.Min, new Vector2(row.Min.X + half, row.Max.Y));
         var rightRect = new Rect(new Vector2(row.Min.X + half, row.Min.Y), row.Max);
-        DrawFeedTabLabel(drawList, leftRect, leftLabel, !rightActive);
-        DrawFeedTabLabel(drawList, rightRect, rightLabel, rightActive);
+        var leftHovered = UiInteract.Hover(leftRect.Min, leftRect.Max);
+        var rightHovered = UiInteract.Hover(rightRect.Min, rightRect.Max);
+        if (leftHovered || rightHovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        DrawFeedTabLabel(drawList, leftRect, leftLabel, !rightActive, leftHovered);
+        DrawFeedTabLabel(drawList, rightRect, rightLabel, rightActive, rightHovered);
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
         slide.Step(rightActive ? 1f : 0f, SegmentSmoothTime, delta);
         var inset = CellPadX * scale;
@@ -615,12 +624,12 @@ internal sealed partial class ChirperApp
             new Vector2(underlineLeft + underlineWidth, row.Max.Y), FeedTabUnderline * scale * 0.5f,
             ImGui.GetColorU32(ChirperInk.Accent));
         DrawHairline(drawList, row.Min.X, row.Max.X, row.Max.Y);
-        if (UiInteract.HoverClick(leftRect.Min, leftRect.Max))
+        if (UiInteract.Click(leftRect.Min, leftRect.Max, leftHovered))
         {
             return 0;
         }
 
-        return UiInteract.HoverClick(rightRect.Min, rightRect.Max) ? 1 : -1;
+        return UiInteract.Click(rightRect.Min, rightRect.Max, rightHovered) ? 1 : -1;
     }
 
     private bool ShowsActivity(NotificationDto item)

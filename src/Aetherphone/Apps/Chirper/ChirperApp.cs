@@ -74,6 +74,11 @@ internal sealed partial class ChirperApp : IResumableApp
     private const float FeedTabUnderline = 4f;
     private const float TabBarHeight = 58f;
     private const float TabBarIconSize = 24f;
+    private const float TabBarHoverRadius = 20f;
+    private const float TabBarAvatarRadius = 13f;
+    private const float TabBarAvatarRingGap = 2.5f;
+    private const float FeedTabHoverPadX = 14f;
+    private const float FeedTabHoverPadY = 6f;
     private const int TabCount = 4;
     private const float FeedTopPadding = 2f;
     private const float CellPadX = 16f;
@@ -137,7 +142,6 @@ internal sealed partial class ChirperApp : IResumableApp
     private static readonly TextStyle CapsuleStyle = new(0.87f, FontWeight.SemiBold);
     private static readonly TextStyle FeedTabStyle = new(1.07f, FontWeight.SemiBold);
     private static readonly TextStyle FeedTabIdleStyle = new(1.07f, FontWeight.Medium);
-    private static readonly TextStyle TabBarLabelStyle = new(0.73f, FontWeight.SemiBold);
     private static readonly TextStyle WordmarkStyle = new(1.4f, FontWeight.Bold);
     private static readonly TextStyle BadgeStyle = new(0.67f, FontWeight.Bold);
     private static readonly TextStyle PopoverRowStyle = new(0.97f, FontWeight.SemiBold);
@@ -540,12 +544,21 @@ internal sealed partial class ChirperApp : IResumableApp
         profile.EnsureLoaded(activeScope);
     }
 
-    private static void DrawFeedTabLabel(ImDrawListPtr drawList, Rect rect, string label, bool active)
+    private static void DrawFeedTabLabel(ImDrawListPtr drawList, Rect rect, string label, bool active, bool hovered)
     {
+        var scale = UiScale.Current;
         var style = active ? FeedTabStyle : FeedTabIdleStyle;
-        var ink = active ? ChirperInk.AccentLink : ChirperInk.SegmentIdleInk;
-        var fitted = Typography.FitText(label, MathF.Max(1f, rect.Width - 16f * UiScale.Current), style);
-        Typography.DrawCentered(drawList, rect.Center - new Vector2(0f, 2f * UiScale.Current), fitted, ink, style);
+        var ink = active ? ChirperInk.AccentLink : hovered ? ChirperInk.TitleInk : ChirperInk.SegmentIdleInk;
+        var fitted = Typography.FitText(label, MathF.Max(1f, rect.Width - 16f * scale), style);
+        var center = rect.Center - new Vector2(0f, 2f * scale);
+        if (hovered)
+        {
+            var size = Typography.Measure(fitted, style);
+            var half = new Vector2(size.X * 0.5f + FeedTabHoverPadX * scale, size.Y * 0.5f + FeedTabHoverPadY * scale);
+            Squircle.Fill(drawList, center - half, center + half, half.Y, ImGui.GetColorU32(ChirperInk.FieldFill));
+        }
+
+        Typography.DrawCentered(drawList, center, fitted, ink, style);
     }
 
     private void DrawTabBar(Rect bar)
@@ -562,10 +575,16 @@ internal sealed partial class ChirperApp : IResumableApp
             var cellMax = new Vector2(cellMin.X + slot, bar.Max.Y);
             var active = homeTab == tab;
             var hovered = UiInteract.Hover(cellMin, cellMax);
-            var iconCenter = new Vector2((cellMin.X + cellMax.X) * 0.5f, bar.Min.Y + 21f * scale);
+            var iconCenter = new Vector2((cellMin.X + cellMax.X) * 0.5f, bar.Center.Y);
             var iconInk = active ? ChirperInk.AccentLink : hovered ? ChirperInk.TitleInk : GlassPillInk;
-            var labelInk = active ? ChirperInk.AccentLink : hovered ? ChirperInk.BodyInk : ChirperInk.MutedInk;
             var iconSize = TabBarIconSize * scale;
+            if (hovered)
+            {
+                drawList.AddCircleFilled(iconCenter, TabBarHoverRadius * scale,
+                    ImGui.GetColorU32(ChirperInk.FieldFill), 32);
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            }
+
             string label;
             switch (tab)
             {
@@ -580,8 +599,7 @@ internal sealed partial class ChirperApp : IResumableApp
                     label = Loc.T(L.Social.ActivityTitle);
                     break;
                 case HomeTab.Profile:
-                    PhoneIcon.Draw(drawList, iconCenter, active ? PhoneIcons.UserFilled : PhoneIcons.User,
-                        iconInk, iconSize);
+                    DrawProfileTabIcon(drawList, iconCenter, active, iconInk, iconSize);
                     label = Loc.T(L.Chirper.TabProfile);
                     break;
                 default:
@@ -591,19 +609,33 @@ internal sealed partial class ChirperApp : IResumableApp
                     break;
             }
 
-            var fitted = Typography.FitText(label, slot - 8f * scale, TabBarLabelStyle);
-            Typography.DrawCentered(drawList, new Vector2(iconCenter.X, iconCenter.Y + 21f * scale), fitted, labelInk,
-                TabBarLabelStyle);
-            if (hovered)
-            {
-                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-            }
-
+            HoverTooltip.Show(new Rect(cellMin, cellMax), label, HoverLabelSide.Above);
             if (UiInteract.Click(cellMin, cellMax, hovered))
             {
                 SelectHomeTab(tab);
             }
         }
+    }
+
+    private void DrawProfileTabIcon(ImDrawListPtr drawList, Vector2 center, bool active, Vector4 ink, float iconSize)
+    {
+        if (store.Me is not { } me)
+        {
+            store.EnsureMe();
+            PhoneIcon.Draw(drawList, center, active ? PhoneIcons.UserFilled : PhoneIcons.User, ink, iconSize);
+            return;
+        }
+
+        var scale = UiScale.Current;
+        var radius = TabBarAvatarRadius * scale;
+        DrawAvatar(drawList, center, radius, me.Name, me.World, me.AvatarUrl, 0.85f, 28, Frames.Of(me.FrameId));
+        if (!active)
+        {
+            return;
+        }
+
+        drawList.AddCircle(center, radius + TabBarAvatarRingGap * scale, ImGui.GetColorU32(ChirperInk.AccentLink), 32,
+            1.6f * scale);
     }
 
     private void SelectHomeTab(HomeTab tab)
