@@ -80,6 +80,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     private volatile bool vaultRefreshInFlight;
     private DateTime nextVaultRetryUtc = DateTime.MinValue;
     private volatile bool keyStatusRefreshing;
+    private volatile bool keyStatusRefreshForced;
     private DateTime lastKeyStatusUtc = DateTime.MinValue;
     private volatile ChatKeyStatus currentKeyStatus = ChatKeyStatus.None;
     private string? lastAccountId;
@@ -438,12 +439,14 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     {
         var id = currentThreadId;
         if (id is null || keyStatusRefreshing || vault.State != KeyVaultState.Unlocked
-            || currentKeyStatus.CanEncrypt || now - lastKeyStatusUtc < KeyStatusRetryInterval)
+            || (currentKeyStatus.CanEncrypt && !keyStatusRefreshForced)
+            || now - lastKeyStatusUtc < KeyStatusRetryInterval)
         {
             return;
         }
 
         keyStatusRefreshing = true;
+        keyStatusRefreshForced = false;
         lastKeyStatusUtc = now;
         work.Run("key status refresh", async token =>
         {
@@ -723,6 +726,11 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         }
 
         BeginThreadOpen(pending);
+    }
+
+    public void RequestThreadKeyRefresh()
+    {
+        keyStatusRefreshForced = true;
     }
 
     public void RequestThreadRefresh(string? threadId = null)

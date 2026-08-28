@@ -55,6 +55,7 @@ internal sealed class DirectMessagesStore : ChatThreadStoreBase<ChatMessageDto, 
             return;
         }
 
+        RequestThreadKeyRefresh();
         RequestThreadRefresh(signal.ConversationId);
     }
 

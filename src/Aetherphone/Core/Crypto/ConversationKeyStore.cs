@@ -21,9 +21,11 @@ internal sealed class ConversationKeyStore
     private readonly ConcurrentDictionary<string, int> currentGenerations = new(StringComparer.Ordinal);
     private readonly UnwrapFailureCache failedUnwraps = new();
     private readonly ConcurrentDictionary<(string ScopeId, int Generation), byte> scheduledSelfRepairs = new();
+    private readonly ConcurrentDictionary<(string ScopeId, int Generation), DateTime> unreadableRekeys = new();
     private readonly ConcurrentDictionary<string, DateTime> previewHydrateRequests = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, byte> hydratedScopes = new(StringComparer.Ordinal);
     private static readonly TimeSpan PreviewHydrateCooldown = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan UnreadableRekeyCooldown = TimeSpan.FromMinutes(2);
 
     private readonly KeySurface chatSurface;
     private readonly KeySurface velvetSurface;
@@ -114,6 +116,7 @@ internal sealed class ConversationKeyStore
         currentGenerations.Clear();
         failedUnwraps.Clear();
         scheduledSelfRepairs.Clear();
+        unreadableRekeys.Clear();
         hydratedScopes.Clear();
     }
 
@@ -201,7 +204,8 @@ internal sealed class ConversationKeyStore
                 continue;
             }
 
-            if (surface.RotatesGenerations && keys.NeedsNewGeneration && keys.MemberKeys.Length > 0)
+            if (surface.RotatesGenerations && keys.MemberKeys.Length > 0
+                && (keys.NeedsNewGeneration || ShouldRekeyUnreadable(scope, keys.CurrentGeneration)))
             {
                 var nextGeneration = keys.CurrentGeneration + 1;
                 if (await CreateGenerationAsync(surface, remoteId, scope, nextGeneration, keys.MemberKeys, token)
@@ -225,6 +229,26 @@ internal sealed class ConversationKeyStore
 
         var canEncrypt = keys.MembersWithoutKeys.Length == 0 && TryGetCek(scope, keys.CurrentGeneration, out _);
         return new ChatKeyStatus(true, canEncrypt, keys.CurrentGeneration, keys.MembersWithoutKeys);
+    }
+
+    private bool ShouldRekeyUnreadable(string scope, int generation)
+    {
+        if (TryGetCek(scope, generation, out _))
+        {
+            return false;
+        }
+
+        var now = DateTime.UtcNow;
+        if (unreadableRekeys.TryGetValue((scope, generation), out var lastAttemptedAt)
+            && now - lastAttemptedAt < UnreadableRekeyCooldown)
+        {
+            return false;
+        }
+
+        unreadableRekeys[(scope, generation)] = now;
+        AepLog.Warning(
+            $"[Crypto] no readable key for {scope} generation {generation}; rolling this conversation to a new generation so it can carry on.");
+        return true;
     }
 
     private async Task<bool> CreateGenerationAsync(KeySurface surface, string remoteId, string scope, int generation,
