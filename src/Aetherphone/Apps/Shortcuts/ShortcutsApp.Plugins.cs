@@ -384,6 +384,12 @@ internal sealed partial class ShortcutsApp
     {
         if (draft is not null)
         {
+            var unsavedIcon = UnsavedIconOf(draft);
+            if (unsavedIcon.Length > 0)
+            {
+                store.ReleaseIcon(unsavedIcon);
+            }
+
             draft.IconPlugin = entry.InternalName;
             draft.IconImage = string.Empty;
         }

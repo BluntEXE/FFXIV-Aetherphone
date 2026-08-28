@@ -453,6 +453,8 @@ internal sealed partial class ShortcutsApp
             return;
         }
 
+        var previousUnsavedIcon = UnsavedIconOf(draft);
+
         var copy = draft.Copy();
         copy.Name = CopyName(draft.Name);
         PruneEmptySteps(copy);
@@ -462,6 +464,11 @@ internal sealed partial class ShortcutsApp
         }
 
         store.Add(copy);
+        if (previousUnsavedIcon.Length > 0)
+        {
+            store.ReleaseIcon(previousUnsavedIcon);
+        }
+
         draft = copy.Copy();
         draftId = copy.Id;
         draftPinned = false;
@@ -638,7 +645,7 @@ internal sealed partial class ShortcutsApp
             var min = center - new Vector2(tile * 0.5f);
             var max = center + new Vector2(tile * 0.5f);
             var glyph = index == 0 ? 0 : (int)ShortcutPalette.Glyphs[index - 1];
-            var active = !usesPluginIcon && !usesCustomIcon && entry.Glyph == glyph;
+            var active = !usesPluginIcon && entry.Glyph == glyph;
             Squircle.Fill(drawList, min, max, tile * 0.28f,
                 ImGui.GetColorU32(active ? Palette.WithAlpha(ui.Accent, 0.32f) : ui.FieldSurface));
             if (active)
@@ -658,6 +665,12 @@ internal sealed partial class ShortcutsApp
 
             if (UiInteract.HoverClick(min, max))
             {
+                var unsavedIcon = UnsavedIconOf(entry);
+                if (unsavedIcon.Length > 0)
+                {
+                    store.ReleaseIcon(unsavedIcon);
+                }
+
                 entry.Glyph = glyph;
                 entry.IconPlugin = string.Empty;
                 entry.IconImage = string.Empty;
@@ -676,7 +689,7 @@ internal sealed partial class ShortcutsApp
             : Loc.T(L.Shortcuts.PluginIconNone);
         var pickedPlugin = SettingsRow.Disclosure(card.NextRow(), Loc.T(L.Shortcuts.PluginIcon), pluginValue, theme,
             "shortcuts.iconPlugin");
-        var customValue = usesCustomIcon ? Loc.T(L.Shortcuts.CustomIcon) : Loc.T(L.Shortcuts.CustomIconNone);
+        var customValue = usesCustomIcon ? Loc.T(L.Shortcuts.CustomIcon) : Loc.T(L.Shortcuts.PluginIconNone);
         var pickedCustom = SettingsRow.Disclosure(card.NextRow(), Loc.T(L.Shortcuts.CustomIcon), customValue, theme,
             "shortcuts.iconImage");
         card.End();
