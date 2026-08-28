@@ -1,3 +1,4 @@
+using Aetherphone.Core.Game;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
@@ -79,12 +80,11 @@ internal static unsafe class GameLinkActions
 
     public static bool InviteToParty(string name, string world)
     {
-        if (name.Length == 0)
+        if (!PlayerTarget.TryFormat(name, world, out var target))
         {
             return false;
         }
 
-        var target = world.Length > 0 ? string.Concat(name, "@", world) : name;
         return ChatSender.TrySend(string.Concat("/invite ", target));
     }
 }
