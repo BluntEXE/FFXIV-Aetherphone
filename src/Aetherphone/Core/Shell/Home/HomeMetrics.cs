@@ -8,6 +8,7 @@ internal readonly struct HomeMetrics
     public const float LabelBandUnits = 20f;
     public const float EditToolbarBandUnits = 40f;
     private const float DotsBandUnits = 24f;
+    private const float DotsLiftUnits = 7f;
     private const float GridTopPadUnits = 4f;
 
     public readonly Rect Content;
@@ -45,7 +46,7 @@ internal readonly struct HomeMetrics
         var dockBottom = warped.Max.Y - 2f * scale;
         var dockBar = new Rect(new Vector2(warped.Min.X + 6f * scale, dockBottom - dockHeight),
             new Vector2(warped.Max.X - 6f * scale, dockBottom));
-        var dotsCenterY = dockBar.Min.Y - DotsBandUnits * scale * 0.5f - 2f * scale;
+        var dotsCenterY = dockBar.Min.Y - DotsBandUnits * scale * 0.5f - DotsLiftUnits * scale;
         var gridTop = warped.Min.Y + (GridTopPadUnits + editReserveUnits) * scale;
         var gridBottom = dockBar.Min.Y - DotsBandUnits * scale;
         var grid = new Rect(new Vector2(warped.Min.X, gridTop), new Vector2(warped.Max.X, gridBottom));
