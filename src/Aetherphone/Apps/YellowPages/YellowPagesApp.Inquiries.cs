@@ -199,6 +199,7 @@ internal sealed partial class YellowPagesApp
         var top = area.Min.Y + AppHeader.Height * scale;
         var composerTop = area.Max.Y - ComposerHeight * scale;
         var body = new Rect(new Vector2(area.Min.X, top), new Vector2(area.Max.X, composerTop));
+        DrawInquiryVaultBanner(ref body);
         if (thread is null)
         {
             if (!inquiries.LoadedOnce)
@@ -248,6 +249,41 @@ internal sealed partial class YellowPagesApp
 
         DrawInquiryComposer(new Rect(new Vector2(area.Min.X, composerTop), area.Max), inquiryId,
             thread.OtherUserId, scale);
+    }
+
+    private void DrawInquiryVaultBanner(ref Rect listRect)
+    {
+        var vault = inquiries.Vault;
+        if (inquiries.VaultState == KeyVaultState.Locked)
+        {
+            var banner = vault.RecoveryConfigured
+                ? L.Encryption.LockedBanner
+                : L.Encryption.LockedNoRecoveryBanner;
+            ChatHeaderControls.DrawBanner(ui, ref listRect, Loc.T(banner), ui.MutedInk,
+                () => router.Push(YellowPagesRoute.Encryption));
+            return;
+        }
+
+        if (inquiries.VaultState != KeyVaultState.Unlocked)
+        {
+            return;
+        }
+
+        if (vault.UnsavedRecoveryCode is not null)
+        {
+            ChatHeaderControls.DrawBanner(ui, ref listRect, Loc.T(L.Encryption.SaveCodeBanner), ui.Accent,
+                () => router.Push(YellowPagesRoute.Encryption));
+            return;
+        }
+
+        if (vault.RecoveryConfigured || !configuration.RecoveryNudgeDue())
+        {
+            return;
+        }
+
+        ChatHeaderControls.DrawPromptBanner(ui, ref listRect, Loc.T(L.Encryption.RecoveryNudgeBanner), ui.MutedInk,
+            () => router.Push(YellowPagesRoute.Encryption),
+            configuration.SnoozeRecoveryNudge);
     }
 
     private void DrawEarlierMessagesRow(float scale)
@@ -342,6 +378,11 @@ internal sealed partial class YellowPagesApp
         {
             Typography.Draw(new Vector2(fieldRect.Min.X, fieldRect.Center.Y - 8f * scale),
                 Loc.T(L.YellowPages.InquiryLocked), AppPalettes.YellowPages.MutedInk, TextStyles.Footnote);
+            if (UiInteract.Hover(fieldRect.Min, fieldRect.Max))
+            {
+                router.Push(YellowPagesRoute.Encryption);
+            }
+
             return;
         }
 
@@ -427,6 +468,11 @@ internal sealed partial class YellowPagesApp
         {
             Typography.Draw(new Vector2(fieldRect.Min.X, fieldRect.Center.Y - 8f * scale),
                 Loc.T(L.YellowPages.InquiryLocked), AppPalettes.YellowPages.MutedInk, TextStyles.Footnote);
+            if (UiInteract.Hover(fieldRect.Min, fieldRect.Max))
+            {
+                router.Push(YellowPagesRoute.Encryption);
+            }
+
             return;
         }
 

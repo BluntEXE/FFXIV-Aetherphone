@@ -20,7 +20,7 @@ internal sealed partial class MessageApp
 
         public ThreadView(MessageApp app)
             : base(app.store, app.ui, app.images, app.lodestone, app.http, app.library, app.configuration,
-                app.confirm, app.report, app.translation, app.wallpaperImages, ThreadPollSeconds,
+                app.confirm, app.report, app.translation, app.wallpaperImages, app.encryptionHelp, ThreadPollSeconds,
                 TypingSendSeconds)
         {
             this.app = app;

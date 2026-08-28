@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
@@ -94,7 +94,8 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     protected ChatThreadView(ChatThreadStoreBase<TMessage, TThread> store, AppSkin ui, RemoteImageCache images,
         LodestoneService lodestone, HttpService http, PhotoLibrary library, Configuration configuration,
         ConfirmService confirm, ReportService report, TranslationService translation,
-        WallpaperImageCache wallpaperImages, float threadPollSeconds, float typingSendSeconds)
+        WallpaperImageCache wallpaperImages, EncryptionHelpService encryptionHelp,
+        float threadPollSeconds, float typingSendSeconds)
     {
         this.store = store;
         this.ui = ui;
@@ -109,7 +110,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         this.wallpaperImages = wallpaperImages;
         this.threadPollSeconds = threadPollSeconds;
         this.typingSendSeconds = typingSendSeconds;
-        encryptionPane = new EncryptionInfoPane(store.Vault, confirm);
+        encryptionPane = new EncryptionInfoPane(store.Vault, confirm, encryptionHelp);
         sinceTypingSend = typingSendSeconds;
         pickImage = OpenImagePicker;
         shareLocation = AskShareLocation;
@@ -614,7 +615,9 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             return false;
         }
 
-        return EncVersionOf(message) != 1 || store.DecryptionState(messageId).State == DmBodyState.Decrypted;
+        var revealState = store.DecryptionState(messageId).State;
+        return EncVersionOf(message) != 1
+            || revealState is DmBodyState.Decrypted or DmBodyState.Remembered;
     }
 
     protected void BeginEdit(string messageId)

@@ -63,6 +63,7 @@ internal sealed partial class MessageApp : IResumableApp, ISpotlightConversation
     private readonly TranslationService translation;
     private readonly ReportService report;
     private readonly WallpaperImageCache wallpaperImages;
+    internal readonly EncryptionHelpService encryptionHelp;
     private readonly MusterStore musters;
     private readonly MusterLauncher musterLauncher;
     private readonly SocialNotificationService socialNotifications;
@@ -98,7 +99,8 @@ internal sealed partial class MessageApp : IResumableApp, ISpotlightConversation
         HttpService http, Configuration configuration, ConfirmService confirm, TranslationService translation,
         ReportService report,
         WallpaperImageCache wallpaperImages, MusterStore musters, MusterLauncher musterLauncher,
-        SocialNotificationService socialNotifications, EncryptionSetupLauncher encryptionSetup)
+        SocialNotificationService socialNotifications, EncryptionSetupLauncher encryptionSetup,
+        EncryptionHelpService encryptionHelp)
     {
         this.translation = translation;
         this.socialNotifications = socialNotifications;
@@ -117,6 +119,7 @@ internal sealed partial class MessageApp : IResumableApp, ISpotlightConversation
         this.confirm = confirm;
         this.report = report;
         this.wallpaperImages = wallpaperImages;
+        this.encryptionHelp = encryptionHelp;
         this.musters = musters;
         router = new ViewRouter<MessageRoute>(MessageRoute.Root);
         drawView = DrawView;

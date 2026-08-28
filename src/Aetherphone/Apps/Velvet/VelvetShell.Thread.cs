@@ -22,7 +22,7 @@ internal sealed partial class VelvetShell
 
         public ThreadView(VelvetShell app)
             : base(app.store, app.ui, app.images, app.lodestone, app.http, app.library, app.configuration,
-                app.confirm, app.report, app.translation, app.wallpaperImages, ThreadPollSeconds,
+                app.confirm, app.report, app.translation, app.wallpaperImages, app.encryptionHelp, ThreadPollSeconds,
                 TypingSendSeconds)
         {
             this.app = app;

@@ -80,12 +80,14 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     private volatile bool vaultRefreshInFlight;
     private DateTime nextVaultRetryUtc = DateTime.MinValue;
     private volatile bool keyStatusRefreshing;
+    private volatile bool keyStatusRefreshForced;
     private DateTime lastKeyStatusUtc = DateTime.MinValue;
     private volatile ChatKeyStatus currentKeyStatus = ChatKeyStatus.None;
     private string? lastAccountId;
 
     protected ChatThreadStoreBase(string logTag, AethernetSession session, SafetyClient safety, MediaClient media,
-        NotificationService notifications, KeyVault vault, ConversationKeyStore keys, PhoneVisibility visibility,
+        NotificationService notifications, KeyVault vault, ConversationKeyStore keys, DecryptedHistoryStore chatHistory,
+        PhoneVisibility visibility,
         AppGate gate)
     {
         this.session = session;
@@ -97,7 +99,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         this.logTag = logTag;
         this.gate = gate;
         work = new StoreWork(logTag);
-        cipher = new MessageCipher(vault, keys);
+        cipher = new MessageCipher(vault, keys, chatHistory);
         messageOrder = CompareByCreatedAt;
         inboxCadence = new PollCadence(visibility, ForegroundInboxPollInterval, BackgroundInboxPollInterval);
         vault.Changed += OnVaultChanged;
@@ -437,12 +439,14 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     {
         var id = currentThreadId;
         if (id is null || keyStatusRefreshing || vault.State != KeyVaultState.Unlocked
-            || currentKeyStatus.CanEncrypt || now - lastKeyStatusUtc < KeyStatusRetryInterval)
+            || (currentKeyStatus.CanEncrypt && !keyStatusRefreshForced)
+            || now - lastKeyStatusUtc < KeyStatusRetryInterval)
         {
             return;
         }
 
         keyStatusRefreshing = true;
+        keyStatusRefreshForced = false;
         lastKeyStatusUtc = now;
         work.Run("key status refresh", async token =>
         {
@@ -722,6 +726,11 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         }
 
         BeginThreadOpen(pending);
+    }
+
+    public void RequestThreadKeyRefresh()
+    {
+        keyStatusRefreshForced = true;
     }
 
     public void RequestThreadRefresh(string? threadId = null)

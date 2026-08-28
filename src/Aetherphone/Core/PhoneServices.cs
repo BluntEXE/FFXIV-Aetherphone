@@ -1,4 +1,4 @@
-﻿using Aetherphone.Core.Activity;
+using Aetherphone.Core.Activity;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Announcements;
 using Aetherphone.Core.Apps;
@@ -125,6 +125,10 @@ internal sealed class PhoneServices : IDisposable
     public required DeviceLinkWatcher DeviceLinks { get; init; }
 
     public required EncryptionGuide EncryptionGuide { get; init; }
+
+    public required DecryptedHistoryStore ChatHistory { get; init; }
+
+    public required EncryptionHelpService EncryptionHelp { get; init; }
     public required PeerKeyDirectory PeerKeys { get; init; }
     public required ConversationKeyStore ConversationKeys { get; init; }
     public required EncryptionSetupLauncher EncryptionSetup { get; init; }
@@ -245,6 +249,8 @@ internal sealed class PhoneServices : IDisposable
         var availability = new AppAvailability(http, aethernetSession, configuration, gameData);
         var aethernet = new AethernetApi(http, aethernetSession);
         var keyVault = new KeyVault(configuration, aethernetSession, aethernet.Keys);
+        var chatHistory = new DecryptedHistoryStore(configDirectory, aethernetSession);
+        var encryptionHelp = new EncryptionHelpService();
         var badgeCatalog = new Social.BadgeCatalogStore(aethernetSession, aethernet.Account);
         var frameCatalog = new Social.FrameCatalogStore(aethernetSession, aethernet.Account);
         var loadoutStore = new Social.LoadoutStore(aethernetSession, aethernet.Account);
@@ -336,7 +342,7 @@ internal sealed class PhoneServices : IDisposable
         var yellowPages = new YellowPagesStore(aethernetSession, aethernet.Ads, aethernet.Media, configuration,
             visibility, realtimeSignals, installer.Gate(YellowPagesStore.AppId));
         var adInquiries = new AdInquiryStore(aethernetSession, aethernet.Ads, aethernet.Safety, keyVault, conversationKeys,
-            visibility, realtimeSignals, installer.Gate(YellowPagesStore.AppId));
+            chatHistory, visibility, realtimeSignals, installer.Gate(YellowPagesStore.AppId));
         var huntMobsFile = new FileInfo(Path.Combine(
             Plugin.PluginInterface.AssemblyLocation.DirectoryName ?? string.Empty, "Hunts", "HuntMob.json"));
         var huntMobCatalog = new HuntMobCatalog(huntMobsFile);
@@ -427,6 +433,8 @@ internal sealed class PhoneServices : IDisposable
             KeyVault = keyVault,
             DeviceLinks = deviceLinks,
             EncryptionGuide = encryptionGuide,
+            ChatHistory = chatHistory,
+            EncryptionHelp = encryptionHelp,
             PeerKeys = peerKeys,
             ConversationKeys = conversationKeys,
             EncryptionSetup = new EncryptionSetupLauncher(),
@@ -489,6 +497,7 @@ internal sealed class PhoneServices : IDisposable
         ModerationPresenter.Dispose();
         ModerationNotices.Dispose();
         AccountState.Dispose();
+        ChatHistory.Dispose();
         DeviceLinks.Dispose();
         KeyVault.Dispose();
         StreamSignals.Dispose();

@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using Aetherphone.Core.Aethernet.Contracts;
 
 namespace Aetherphone.Core.Aethernet;

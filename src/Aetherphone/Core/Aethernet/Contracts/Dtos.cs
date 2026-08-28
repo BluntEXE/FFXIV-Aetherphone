@@ -1,4 +1,4 @@
-﻿namespace Aetherphone.Core.Aethernet.Contracts;
+namespace Aetherphone.Core.Aethernet.Contracts;
 
 internal sealed record ChallengeRequest(string Name, string World);
 

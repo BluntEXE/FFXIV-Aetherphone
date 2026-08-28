@@ -90,6 +90,7 @@ internal sealed partial class AethergramApp : IResumableApp
     private readonly TranslationService translation;
     private readonly ReportService report;
     private readonly WallpaperImageCache wallpaperImages;
+    internal readonly EncryptionHelpService encryptionHelp;
     private readonly ActionSheet postSheet = new();
     private readonly DropdownMenu mediaFilterMenu = new();
     private readonly DropdownMenu overflowMenu = new();
@@ -171,17 +172,18 @@ internal sealed partial class AethergramApp : IResumableApp
         RemoteImageCache images, PhotoLibrary library, SocialLauncher launcher, GramDmLauncher dmLauncher,
         GameData gameData, Configuration configuration, SocialNotificationService social,
         NotificationService notifications, HttpService http, KeyVault keyVault,
-        ConversationKeyStore conversationKeys, PhoneVisibility visibility, RealtimeSignalBus realtimeSignals,
+        ConversationKeyStore conversationKeys, DecryptedHistoryStore chatHistory,
+        PhoneVisibility visibility, RealtimeSignalBus realtimeSignals,
         WallpaperImageCache wallpaperImages, ConfirmService confirm, TranslationService translation,
         ReportService report, ConductGateService conduct,
-        AppInstaller installer)
+        AppInstaller installer, EncryptionHelpService encryptionHelp)
     {
         this.translation = translation;
         store = new AethergramStore(session, net.Account, net.Social, net.Grams, net.Safety, net.Media, realtimeSignals);
         store.SetFeedRegions(SocialRegion.FilterCsv(configuration.AethergramFeedRegionMask));
         account = net.Account;
         dmStore = new GramDmStore(session, net.GramDm, net.Social, net.Safety, net.Media, notifications, keyVault,
-            conversationKeys, visibility, realtimeSignals, installer);
+            conversationKeys, chatHistory, visibility, realtimeSignals, installer);
         composeMentions = new MentionAutocomplete(store.NewMentionSuggestions());
         commentMentions = new MentionAutocomplete(store.NewMentionSuggestions());
         personPicker = new PersonPicker(store.NewMentionSuggestions());
@@ -203,6 +205,7 @@ internal sealed partial class AethergramApp : IResumableApp
         this.confirm = confirm;
         this.report = report;
         this.wallpaperImages = wallpaperImages;
+        this.encryptionHelp = encryptionHelp;
         activityFeed = new SocialActivityFeed(SocialActivity.AethergramApp, session, net.Account);
         loadOlderActivity = activityFeed.LoadOlder;
         router = new ViewRouter<AethergramRoute>(AethergramRoute.Home);

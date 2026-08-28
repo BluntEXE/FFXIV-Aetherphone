@@ -1,4 +1,4 @@
-﻿using Aetherphone.Core;
+using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Config;
 using Aetherphone.Core.Device;
@@ -306,6 +306,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         services.DeviceLinks.Tick((float)framework.UpdateDelta.TotalSeconds);
         services.EncryptionGuide.Tick((float)framework.UpdateDelta.TotalSeconds);
+        services.ChatHistory.Tick((float)framework.UpdateDelta.TotalSeconds);
     }
 
     private void OnAutoOpenTick(IFramework framework)

@@ -76,7 +76,8 @@ internal sealed partial class YellowPagesApp : IPhoneApp
         SocialNotificationService socialNotifications, GramDmLauncher gramDmLauncher, MusterStore musters,
         AethernetApi api, GameData gameData, RemoteImageCache images, LodestoneService lodestone,
         PhotoLibrary library, WallpaperImageCache wallpaperImages, Configuration configuration,
-        ConfirmService confirm, TranslationService translation, ReportService report, ConductGateService conduct)
+        ConfirmService confirm, TranslationService translation, ReportService report, ConductGateService conduct,
+        EncryptionHelpService encryptionHelp)
     {
         this.store = store;
         this.inquiries = inquiries;
@@ -95,7 +96,7 @@ internal sealed partial class YellowPagesApp : IPhoneApp
         this.translation = translation;
         this.report = report;
         this.conduct = conduct;
-        encryptionPane = new EncryptionInfoPane(inquiries.Vault, confirm);
+        encryptionPane = new EncryptionInfoPane(inquiries.Vault, confirm, encryptionHelp);
         router = new ViewRouter<YellowPagesRoute>(YellowPagesRoute.Browse);
         drawView = DrawView;
         back = () => router.Pop();

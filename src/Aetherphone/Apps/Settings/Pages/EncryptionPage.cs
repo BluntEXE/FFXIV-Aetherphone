@@ -250,7 +250,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         if (ThemeButton.Draw(Loc.T(L.Encryption.RecoveryCopy), theme))
         {
             ImGui.SetClipboardText(actions.GeneratedCode);
-            actions.Status = Loc.T(L.Friends.Copied);
+            ShellToast.Show();
         }
 
         ImGui.Dummy(new Vector2(0f, 8f * scale));
@@ -352,7 +352,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
 
             ImGui.Dummy(new Vector2(0f, 8f * scale));
             ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
-            ImGui.InputText("##encryptionVerifySettings", ref actions.VerifyEntry, 16);
+            ImGui.InputText("##encryptionVerifySettings", ref actions.VerifyEntry, 64);
             ImGui.Dummy(new Vector2(0f, 10f * scale));
             if (ThemeButton.Draw(Loc.T(L.Encryption.GuideVerifyConfirm), theme))
             {
@@ -390,6 +390,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         if (ThemeButton.Draw(Loc.T(L.Encryption.RecoveryCopy), theme))
         {
             ImGui.SetClipboardText(code);
+            ShellToast.Show();
         }
 
         ImGui.Dummy(new Vector2(0f, 6f * scale));
@@ -402,7 +403,8 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
 
     private void DrawRestoreOlderSection(PhoneTheme theme)
     {
-        if (!actions.HasArchivedEscrows)
+        var olderKeysHeldHere = actions.Vault.OlderKeysHeldHere;
+        if (!actions.HasArchivedEscrows && olderKeysHeldHere == 0)
         {
             return;
         }
@@ -418,6 +420,15 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
         {
             Typography.Wrapped(Loc.T(L.Encryption.RestoreOlderBody));
+            if (olderKeysHeldHere > 0)
+            {
+                Typography.Wrapped(Loc.T(L.Encryption.OlderKeysHeldHere, olderKeysHeldHere));
+            }
+        }
+
+        if (!actions.HasArchivedEscrows)
+        {
+            return;
         }
 
         ImGui.Dummy(new Vector2(0f, 8f * scale));

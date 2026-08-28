@@ -1,4 +1,4 @@
-﻿using Aetherphone.Core;
+using Aetherphone.Core;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Localization;
@@ -11,10 +11,14 @@ namespace Aetherphone.Windows.Components;
 internal sealed class EncryptionInfoPane : IDisposable
 {
     private readonly EncryptionVaultActions actions;
+    private readonly EncryptionHelpService help;
+    private bool restoreEntryOpen;
+    private bool escrowsChecked;
 
-    public EncryptionInfoPane(KeyVault vault, ConfirmService confirm)
+    public EncryptionInfoPane(KeyVault vault, ConfirmService confirm, EncryptionHelpService help)
     {
         actions = new EncryptionVaultActions(vault, confirm);
+        this.help = help;
     }
 
     public void DrawBody(AppSkin ui, PhoneTheme theme, bool signedIn, bool encrypted)
@@ -27,9 +31,12 @@ internal sealed class EncryptionInfoPane : IDisposable
             return;
         }
 
+        EnsureEscrowsChecked();
         DrawHero(ui, theme, signedIn, encrypted);
         DrawSummary(ui, signedIn, encrypted);
         DrawVaultSection(ui, theme);
+        DrawRestoreOlderSection(ui, theme);
+        DrawTroubleshooting(ui);
         DrawStatus(ui);
     }
 
@@ -41,7 +48,10 @@ internal sealed class EncryptionInfoPane : IDisposable
         }
         else
         {
+            EnsureEscrowsChecked();
             DrawVaultSection(ui, theme);
+            DrawRestoreOlderSection(ui, theme);
+            DrawTroubleshooting(ui);
         }
 
         DrawStatus(ui);
@@ -225,7 +235,7 @@ internal sealed class EncryptionInfoPane : IDisposable
         if (DrawButton(ui, Loc.T(L.Encryption.RecoveryCopy), false))
         {
             ImGui.SetClipboardText(actions.GeneratedCode);
-            actions.Status = Loc.T(L.Friends.Copied);
+            ShellToast.Show();
         }
 
         DrawWrapped(ui, Loc.T(L.Encryption.RecoverySaveBody));
@@ -269,6 +279,7 @@ internal sealed class EncryptionInfoPane : IDisposable
             if (DrawButton(ui, Loc.T(L.Encryption.RecoveryCopy), false))
             {
                 ImGui.SetClipboardText(code);
+                ShellToast.Show();
             }
 
             if (DrawButton(ui, Loc.T(L.Encryption.GuideWroteItDown), true))
@@ -311,11 +322,75 @@ internal sealed class EncryptionInfoPane : IDisposable
         using (Dalamud.Interface.Utility.Raii.ImRaii.PushColor(ImGuiCol.FrameBg, new Vector4(0f, 0f, 0f, 0f))
                    .Push(ImGuiCol.Text, theme.TextStrong))
         {
-            ImGui.InputText("##encryptionVerifyCode", ref actions.VerifyEntry, 16);
+            ImGui.InputText("##encryptionVerifyCode", ref actions.VerifyEntry, 64);
         }
 
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height));
+    }
+
+    private void EnsureEscrowsChecked()
+    {
+        if (escrowsChecked)
+        {
+            return;
+        }
+
+        escrowsChecked = true;
+        actions.RefreshArchivedEscrows();
+    }
+
+    private void DrawRestoreOlderSection(AppSkin ui, PhoneTheme theme)
+    {
+        var olderKeysHeldHere = actions.Vault.OlderKeysHeldHere;
+        if (!actions.HasArchivedEscrows && olderKeysHeldHere == 0)
+        {
+            return;
+        }
+
+        var scale = UiScale.Current;
+        ImGui.Dummy(new Vector2(0f, 16f * scale));
+        DrawSectionLabel(ui, Loc.T(L.Encryption.RestoreOlderTitle));
+        DrawWrapped(ui, Loc.T(L.Encryption.RestoreOlderBody));
+        if (olderKeysHeldHere > 0)
+        {
+            DrawWrapped(ui, Loc.T(L.Encryption.OlderKeysHeldHere, olderKeysHeldHere));
+        }
+
+        if (!actions.HasArchivedEscrows)
+        {
+            return;
+        }
+
+        ImGui.Dummy(new Vector2(0f, 10f * scale));
+        if (!restoreEntryOpen)
+        {
+            if (DrawButton(ui, Loc.T(L.Encryption.RestoreOlderButton), false) && !actions.Busy)
+            {
+                actions.CodeEntry = string.Empty;
+                restoreEntryOpen = true;
+            }
+
+            return;
+        }
+
+        DrawCodeInput(ui, theme);
+        ImGui.Dummy(new Vector2(0f, 10f * scale));
+        if (DrawButton(ui, Loc.T(L.Encryption.RestoreOlderConfirm), true)
+            && !actions.Busy && RecoveryKey.Canonicalize(actions.CodeEntry).Length > 0)
+        {
+            actions.BeginRestorePreviousKeys();
+        }
+    }
+
+    private void DrawTroubleshooting(AppSkin ui)
+    {
+        var scale = UiScale.Current;
+        ImGui.Dummy(new Vector2(0f, 16f * scale));
+        if (DrawButton(ui, Loc.T(L.Encryption.HelpOpen), false))
+        {
+            help.Open();
+        }
     }
 
     private void DrawStatus(AppSkin ui)

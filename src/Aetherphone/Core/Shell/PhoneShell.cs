@@ -118,6 +118,7 @@ internal sealed class PhoneShell : IDisposable
         services.Share.Bind(apps, navigation);
         var shareSheet = new ShareSheet(services.Share);
         var conductOverlay = new ConductGateOverlay(services.Conduct);
+        var encryptionHelpOverlay = new EncryptionHelpOverlay(services.EncryptionHelp);
         setup = new SetupOverlay(services.AethernetSession, services.Aethernet, services.GameData,
             services.RemoteImages, services.Lodestone, bundle.Photos, services.WallpaperImages, navigation,
             configuration, services.Confirm, themes);
@@ -126,7 +127,7 @@ internal sealed class PhoneShell : IDisposable
         morph = new MinimizeMorphView(themes, minimize, minimizedPhone, painter, configuration);
         overlays = new ShellOverlayCoordinator(configuration, loading, navigation, controlCenter, banner, island,
             rateLimitPill, shortcutPill, coinPill, coinFloats, incomingOverlay, banOverlay, confirmOverlay,
-            reportOverlay, shareSheet, conductOverlay, director, setup);
+            reportOverlay, shareSheet, conductOverlay, encryptionHelpOverlay, director, setup);
     }
 
     public void OnOpened()

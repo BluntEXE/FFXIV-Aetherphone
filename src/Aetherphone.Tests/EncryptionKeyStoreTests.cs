@@ -191,6 +191,30 @@ public sealed class EncryptionKeyStoreTests
     }
 
     [Fact]
+    public void A_key_archived_on_this_device_still_opens_wraps_the_current_key_cannot()
+    {
+        var retired = CryptoBox.TryGenerateIdentity();
+        var current = CryptoBox.TryGenerateIdentity();
+        Assert.NotNull(retired);
+        Assert.NotNull(current);
+
+        var cek = CryptoBox.GenerateCek();
+        var wrap = CryptoBox.WrapCek(cek, CryptoBox.ExportPublicKey(retired!));
+        Assert.NotNull(wrap);
+        Assert.Null(CryptoBox.UnwrapCek(wrap!, current!));
+
+        var pkcs8 = CryptoBox.TryExportPrivateKey(retired!);
+        Assert.NotNull(pkcs8);
+
+        var archived = LocalKeyProtector.Protect(pkcs8!, "user-a");
+        Assert.Equal(LocalKeyStatus.Opened, LocalKeyProtector.TryUnprotect(archived, "user-a", out var reopened));
+
+        var reimported = CryptoBox.ImportPrivateKey(reopened!);
+        Assert.NotNull(reimported);
+        Assert.Equal(cek, CryptoBox.UnwrapCek(wrap!, reimported!));
+    }
+
+    [Fact]
     public void A_generated_recovery_code_ends_in_a_group_that_can_be_typed_back()
     {
         var code = RecoveryKey.GenerateCode();
