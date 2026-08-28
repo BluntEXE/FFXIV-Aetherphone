@@ -5,6 +5,7 @@ using Aetherphone.Core.Device;
 using Aetherphone.Core.Emoji;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.GameChat;
+using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Photos;
@@ -73,6 +74,9 @@ public sealed class Plugin : IDalamudPlugin
     private readonly AetherStreamScreenWindow screenWindow;
     private readonly UpdateChipWindow updateChipWindow;
     private readonly LinkpearlPopouts linkpearlPopouts;
+    private readonly PopoutPresence linkpearlPresence;
+    private readonly LinkpearlHotkey linkpearlHotkey;
+    private readonly AppGate linkpearlGate;
     private readonly PhoneEmoteController phoneEmote;
     private readonly TimerNotifier timerNotifier;
     private readonly CalendarReminderService calendarReminders;
@@ -128,10 +132,13 @@ public sealed class Plugin : IDalamudPlugin
             Framework.Update += OnDeviceLinkTick;
             videoDebugWindow = new VideoDebugWindow(video, screenController);
             screenWindow = new AetherStreamScreenWindow(screenController, video);
+            linkpearlGate = services.Installer.Gate("messages");
             linkpearlPopouts = new LinkpearlPopouts(Cfg, services.ChatInbox, services.ChatLog, services.ChatSend,
                 services.ChatTabs, services.TellPreferences, services.LinkpearlNotificationGate, services.Visibility,
-                services.Installer.Gate("messages"), services.GameData, services.Themes, services.Lodestone,
+                linkpearlGate, services.GameData, services.Themes, services.Lodestone,
                 services.Notifications);
+            linkpearlPresence = new PopoutPresence(Cfg, linkpearlPopouts, services.ChatLog, services.ChatInbox);
+            linkpearlHotkey = new LinkpearlHotkey(Cfg, services.ChatInbox, linkpearlPopouts);
             var bundle = AppRegistry.BuildDefault(services, video, screenController, videoQueue, watchAlong,
                 streamSuggestions, screenWindow, linkpearlPopouts);
             shell = new PhoneShell(services, bundle);
@@ -154,6 +161,7 @@ public sealed class Plugin : IDalamudPlugin
             linkpearlPopouts.LookUpInPhone = OpenLinkpearlLookup;
             linkpearlPopouts.OpenMarketInPhone = OpenMarketItem;
             linkpearlPopouts.Restore();
+            Framework.Update += OnLinkpearlPresenceTick;
             services.Visibility.Bind(() => phoneWindow is { IsOpen: true, IsMinimized: false });
             phoneEmote = new PhoneEmoteController(Cfg, Framework, ObjectTable, Condition, DataManager,
                 () => services.Visibility.IsVisible);
@@ -179,6 +187,7 @@ public sealed class Plugin : IDalamudPlugin
             CommandManager.AddHandler(AepConstants.AliasCommand, aliasCommand);
             PluginInterface.UiBuilder.Draw += windowSystem.Draw;
             PluginInterface.UiBuilder.Draw += FilePicker.Draw;
+            PluginInterface.UiBuilder.Draw += linkpearlHotkey.Tick;
             PluginInterface.UiBuilder.OpenMainUi += phoneWindow.ToggleShell;
             PluginInterface.UiBuilder.OpenConfigUi += phoneWindow.OpenSettings;
             PluginInterface.UiBuilder.DisableGposeUiHide = Cfg.ShowInGpose;
@@ -208,6 +217,11 @@ public sealed class Plugin : IDalamudPlugin
     {
         PluginInterface.UiBuilder.Draw -= windowSystem.Draw;
         PluginInterface.UiBuilder.Draw -= FilePicker.Draw;
+        if (linkpearlHotkey is not null)
+        {
+            PluginInterface.UiBuilder.Draw -= linkpearlHotkey.Tick;
+        }
+
         if (phoneWindow is not null)
         {
             PluginInterface.UiBuilder.OpenMainUi -= phoneWindow.ToggleShell;
@@ -218,6 +232,7 @@ public sealed class Plugin : IDalamudPlugin
         Framework.Update -= OnAutoOpenTick;
         Framework.Update -= OnVideoFrameworkUpdate;
         Framework.Update -= OnDeviceLinkTick;
+        Framework.Update -= OnLinkpearlPresenceTick;
         ContextMenu.OnMenuOpened -= OnMenuOpened;
         CommandManager.RemoveHandler(AepConstants.PrimaryCommand);
         CommandManager.RemoveHandler(AepConstants.AliasCommand);
@@ -228,6 +243,7 @@ public sealed class Plugin : IDalamudPlugin
         }
 
         dtrEntry?.Remove();
+        linkpearlPresence?.Dispose();
         windowSystem.RemoveAllWindows();
         videoDebugWindow?.Dispose();
         streamSuggestions?.Dispose();
@@ -302,6 +318,9 @@ public sealed class Plugin : IDalamudPlugin
         watchAlong.OnFrameworkUpdate((float)framework.UpdateDelta.TotalSeconds);
     }
 
+    private void OnLinkpearlPresenceTick(IFramework framework) =>
+        linkpearlPresence.Tick((float)framework.UpdateDelta.TotalSeconds);
+
     private void OnDeviceLinkTick(IFramework framework)
     {
         services.DeviceLinks.Tick((float)framework.UpdateDelta.TotalSeconds);
@@ -346,16 +365,19 @@ public sealed class Plugin : IDalamudPlugin
     {
         PluginInterface.UiBuilder.Draw -= windowSystem.Draw;
         PluginInterface.UiBuilder.Draw -= FilePicker.Draw;
+        PluginInterface.UiBuilder.Draw -= linkpearlHotkey.Tick;
         PluginInterface.UiBuilder.OpenMainUi -= phoneWindow.ToggleShell;
         PluginInterface.UiBuilder.OpenConfigUi -= phoneWindow.OpenSettings;
         ClientState.Login -= OnLogin;
         Framework.Update -= OnAutoOpenTick;
         Framework.Update -= OnVideoFrameworkUpdate;
+        Framework.Update -= OnLinkpearlPresenceTick;
         services.Notifications.Changed -= UpdateDtrBadge;
         services.Calls.IncomingCallPresented -= OnIncomingCall;
         ContextMenu.OnMenuOpened -= OnMenuOpened;
         dtrEntry.Remove();
         phoneWindow.PersistPositions();
+        linkpearlPresence.Dispose();
         linkpearlPopouts.Dispose();
         windowSystem.RemoveAllWindows();
         videoDebugWindow.Dispose();
@@ -514,21 +536,52 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnMenuOpened(IMenuOpenedArgs args)
     {
-        if(!Cfg.MarketContextMenu)
+        AddMarketMenuItem(args);
+        AddLinkpearlMenuItem(args);
+    }
+
+    private void AddMarketMenuItem(IMenuOpenedArgs args)
+    {
+        if (!Cfg.MarketContextMenu)
         {
             return;
         }
-            else
+
+        var itemId = ResolveContextItem(args);
+        if (itemId == 0 || !services.MarketIndex.TryGet(itemId, out _))
         {
-            var itemId = ResolveContextItem(args);
-            if (itemId == 0 || !services.MarketIndex.TryGet(itemId, out _))
-            {
-                return;
-            }
-            
-            args.AddMenuItem(
-                new MenuItem { Name = Loc.T(L.Plugin.SearchTheMarket), OnClicked = _ => OpenMarketAt(itemId), });
+            return;
         }
+
+        args.AddMenuItem(
+            new MenuItem { Name = Loc.T(L.Plugin.SearchTheMarket), OnClicked = _ => OpenMarketAt(itemId), });
+    }
+
+    private void AddLinkpearlMenuItem(IMenuOpenedArgs args)
+    {
+        if (!Cfg.LinkpearlPlayerContextMenu || !linkpearlGate.Open)
+        {
+            return;
+        }
+
+        if (args.Target is not MenuTargetDefault target || target.TargetName.Length == 0 ||
+            target.TargetHomeWorld.RowId == 0)
+        {
+            return;
+        }
+
+        var name = target.TargetName;
+        var world = services.GameData.WorldName(target.TargetHomeWorld.RowId);
+        if (services.GameData.IsLocalPlayer(name, world))
+        {
+            return;
+        }
+
+        args.AddMenuItem(new MenuItem
+        {
+            Name = Loc.T(L.Linkpearl.ContextMenuEntry),
+            OnClicked = _ => linkpearlPopouts.OpenTell(name, world),
+        });
     }
 
     private static uint ResolveContextItem(IMenuOpenedArgs args)
