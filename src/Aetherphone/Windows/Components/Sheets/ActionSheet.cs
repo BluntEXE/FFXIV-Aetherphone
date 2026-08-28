@@ -47,11 +47,11 @@ internal sealed class ActionSheet
     private const float GlyphReserve = 30f;
     private const float CheckReserve = 26f;
     private const float HeaderPadY = 13f;
-    private const float HeaderInkAlpha = 0.65f;
+    private const float HeaderInkAlpha = 0.78f;
 
     private static readonly TextStyle RowStyle = new(1.07f, FontWeight.SemiBold);
     private static readonly TextStyle CancelStyle = new(1.07f, FontWeight.Bold);
-    private static readonly TextStyle HeaderStyle = new(0.82f, FontWeight.SemiBold);
+    private static readonly TextStyle HeaderStyle = new(1.02f, FontWeight.SemiBold);
     private static readonly Vector4 RowHover = new(1f, 1f, 1f, 0.06f);
 
     private Spring reveal;
