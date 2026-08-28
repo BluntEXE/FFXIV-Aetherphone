@@ -4784,7 +4784,7 @@
   "changelog.r1010.17": "Tetris bekommt neben Klassisch ein Regelwerk Modern mit SRS-Kicks, Lock Delay, T-Spins, Back-to-Back- und Combo-Wertung und eigener Bestleistung",
   "changelog.r1013.0": "Chirper komplett neu gestaltet: Tabs für Start, Entdecken, Hinweise und Profil, randlose Beitragszellen mit überall gleichem Aufbau, Threads mit einer Antwortlinie unter jedem Beitrag, eine neue Verfassen-Pille und Beitragsaktionen in einem Blatt von unten",
   "changelog.r1013.1": "Profilbilder neben jedem Beitrag, jeder Antwort und jedem Zitat in Chirper hinzugefügt, dazu auf Profilen ein Banner hinter einem gerahmten Profilbild, das sich beim Antippen in voller Größe öffnet",
-  "changelog.r1013.2": "Töne im ganzen Handy hinzugefügt: für Tippen, Texteingabe, App-Übergänge, Schalter, Aufwecken, Foto aufnehmen, Nachricht senden, Anruf verbinden und beenden sowie Auszahlungen, alle abschaltbar unter Einstellungen > Töne",
+  "changelog.r1013.2": "Töne im ganzen Handy hinzugefügt: für Tippen, Texteingabe, App-Übergänge, Schalter, Aufwecken, Foto aufnehmen, Nachricht senden, Anruf verbinden und beenden sowie Auszahlungen, auf einem neuen Handy standardmäßig an und auf einem bereits genutzten aus, umschaltbar unter Einstellungen > Töne",
   "changelog.r1013.3": "Soundeffekte für die Minispiele in Spiele hinzugefügt, mit eigener Lautstärke unter Spielsounds in Einstellungen > Töne",
   "changelog.r1013.4": "Einen Schalter für Lautlos auf der Hauptseite der Einstellungen hinzugefügt, damit Klingelton, Benachrichtigungen und Bedienungstöne mit einem Tippen stumm sind",
   "changelog.r1013.5": "Tastatursteuerung für Beat hinzugefügt: die vier Spuren liegen auf 1 bis 4, alternativ auf A, S, D und F, und die Taste steht auf einer Kappe unter ihrer Spur",

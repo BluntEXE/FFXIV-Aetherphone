@@ -144,7 +144,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool GameSounds { get; set; } = true;
     public bool ShowPerfHud { get; set; }
     public float GameSoundVolume { get; set; } = 0.7f;
-    public bool UiSoundChannelsDefaulted { get; set; }
+    public bool UiSoundDefaultsApplied { get; set; }
     public float MusicVolume { get; set; } = 0.6f;
     public int MusicRepeat { get; set; }
     public float VideoVolume { get; set; } = 0.6f;
@@ -644,18 +644,19 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
         Save();
     }
 
-    public void MigrateUiSoundChannels()
+    public void MigrateUiSoundDefaults(bool freshInstall)
     {
-        if (UiSoundChannelsDefaulted)
+        if (UiSoundDefaultsApplied)
         {
             return;
         }
 
+        UiSounds = freshInstall;
         UiSoundTaps = true;
         UiSoundTransitions = true;
         UiSoundToggles = true;
         UiSoundKeyboard = true;
-        UiSoundChannelsDefaulted = true;
+        UiSoundDefaultsApplied = true;
         Save();
     }
 

@@ -1637,7 +1637,7 @@ internal static class L
             new("changelog.r1013.1",
                 "Added profile pictures next to every post, reply and quote in Chirper, and a banner behind a framed avatar on profiles that opens full size when tapped"),
             new("changelog.r1013.2",
-                "Added sounds across the phone for taps, typing, app transitions, toggles, waking it, taking a photo, sending a message, connecting and ending a call and payouts, all of which can be turned off in Settings > Sounds"),
+                "Added sounds across the phone for taps, typing, app transitions, toggles, waking it, taking a photo, sending a message, connecting and ending a call and payouts, on by default on a new phone and off if you already had one, switchable in Settings > Sounds"),
             new("changelog.r1013.3",
                 "Added sound effects to the mini-games in Games, with their own volume under Game Sounds in Settings > Sounds"),
             new("changelog.r1013.4",

@@ -4784,7 +4784,7 @@
   "changelog.r1010.17": "Tetris gains a Modern ruleset beside Classic, with SRS kicks, lock delay, T-spins, back-to-back and combo scoring, and its own best score",
   "changelog.r1013.0": "Redesigned Chirper around a new look: Home, Explore, Alerts and Profile tabs, edge to edge post cells with the same layout everywhere, threads with a reply line under each post, a new compose pill, and post actions in a bottom sheet",
   "changelog.r1013.1": "Added profile pictures next to every post, reply and quote in Chirper, and a banner behind a framed avatar on profiles that opens full size when tapped",
-  "changelog.r1013.2": "Added sounds across the phone for taps, typing, app transitions, toggles, waking it, taking a photo, sending a message, connecting and ending a call and payouts, all of which can be turned off in Settings > Sounds",
+  "changelog.r1013.2": "Added sounds across the phone for taps, typing, app transitions, toggles, waking it, taking a photo, sending a message, connecting and ending a call and payouts, on by default on a new phone and off if you already had one, switchable in Settings > Sounds",
   "changelog.r1013.3": "Added sound effects to the mini-games in Games, with their own volume under Game Sounds in Settings > Sounds",
   "changelog.r1013.4": "Added a Silent Mode switch to the main Settings page, so muting the ringtone, notifications and interface sounds is one tap away",
   "changelog.r1013.5": "Added keyboard controls to Beat: the four lanes bind to 1 to 4 with A, S, D and F as alternates, and each key is printed on a cap under its lane",
