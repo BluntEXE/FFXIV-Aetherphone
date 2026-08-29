@@ -8,16 +8,16 @@ using GameObjectStruct = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 
 namespace Aetherphone.Core.Game;
 
-internal readonly record struct PlayerActionAvailability(bool FriendRequest, bool Blacklist, bool AdventurerPlate,
-    bool Target)
+internal readonly record struct PlayerActionAvailability(bool Invite, bool FriendRequest, bool Blacklist,
+    bool AdventurerPlate, bool Target)
 {
     public static readonly PlayerActionAvailability None = default;
 }
 
 internal static unsafe class PlayerActions
 {
-    private const string FriendRequestCommand = "/friendlist add ";
-    private const string BlacklistCommand = "/blacklist add ";
+    private const string FriendRequestCommand = "/friendlist add <t>";
+    private const string BlacklistCommand = "/blacklist add <t>";
 
     public static PlayerActionAvailability Resolve(string name, string world)
     {
@@ -33,17 +33,20 @@ internal static unsafe class PlayerActions
                 return PlayerActionAvailability.None;
             }
 
-            var worldId = WorldId(worldName);
+            MusterWorlds.TryResolve(worldName, out var worldId, out var dataCenterId);
             if (IsLocalPlayer(playerName, worldId))
             {
                 return PlayerActionAvailability.None;
             }
 
             var nearby = FindNearby(playerName, worldId);
+            var targetable = nearby is not null && nearby.IsTargetable && TargetSystem.Instance() != null;
+            var invite = InfoProxyPartyInvite.Instance() != null && (nearby is not null
+                ? worldId != 0 || nearby.HomeWorld.RowId != 0u
+                : PartyInvite.IsSameDataCenter(dataCenterId));
             var plate = AgentCharaCard.Instance() != null &&
                         (nearby is not null || FriendContentId(playerName, worldId) != 0ul);
-            var target = nearby is not null && nearby.IsTargetable && TargetSystem.Instance() != null;
-            return new PlayerActionAvailability(true, true, plate, target);
+            return new PlayerActionAvailability(invite, targetable, targetable, plate, targetable);
         }
         catch (Exception exception)
         {
@@ -52,14 +55,39 @@ internal static unsafe class PlayerActions
         }
     }
 
+    public static bool InviteToParty(string name, string world)
+    {
+        if (!PlayerTarget.TrySplit(name, world, out var playerName, out var worldName))
+        {
+            return false;
+        }
+
+        try
+        {
+            var worldId = WorldId(worldName);
+            if (worldId == 0)
+            {
+                var nearby = FindNearby(playerName, 0);
+                worldId = nearby is not null ? (ushort)nearby.HomeWorld.RowId : (ushort)0;
+            }
+
+            return PartyInvite.Invite(playerName, worldId);
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning(exception, "[PlayerActions] party invite failed");
+            return false;
+        }
+    }
+
     public static bool SendFriendRequest(string name, string world)
     {
-        return SendPlayerCommand(FriendRequestCommand, name, world, "[PlayerActions] friend request failed");
+        return SendTargetedCommand(FriendRequestCommand, name, world, "[PlayerActions] friend request failed");
     }
 
     public static bool AddToBlacklist(string name, string world)
     {
-        return SendPlayerCommand(BlacklistCommand, name, world, "[PlayerActions] blacklist failed");
+        return SendTargetedCommand(BlacklistCommand, name, world, "[PlayerActions] blacklist failed");
     }
 
     public static bool OpenAdventurerPlate(string name, string world)
@@ -132,16 +160,37 @@ internal static unsafe class PlayerActions
         }
     }
 
-    private static bool SendPlayerCommand(string command, string name, string world, string failureMessage)
+    private static bool SendTargetedCommand(string command, string name, string world, string failureMessage)
     {
-        if (!PlayerTarget.TryFormat(name, world, out var target))
+        if (!PlayerTarget.TrySplit(name, world, out var playerName, out var worldName))
         {
             return false;
         }
 
         try
         {
-            return ChatSender.TrySend(string.Concat(command, target));
+            var nearby = FindNearby(playerName, WorldId(worldName));
+            if (nearby is null || !nearby.IsTargetable)
+            {
+                return false;
+            }
+
+            var targetSystem = TargetSystem.Instance();
+            if (targetSystem == null)
+            {
+                return false;
+            }
+
+            var previous = targetSystem->Target;
+            targetSystem->Target = (GameObjectStruct*)nearby.Address;
+            var sent = ChatSender.TrySend(command);
+            targetSystem->Target = previous;
+            if (!sent)
+            {
+                AepLog.Warning(failureMessage);
+            }
+
+            return sent;
         }
         catch (Exception exception)
         {

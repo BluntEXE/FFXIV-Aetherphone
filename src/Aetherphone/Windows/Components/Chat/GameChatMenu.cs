@@ -145,7 +145,11 @@ internal sealed class GameChatMenu
 
     private void AddPlayerItems()
     {
-        Add(L.Linkpearl.InviteToParty, FontAwesomeIcon.UserPlus, ActionInviteParty);
+        if (playerActions.Invite)
+        {
+            Add(L.Linkpearl.InviteToParty, FontAwesomeIcon.UserPlus, ActionInviteParty);
+        }
+
         if (playerActions.FriendRequest)
         {
             Add(L.Linkpearl.SendFriendRequest, FontAwesomeIcon.UserFriends, ActionFriendRequest);
@@ -235,7 +239,7 @@ internal sealed class GameChatMenu
                 LookUp?.Invoke(name, world);
                 break;
             case ActionInviteParty:
-                GameLinkActions.InviteToParty(name, world);
+                PlayerActions.InviteToParty(name, world);
                 break;
             case ActionFriendRequest:
                 PlayerActions.SendFriendRequest(name, world);

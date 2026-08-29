@@ -2,6 +2,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
+using Aetherphone.Core.Game;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Maps;
 using Aetherphone.Core.Muster;
@@ -221,11 +222,11 @@ internal sealed partial class MusterApp
         else
         {
             var inviteCenter = new Vector2(rowRight - inviteRadius, centerY);
-            if (MusterPartyInvite.CanInvite(attendee.World))
+            if (PartyInvite.CanInvite(attendee.World))
             {
                 if (ui.IconButton(inviteCenter, inviteRadius, IconGlyph.Of(FontAwesomeIcon.UserPlus), ui.Accent,
                         AppPalettes.Muster.FieldSurface, 0.6f, Loc.T(L.Muster.InviteToParty))
-                    && MusterPartyInvite.Invite(attendee.CharacterName, attendee.World))
+                    && PartyInvite.Invite(attendee.CharacterName, attendee.World))
                 {
                     invitedUserId = attendee.UserId;
                     invitedTimer = CopiedSeconds;

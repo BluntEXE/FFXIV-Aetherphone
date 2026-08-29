@@ -1,4 +1,3 @@
-using Aetherphone.Core.Game;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
@@ -76,15 +75,5 @@ internal static unsafe class GameLinkActions
         {
             AepLog.Warning(exception, "[GameLinkActions] open map failed");
         }
-    }
-
-    public static bool InviteToParty(string name, string world)
-    {
-        if (!PlayerTarget.TryFormat(name, world, out var target))
-        {
-            return false;
-        }
-
-        return ChatSender.TrySend(string.Concat("/invite ", target));
     }
 }
