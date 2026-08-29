@@ -562,7 +562,7 @@ internal sealed class ChatTranscript
         var chipMin = new Vector2(origin.X + (available - chipWidth) * 0.5f, origin.Y + 4f * scale);
         var chipMax = chipMin + new Vector2(chipWidth, chipHeight);
         Squircle.Fill(drawList, chipMin, chipMax, chipHeight * 0.5f,
-            ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.08f)));
+            ImGui.GetColorU32(ChatInk.Wash(model.Theme, 0.08f)));
         Typography.DrawCentered(drawList, (chipMin + chipMax) * 0.5f, label, model.MutedInk, 0.72f, FontWeight.Medium);
         ImGui.SetCursorScreenPos(new Vector2(origin.X, chipMax.Y + 10f * scale));
     }
@@ -623,7 +623,7 @@ internal sealed class ChatTranscript
         var scaledMin = fx.Apply(bubbleMin);
         var scaledMax = fx.Apply(bubbleMax);
         var placeholder = (message.Flags & TranscriptFlags.Placeholder) != 0;
-        var fill = mine ? model.Accent : new Vector4(1f, 1f, 1f, 0.10f);
+        var fill = mine ? model.Accent : ChatInk.IncomingBubble(model.Theme);
         var ink = mine ? new Vector4(1f, 1f, 1f, 1f) : model.Theme.TextStrong;
         if (placeholder || deleted)
         {
@@ -774,7 +774,7 @@ internal sealed class ChatTranscript
         var fx = BubblePop.For(entrance, scale, new Vector2(mine ? bubbleMax.X : bubbleMin.X, bubbleMax.Y));
         var scaledMin = fx.Apply(bubbleMin);
         var scaledMax = fx.Apply(bubbleMax);
-        var fill = mine ? model.Accent : new Vector4(1f, 1f, 1f, 0.10f);
+        var fill = mine ? model.Accent : ChatInk.IncomingBubble(model.Theme);
         var ink = mine ? new Vector4(1f, 1f, 1f, 1f) : model.Theme.TextStrong;
         var mutedInk = mine ? new Vector4(1f, 1f, 1f, 0.78f) : Palette.WithAlpha(model.MutedInk, 0.95f);
         if (!card.Available)
@@ -806,7 +806,7 @@ internal sealed class ChatTranscript
             else if (texture is null)
             {
                 Squircle.Fill(drawList, thumbMin, thumbMax, rounding,
-                    ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.08f * fx.Alpha)));
+                    ImGui.GetColorU32(ChatInk.Wash(model.Theme, 0.08f * fx.Alpha)));
                 AppSkin.Icon((thumbMin + thumbMax) * 0.5f, IconGlyph.Of(FontAwesomeIcon.Image),
                     Palette.WithAlpha(model.MutedInk, fx.Alpha), 1.2f);
             }
@@ -930,7 +930,7 @@ internal sealed class ChatTranscript
         var fx = BubblePop.For(entrance, scale, new Vector2(mine ? bubbleMax.X : bubbleMin.X, bubbleMax.Y));
         var scaledMin = fx.Apply(bubbleMin);
         var scaledMax = fx.Apply(bubbleMax);
-        var fill = mine ? model.Accent : new Vector4(1f, 1f, 1f, 0.10f);
+        var fill = mine ? model.Accent : ChatInk.IncomingBubble(model.Theme);
         var ink = mine ? new Vector4(1f, 1f, 1f, 1f) : model.Theme.TextStrong;
         var mutedInk = mine ? new Vector4(1f, 1f, 1f, 0.78f) : Palette.WithAlpha(model.MutedInk, 0.95f);
         var accentInk = mine ? new Vector4(1f, 1f, 1f, 0.88f) : model.Accent;
@@ -1130,7 +1130,7 @@ internal sealed class ChatTranscript
         var fx = BubblePop.For(entrance, scale, new Vector2(mine ? bubbleMax.X : bubbleMin.X, bubbleMax.Y));
         var scaledMin = fx.Apply(bubbleMin);
         var scaledMax = fx.Apply(bubbleMax);
-        var fill = mine ? model.Accent : new Vector4(1f, 1f, 1f, 0.10f);
+        var fill = mine ? model.Accent : ChatInk.IncomingBubble(model.Theme);
         var ink = mine ? new Vector4(1f, 1f, 1f, 1f) : model.Theme.TextStrong;
         var mutedInk = mine ? new Vector4(1f, 1f, 1f, 0.78f) : Palette.WithAlpha(model.MutedInk, 0.95f);
         var accentInk = mine ? new Vector4(1f, 1f, 1f, 0.88f) : model.Accent;
@@ -1282,7 +1282,7 @@ internal sealed class ChatTranscript
         var fx = BubblePop.For(entrance, scale, new Vector2(mine ? bubbleMax.X : bubbleMin.X, bubbleMax.Y));
         var scaledMin = fx.Apply(bubbleMin);
         var scaledMax = fx.Apply(bubbleMax);
-        var fill = mine ? model.Accent : new Vector4(1f, 1f, 1f, 0.10f);
+        var fill = mine ? model.Accent : ChatInk.IncomingBubble(model.Theme);
         var ink = mine ? new Vector4(1f, 1f, 1f, 1f) : model.Theme.TextStrong;
         var mutedInk = mine ? new Vector4(1f, 1f, 1f, 0.78f) : Palette.WithAlpha(model.MutedInk, 0.95f);
         var accentInk = mine ? new Vector4(1f, 1f, 1f, 0.88f) : model.Accent;
@@ -1401,7 +1401,7 @@ internal sealed class ChatTranscript
             var chipMin = new Vector2(mine ? origin.X + available - chipWidth : origin.X, top);
             var chipMax = chipMin + new Vector2(chipWidth, chipHeight);
             Squircle.Fill(drawList, chipMin, chipMax, chipHeight * 0.5f,
-                ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.07f)));
+                ImGui.GetColorU32(ChatInk.Wash(model.Theme, 0.07f)));
             AppSkin.Icon(drawList, new Vector2(chipMin.X + 12f * scale + 5f * scale, chipMin.Y + chipHeight * 0.5f),
                 IconGlyph.Of(FontAwesomeIcon.EyeSlash), Palette.WithAlpha(model.MutedInk, 0.9f), 0.62f);
             Typography.Draw(drawList, new Vector2(chipMin.X + 12f * scale + 15f * scale,
@@ -1421,7 +1421,7 @@ internal sealed class ChatTranscript
             if (texture is null)
             {
                 Squircle.Fill(drawList, thumbMin, thumbMax, rounding,
-                    ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.08f)));
+                    ImGui.GetColorU32(ChatInk.Wash(model.Theme, 0.08f)));
                 AppSkin.Icon((thumbMin + thumbMax) * 0.5f, IconGlyph.Of(FontAwesomeIcon.Image), model.MutedInk,
                     1.1f);
             }
@@ -1555,7 +1555,7 @@ internal sealed class ChatTranscript
         var fx = BubblePop.For(entrance, scale, new Vector2(mine ? bubbleMax.X : bubbleMin.X, bubbleMax.Y));
         var scaledMin = fx.Apply(bubbleMin);
         var scaledMax = fx.Apply(bubbleMax);
-        var fill = mine ? model.Accent : new Vector4(1f, 1f, 1f, 0.10f);
+        var fill = mine ? model.Accent : ChatInk.IncomingBubble(model.Theme);
         var ink = mine ? new Vector4(1f, 1f, 1f, 1f) : model.Theme.TextStrong;
         Squircle.Fill(drawList, scaledMin, scaledMax, 14f * scale * fx.Pop,
             ImGui.GetColorU32(Palette.WithAlpha(fill, fill.W * fx.Alpha)));
@@ -1649,7 +1649,7 @@ internal sealed class ChatTranscript
         var bubbleHeight = imageHeight + padding * 2f + captionHeight + stampRowHeight + forwardBlock;
         var start = ImGui.GetCursorScreenPos();
         var offsetX = mine ? available - bubbleWidth : 0f;
-        var fill = mine ? model.Accent : new Vector4(1f, 1f, 1f, 0.10f);
+        var fill = mine ? model.Accent : ChatInk.IncomingBubble(model.Theme);
         var entrance = entrances.Progress(index);
         var bubbleMin = start + new Vector2(offsetX, 0f);
         var bubbleMax = bubbleMin + new Vector2(bubbleWidth, bubbleHeight);
@@ -1672,7 +1672,7 @@ internal sealed class ChatTranscript
         if (texture is null)
         {
             Squircle.Fill(drawList, imageMin, imageMax, rounding,
-                ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.08f * fx.Alpha)));
+                ImGui.GetColorU32(ChatInk.Wash(model.Theme, 0.08f * fx.Alpha)));
             AppSkin.Icon((imageMin + imageMax) * 0.5f, IconGlyph.Of(FontAwesomeIcon.Image),
                 Palette.WithAlpha(model.MutedInk, fx.Alpha), 1.2f);
         }
@@ -1747,7 +1747,7 @@ internal sealed class ChatTranscript
         var origin = ImGui.GetCursorScreenPos() + new Vector2(0f, (1f - eased) * 6f * scale);
         var bubbleMax = new Vector2(origin.X + bubbleWidth, origin.Y + bubbleHeight);
         Squircle.Fill(drawList, origin, bubbleMax, bubbleHeight * 0.5f,
-            ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.10f * eased)));
+            ImGui.GetColorU32(ChatInk.Wash(model.Theme, 0.10f * eased)));
         var baseY = (origin.Y + bubbleMax.Y) * 0.5f;
         var firstDotX = origin.X + paddingX + dotRadius;
         for (var dot = 0; dot < 3; dot++)
@@ -1788,7 +1788,7 @@ internal sealed class ChatTranscript
         var quoteMax = origin + new Vector2(width, quote.Height);
         var scaledMin = fx.Apply(quoteMin);
         var scaledMax = fx.Apply(quoteMax);
-        var fill = mine ? new Vector4(0f, 0f, 0f, 0.20f) : new Vector4(1f, 1f, 1f, 0.07f);
+        var fill = mine ? new Vector4(0f, 0f, 0f, 0.20f) : ChatInk.Wash(model.Theme, 0.07f);
         Squircle.Fill(drawList, scaledMin, scaledMax, 8f * scale * fx.Pop,
             ImGui.GetColorU32(Palette.WithAlpha(fill, fill.W * fx.Alpha)));
         var barColor = mine ? new Vector4(1f, 1f, 1f, 0.92f) : model.Accent;

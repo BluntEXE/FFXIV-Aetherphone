@@ -681,7 +681,7 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
         var chipMin = new Vector2(origin.X + (available - textSize.X - 20f * scale) * 0.5f, origin.Y + 4f * scale);
         var chipMax = chipMin + new Vector2(textSize.X + 20f * scale, textSize.Y + 8f * scale);
         Squircle.Fill(drawList, chipMin, chipMax, (chipMax.Y - chipMin.Y) * 0.5f,
-            ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.08f)));
+            ImGui.GetColorU32(ChatInk.Wash(theme, 0.08f)));
         Typography.DrawCentered(drawList, (chipMin + chipMax) * 0.5f, label, theme.TextMuted, TextStyles.Caption1);
         ImGui.SetCursorScreenPos(new Vector2(origin.X, chipMax.Y + 8f * scale));
     }
