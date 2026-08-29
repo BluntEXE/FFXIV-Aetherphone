@@ -93,6 +93,7 @@ internal sealed partial class MessageApp : IResumableApp, ISpotlightConversation
     private volatile bool removePending;
     private string? forwardOpenPending;
     private readonly ThreadView threadView;
+    private readonly Action refreshContacts;
 
     public MessageApp(DirectMessagesStore store, ContactBook contacts, CallHub calls, AethernetSession session,
         RemoteImageCache images, LodestoneService lodestone, DmLauncher launcher, PhotoLibrary library,
@@ -124,6 +125,7 @@ internal sealed partial class MessageApp : IResumableApp, ISpotlightConversation
         router = new ViewRouter<MessageRoute>(MessageRoute.Root);
         drawView = DrawView;
         back = () => router.Pop();
+        refreshContacts = () => contacts.Refresh(force: true);
         threadView = new ThreadView(this);
     }
 
@@ -187,6 +189,7 @@ internal sealed partial class MessageApp : IResumableApp, ISpotlightConversation
         }
 
         currentCall = calls.Snapshot();
+        contacts.Refresh();
         SyncCallRoute();
         ConsumeSharedPhoto();
         ProcessPending();

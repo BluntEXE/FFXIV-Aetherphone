@@ -16,7 +16,7 @@ internal enum AddContactOutcome
 
 internal sealed class ContactBook : IDisposable
 {
-    private const long RefreshIntervalMs = 30_000;
+    private const long RefreshIntervalMs = 15_000;
 
     private readonly ContactsClient client;
     private readonly AethernetSession session;
@@ -26,6 +26,7 @@ internal sealed class ContactBook : IDisposable
     private volatile string myNumber = string.Empty;
     private volatile NumberChangeStatusDto? numberChange;
     private volatile bool loading;
+    private volatile bool numberChangeLoaded;
     private long lastRefreshTicks;
     private string? lastAccountId;
 
@@ -48,6 +49,7 @@ internal sealed class ContactBook : IDisposable
         contacts = Array.Empty<ContactDto>();
         myNumber = string.Empty;
         numberChange = null;
+        numberChangeLoaded = false;
         lastRefreshTicks = 0;
     }
 
@@ -64,6 +66,12 @@ internal sealed class ContactBook : IDisposable
         }
 
         var now = Environment.TickCount64;
+        if (!force && now - lastRefreshTicks < RefreshIntervalMs)
+        {
+            return;
+        }
+
+        bool withNumberChange;
         lock (gate)
         {
             if (loading || (!force && now - lastRefreshTicks < RefreshIntervalMs))
@@ -73,6 +81,7 @@ internal sealed class ContactBook : IDisposable
 
             loading = true;
             lastRefreshTicks = now;
+            withNumberChange = force || !numberChangeLoaded;
         }
 
         var token = cancellation.Token;
@@ -87,10 +96,14 @@ internal sealed class ContactBook : IDisposable
                     myNumber = list.MyNumber;
                 }
 
-                var status = await client.NumberChangeStatusAsync(token).ConfigureAwait(false);
-                if (status is not null)
+                if (withNumberChange)
                 {
-                    numberChange = status.Request;
+                    var status = await client.NumberChangeStatusAsync(token).ConfigureAwait(false);
+                    if (status is not null)
+                    {
+                        numberChange = status.Request;
+                        numberChangeLoaded = true;
+                    }
                 }
             }
             catch (Exception exception)

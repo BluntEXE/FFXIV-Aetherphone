@@ -21,6 +21,8 @@ internal sealed partial class MessageApp
     private const int ReasonMaxLength = 500;
     private const float CopiedSeconds = 1.6f;
 
+    private readonly PullToRefresh contactsRefresh = new();
+
     private string numberDraft = string.Empty;
     private string aliasDraft = string.Empty;
     private string reasonDraft = string.Empty;
@@ -81,8 +83,10 @@ internal sealed partial class MessageApp
         SearchField.DrawSubmit(new Rect(area.Min, new Vector2(area.Max.X, area.Min.Y + searchHeight)),
             "##msgContactsFilter", Loc.T(L.Phone.FilterHint), ref filter, AppPalettes.Message);
         var listRect = new Rect(new Vector2(area.Min.X, area.Min.Y + searchHeight), area.Max);
-        using (AppSurface.BeginEdgeToEdge(listRect))
+        using (var surface = AppSurface.BeginEdgeToEdge(listRect))
         {
+            contactsRefresh.Draw(listRect, surface.Pull, surface.Dragging, contacts.Loading, ui.MutedInk,
+                refreshContacts);
             ImGui.Dummy(new Vector2(0f, 4f * scale));
             DrawMyNumberCard(scale);
             var favorites = new List<ContactDto>();
