@@ -95,7 +95,6 @@ internal sealed class LinkpearlPopoutWindow : Window
     private bool placePending;
     private bool collapsed;
     private bool suppressed;
-    private bool anchorsBottomEdge;
     private bool positionForced;
     private bool dragging;
     private Spring collapseSpring;
@@ -106,7 +105,6 @@ internal sealed class LinkpearlPopoutWindow : Window
     private Vector2 pendingSize;
     private Vector2 expandedSize;
     private Vector2 lastPosition;
-    private Rect anchorFrame;
     private Rect titleAnchor;
     private Rect frame;
 
@@ -306,12 +304,12 @@ internal sealed class LinkpearlPopoutWindow : Window
     private void StepCollapse(float zoom, float delta)
     {
         var target = collapsed ? 1f : 0f;
+        Position = null;
         if (collapseSpring.IsResting(target, TransitionTiming.RestPositionEpsilon,
                 TransitionTiming.RestVelocityEpsilon))
         {
             var settling = collapseSpring.Value != target;
             collapseSpring.SnapTo(target);
-            Position = null;
             if (collapsed)
             {
                 Size = new Vector2(expandedSize.X, TitleHeight * zoom);
@@ -331,12 +329,8 @@ internal sealed class LinkpearlPopoutWindow : Window
         }
 
         collapseSpring.Step(target, TransitionTiming.PushSmoothTime, delta);
-        var height = HeightFor(zoom);
-        Size = new Vector2(expandedSize.X, height);
+        Size = new Vector2(expandedSize.X, HeightFor(zoom));
         SizeCondition = ImGuiCond.Always;
-        Position = PopoutPlacement.AnchoredPosition(anchorFrame, anchorsBottomEdge, height * UiScale.Global);
-        PositionCondition = ImGuiCond.Always;
-        positionForced = true;
     }
 
     public bool SetCollapsed(bool value)
@@ -347,8 +341,6 @@ internal sealed class LinkpearlPopoutWindow : Window
         }
 
         collapsed = value;
-        anchorFrame = frame;
-        anchorsBottomEdge = PopoutPlacement.AnchorsBottomEdge(frame, ViewportRect());
         if (!value)
         {
             return true;
@@ -367,12 +359,6 @@ internal sealed class LinkpearlPopoutWindow : Window
         {
             owner.OnCollapseChanged();
         }
-    }
-
-    private static Rect ViewportRect()
-    {
-        var viewport = ImGui.GetMainViewport();
-        return new Rect(viewport.Pos, viewport.Pos + viewport.Size);
     }
 
     public void Rebind(string conversationKey)
