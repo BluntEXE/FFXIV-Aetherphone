@@ -539,7 +539,8 @@ internal sealed class ChatTranscript
         var max = min + size + new Vector2(10f * scale, 3f * scale);
         Squircle.Fill(drawList, min, max, (max.Y - min.Y) * 0.5f,
             ImGui.GetColorU32(Palette.WithAlpha(message.ChannelTint, 0.18f)));
-        Typography.DrawCentered(drawList, (min + max) * 0.5f, label, message.ChannelTint, TextStyles.Caption2);
+        var labelMin = new Vector2(min.X + (max.X - min.X - size.X) * 0.5f, min.Y + (max.Y - min.Y - size.Y) * 0.5f);
+        Typography.Draw(drawList, labelMin, label, message.ChannelTint, TextStyles.Caption2);
     }
 
     private void DrawSystemMessage(TranscriptMessage message, in ChatTranscriptModel model)
