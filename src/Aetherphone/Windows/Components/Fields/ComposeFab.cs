@@ -29,14 +29,14 @@ internal static class ComposeFab
     {
         var scale = UiScale.Current;
         var radius = radiusUnscaled * scale;
-        var margin = 18f * scale;
         var glowPad = gradientBottom is null ? 0f : GlowReach * scale;
-        var boxSize = radius * 2f + margin + glowPad;
-        var boxMin = new Vector2(area.Max.X - boxSize, area.Max.Y - boxSize);
-        ImGui.SetCursorScreenPos(boxMin);
+        var scrollbarInset = DragScrollHost.Enabled ? 0f : ImGui.GetStyle().ScrollbarSize;
+        var box = ComputeBoxRect(area, radiusUnscaled, scale, glowPad, scrollbarInset);
+        var boxSize = box.Width;
+        ImGui.SetCursorScreenPos(box.Min);
         using var overlay = ImRaii.Child(childId, new Vector2(boxSize, boxSize), false,
             ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
-        var center = new Vector2(area.Max.X - radius - margin, area.Max.Y - radius - margin);
+        var center = box.Center;
         var fabRect = new Rect(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
         if (anchorKey is not null)
         {
@@ -84,6 +84,16 @@ internal static class ComposeFab
         }
 
         return UiInteract.Click(fabRect.Min, fabRect.Max, hovered);
+    }
+
+    internal static Rect ComputeBoxRect(Rect area, float radiusUnscaled, float scale, float glowPad,
+        float scrollbarInset)
+    {
+        var radius = radiusUnscaled * scale;
+        var margin = 18f * scale;
+        var boxSize = radius * 2f + margin + glowPad;
+        var boxMin = new Vector2(area.Max.X - boxSize - scrollbarInset, area.Max.Y - boxSize);
+        return new Rect(boxMin, boxMin + new Vector2(boxSize, boxSize));
     }
 
     private static float HoverEase(string id, bool hovered)
