@@ -1995,6 +1995,7 @@
   "linkpearl.popoutTabsHint": "Bir pop-out'u başka birinin üzerine sürükleyerek tek pencerede birleştir.",
   "linkpearl.popoutOutgoingTells": "Gönderdiğin fısıltılarda da aç",
   "linkpearl.popoutCloseOnLogout": "Çıkış yaparken pop-out'ları kapat",
+  "linkpearl.popoutFlash": "Yeni mesajda cubugu yanip sondur",
   "linkpearl.popoutFade": "Kullanmadığın sürece soluklasın",
   "linkpearl.popoutIdleOpacity": "Boştayken opaklık",
   "linkpearl.windowTabs": "Bu penceredeki sekmeler",

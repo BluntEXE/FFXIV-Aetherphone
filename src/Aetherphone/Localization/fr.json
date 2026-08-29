@@ -1995,6 +1995,7 @@
   "linkpearl.popoutTabsHint": "Faites glisser un pop-out sur un autre pour les réunir dans une seule fenêtre.",
   "linkpearl.popoutOutgoingTells": "Ouvrir aussi pour les messages privés envoyés",
   "linkpearl.popoutCloseOnLogout": "Fermer les pop-outs à la déconnexion",
+  "linkpearl.popoutFlash": "Faire clignoter la barre a chaque nouveau message",
   "linkpearl.popoutFade": "Estomper tant que vous ne l'utilisez pas",
   "linkpearl.popoutIdleOpacity": "Opacité au repos",
   "linkpearl.windowTabs": "Onglets de cette fenêtre",

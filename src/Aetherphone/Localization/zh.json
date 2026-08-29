@@ -1995,6 +1995,7 @@
   "linkpearl.popoutTabsHint": "将一个弹出窗口拖到另一个上，即可合并为一个窗口。",
   "linkpearl.popoutOutgoingTells": "发送密语时也弹出窗口",
   "linkpearl.popoutCloseOnLogout": "登出时关闭弹出窗口",
+  "linkpearl.popoutFlash": "有新消息时闪烁标题栏",
   "linkpearl.popoutFade": "闲置时淡出",
   "linkpearl.popoutIdleOpacity": "闲置时不透明度",
   "linkpearl.windowTabs": "此窗口的标签页",

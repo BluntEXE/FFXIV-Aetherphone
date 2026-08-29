@@ -3551,6 +3551,7 @@ internal static class L
         public static readonly LocString PopoutTabsHint = new("linkpearl.popoutTabsHint", "Drag a pop-out onto another to merge them into one window.");
         public static readonly LocString PopoutOutgoingTells = new("linkpearl.popoutOutgoingTells", "Pop up tells you send too");
         public static readonly LocString PopoutCloseOnLogout = new("linkpearl.popoutCloseOnLogout", "Close pop-outs when you log out");
+        public static readonly LocString PopoutFlash = new("linkpearl.popoutFlash", "Flash the bar on a new message");
         public static readonly LocString PopoutFade = new("linkpearl.popoutFade", "Fade while you are away from it");
         public static readonly LocString PopoutIdleOpacity = new("linkpearl.popoutIdleOpacity", "Idle opacity");
         public static readonly LocString WindowTabs = new("linkpearl.windowTabs", "Tabs in this window");

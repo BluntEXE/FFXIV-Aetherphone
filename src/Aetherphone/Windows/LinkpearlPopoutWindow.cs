@@ -42,6 +42,7 @@ internal sealed class LinkpearlPopoutWindow : Window
     private const float ViewportMargin = 24f;
     private const float GripArm = 9f;
     private const float MinBodyHeight = 96f;
+    private const float FlashStrength = 0.72f;
     private const float TabRailInset = 8f;
     private const float TabRailGap = 4f;
     private const float DragThreshold = 2f;
@@ -58,6 +59,7 @@ internal sealed class LinkpearlPopoutWindow : Window
 
     private static readonly Vector4 White = new(1f, 1f, 1f, 1f);
     private static readonly Vector4 GripInk = new(1f, 1f, 1f, 0.22f);
+    private static readonly Vector4 FlashInk = new(1f, 0.839f, 0.039f, 1f);
 
     private readonly LinkpearlPopouts owner;
     private readonly int slot;
@@ -548,9 +550,10 @@ internal sealed class LinkpearlPopoutWindow : Window
 
             using (InputShield.Engage(confirming))
             {
-                DrawSurface(theme, scale, lively, barHeight + (bodyOpen ? railHeight : 0f));
+                var flashing = configuration.LinkpearlPopoutFlash && TitleUnread(row) > 0;
+                DrawSurface(theme, scale, lively, barHeight + (bodyOpen ? railHeight : 0f), flashing);
                 var titleBar = new Rect(frame.Min, new Vector2(frame.Max.X, frame.Min.Y + barHeight));
-                DrawTitleBar(titleBar, row, theme, scale, delta);
+                DrawTitleBar(titleBar, row, theme, scale, delta, flashing);
                 if (bodyOpen)
                 {
                     var bodyTop = DrawTabRail(titleBar.Max.Y, theme, scale);
@@ -764,7 +767,7 @@ internal sealed class LinkpearlPopoutWindow : Window
         thread.Open(GameChatTargets.For(row));
     }
 
-    private void DrawSurface(PhoneTheme theme, float scale, bool lively, float stripHeight)
+    private void DrawSurface(PhoneTheme theme, float scale, bool lively, float stripHeight, bool flashing)
     {
         var drawList = ImGui.GetWindowDrawList();
         var rounding = Rounding * scale;
@@ -773,7 +776,10 @@ internal sealed class LinkpearlPopoutWindow : Window
         var surface = ImGui.GetColorU32(Palette.WithAlpha(theme.AppBackground, opacity));
         Squircle.FillVerticalGradient(drawList, frame.Min, frame.Max, rounding, surface, surface);
         var titleBottom = MathF.Min(frame.Min.Y + stripHeight, frame.Max.Y);
-        var strip = ImGui.GetColorU32(Palette.WithAlpha(theme.GroupedCard, opacity));
+        var stripInk = flashing
+            ? Vector4.Lerp(theme.GroupedCard, FlashInk, Pulse.Wave() * FlashStrength)
+            : theme.GroupedCard;
+        var strip = ImGui.GetColorU32(Palette.WithAlpha(stripInk, opacity));
         drawList.PushClipRect(frame.Min, new Vector2(frame.Max.X, titleBottom), true);
         Squircle.FillVerticalGradient(drawList, frame.Min, frame.Max, rounding, strip, strip);
         drawList.PopClipRect();
@@ -787,7 +793,7 @@ internal sealed class LinkpearlPopoutWindow : Window
         Material.EdgeSquircle(drawList, frame.Min, frame.Max, rounding, scale, lively ? 1f : 0.6f);
     }
 
-    private void DrawTitleBar(Rect bar, InboxRow? row, PhoneTheme theme, float scale, float delta)
+    private void DrawTitleBar(Rect bar, InboxRow? row, PhoneTheme theme, float scale, float delta, bool flashing)
     {
         var drawList = ImGui.GetWindowDrawList();
         var centerY = bar.Center.Y;
@@ -831,7 +837,7 @@ internal sealed class LinkpearlPopoutWindow : Window
         var textLeft = avatarCenter.X + avatarRadius + Metrics.Space.Sm * scale;
         var textLimit = collapseCenter.X - radius - Metrics.Space.Sm * scale;
         var title = row?.Title ?? FallbackTitleFor(Key);
-        var unread = TitleUnread(row);
+        var unread = flashing ? 0 : TitleUnread(row);
         var badgeWidth = 0f;
         if (unread > 0)
         {

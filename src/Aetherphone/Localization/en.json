@@ -1995,6 +1995,7 @@
   "linkpearl.popoutTabsHint": "Drag a pop-out onto another to merge them into one window.",
   "linkpearl.popoutOutgoingTells": "Pop up tells you send too",
   "linkpearl.popoutCloseOnLogout": "Close pop-outs when you log out",
+  "linkpearl.popoutFlash": "Flash the bar on a new message",
   "linkpearl.popoutFade": "Fade while you are away from it",
   "linkpearl.popoutIdleOpacity": "Idle opacity",
   "linkpearl.windowTabs": "Tabs in this window",

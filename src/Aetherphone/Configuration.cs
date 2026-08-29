@@ -304,6 +304,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public float LinkpearlPopoutIdleOpacity { get; set; } = 0.62f;
     public bool LinkpearlPopoutOutgoingTells { get; set; } = true;
     public bool LinkpearlPopoutCloseOnLogout { get; set; }
+    public bool LinkpearlPopoutFlash { get; set; } = true;
     public bool LinkpearlPopoutHideInCombat { get; set; } = true;
     public bool LinkpearlPopoutHideInDuty { get; set; }
     public bool LinkpearlPopoutFieldOperationsExempt { get; set; } = true;

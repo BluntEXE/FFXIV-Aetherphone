@@ -129,7 +129,7 @@ internal sealed partial class LinkpearlApp
     private void DrawPopoutSettings(float scale)
     {
         SettingsSection.Header(Loc.T(L.Linkpearl.PopoutSection), frameTheme);
-        var behaviour = GroupCard.Begin(frameTheme, 4);
+        var behaviour = GroupCard.Begin(frameTheme, 5);
         var grouped = SettingsRow.Bool(behaviour.NextRow(), Loc.T(L.Linkpearl.PopoutTabs),
             configuration.LinkpearlPopoutTabs, frameTheme, "linkpearl.settings.popoutTabs");
         if (grouped != configuration.LinkpearlPopoutTabs)
@@ -160,6 +160,14 @@ internal sealed partial class LinkpearlApp
         if (closeOnLogout != configuration.LinkpearlPopoutCloseOnLogout)
         {
             configuration.LinkpearlPopoutCloseOnLogout = closeOnLogout;
+            configuration.Save();
+        }
+
+        var flash = SettingsRow.Bool(behaviour.NextRow(), Loc.T(L.Linkpearl.PopoutFlash),
+            configuration.LinkpearlPopoutFlash, frameTheme, "linkpearl.settings.popoutFlash");
+        if (flash != configuration.LinkpearlPopoutFlash)
+        {
+            configuration.LinkpearlPopoutFlash = flash;
             configuration.Save();
         }
 

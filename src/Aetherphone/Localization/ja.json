@@ -1995,6 +1995,7 @@
   "linkpearl.popoutTabsHint": "ポップアウトを別のポップアウトにドラッグすると、1つのウィンドウにまとまります。",
   "linkpearl.popoutOutgoingTells": "自分が送ったテルでも開く",
   "linkpearl.popoutCloseOnLogout": "ログアウト時にポップアウトを閉じる",
+  "linkpearl.popoutFlash": "新着メッセージでバーを点滅",
   "linkpearl.popoutFade": "使っていない間は薄く表示",
   "linkpearl.popoutIdleOpacity": "待機中の不透明度",
   "linkpearl.windowTabs": "このウィンドウのタブ",

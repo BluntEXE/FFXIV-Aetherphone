@@ -1995,6 +1995,7 @@
   "linkpearl.popoutTabsHint": "Arrastra un pop-out sobre otro para unirlos en una sola ventana.",
   "linkpearl.popoutOutgoingTells": "Abrir también al enviar un susurro",
   "linkpearl.popoutCloseOnLogout": "Cerrar los pop-outs al cerrar sesión",
+  "linkpearl.popoutFlash": "Parpadear la barra al llegar un mensaje",
   "linkpearl.popoutFade": "Atenuar mientras no lo usas",
   "linkpearl.popoutIdleOpacity": "Opacidad en reposo",
   "linkpearl.windowTabs": "Pestañas de esta ventana",

@@ -1995,6 +1995,7 @@
   "linkpearl.popoutTabsHint": "Перетащите одно отдельное окно на другое, чтобы объединить их.",
   "linkpearl.popoutOutgoingTells": "Открывать и для отправленных сообщений",
   "linkpearl.popoutCloseOnLogout": "Закрывать отдельные окна при выходе",
+  "linkpearl.popoutFlash": "Мигать полосой при новом сообщении",
   "linkpearl.popoutFade": "Затемнять, пока окно не используется",
   "linkpearl.popoutIdleOpacity": "Непрозрачность в покое",
   "linkpearl.windowTabs": "Вкладки этого окна",
