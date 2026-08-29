@@ -25,6 +25,12 @@ internal sealed class SlotsCabinet
     private const float AnticipationRowsPerSecond = 5.5f;
     private const float LineTraceCycleSeconds = 0.7f;
     private const long SmallCelebrationMultiple = 4;
+    private const string BonusBannerMarqueeId = "casino.slots.banner.bonus";
+    private const string BonusSubMarqueeId = "casino.slots.banner.bonusSub";
+    private const string JackpotTitleMarqueeId = "casino.slots.banner.jackpot";
+    private const string JackpotAmountMarqueeId = "casino.slots.banner.jackpotAmount";
+    private const string BigWinMarqueeId = "casino.slots.banner.bigWin";
+    private const string CapNoteMarqueeId = "casino.slots.banner.capNote";
 
     private static readonly int[] AutoRounds = { 10, 25, 50, 100 };
 
@@ -564,10 +570,10 @@ internal sealed class SlotsCabinet
         if (playback.Phase == SlotsPlaybackPhase.BonusIntro)
         {
             var banner = Loc.T(L.Casino.SlotsFreeSpinsBanner, GameNumber.Label(playback.BonusAwarded));
-            Typography.DrawCentered(drawList, center with { Y = center.Y - 10f * scale }, banner, Gold,
-                TextStyles.Title2);
-            Typography.DrawCentered(drawList, center with { Y = center.Y + 16f * scale },
-                Loc.T(L.Casino.SlotsBonusSub), ui.MutedInk, TextStyles.Footnote);
+            DrawBannerLine(drawList, BonusBannerMarqueeId, banner, center.X, center.Y - 10f * scale, width,
+                TextStyles.Title2, Gold);
+            DrawBannerLine(drawList, BonusSubMarqueeId, Loc.T(L.Casino.SlotsBonusSub), center.X,
+                center.Y + 16f * scale, width, TextStyles.Footnote, ui.MutedInk);
             DrawSkip(drawList, ui, left, y, width, scale);
             return y + height;
         }
@@ -575,11 +581,11 @@ internal sealed class SlotsCabinet
         if (playback.JackpotLanded && ShowingJackpotBanner)
         {
             var pulse = 0.78f + 0.22f * Pulse.Wave(Pulse.Fast);
-            Typography.DrawCentered(drawList, center with { Y = center.Y - 16f * scale },
-                Loc.T(L.Casino.JackpotWon), Palette.WithAlpha(Gold, pulse), TextStyles.Title1);
+            DrawBannerLine(drawList, JackpotTitleMarqueeId, Loc.T(L.Casino.JackpotWon), center.X,
+                center.Y - 16f * scale, width, TextStyles.Title1, Palette.WithAlpha(Gold, pulse));
             var coins = NumberText.Group(CasinoChipLots.CoinsFor(playback.Jackpot));
-            Typography.DrawCentered(drawList, center with { Y = center.Y + 16f * scale },
-                Loc.T(L.Casino.JackpotWonAmount, coins), Gold, TextStyles.SubheadlineEmphasized);
+            DrawBannerLine(drawList, JackpotAmountMarqueeId, Loc.T(L.Casino.JackpotWonAmount, coins), center.X,
+                center.Y + 16f * scale, width, TextStyles.SubheadlineEmphasized, Gold);
             DrawSkip(drawList, ui, left, y, width, scale);
             return y + height;
         }
@@ -590,8 +596,8 @@ internal sealed class SlotsCabinet
             var bigWin = playback.CommittedWin >= playback.Stake * SlotsRoundPlayback.BigWinMultiple;
             if (bigWin)
             {
-                Typography.DrawCentered(drawList, center with { Y = center.Y - 20f * scale },
-                    Loc.T(L.Casino.SlotsBigWin), Gold, TextStyles.FootnoteEmphasized);
+                DrawBannerLine(drawList, BigWinMarqueeId, Loc.T(L.Casino.SlotsBigWin), center.X,
+                    center.Y - 20f * scale, width, TextStyles.FootnoteEmphasized, Gold);
             }
 
             var amount = "+" + NumberText.Group((long)winRoll.Display);
@@ -599,14 +605,21 @@ internal sealed class SlotsCabinet
                 Gold, TextStyles.Title1.Scale * winRoll.PopScale, TextStyles.Title1.Weight);
             if (playback.CapApplied && playback.Phase == SlotsPlaybackPhase.Finished)
             {
-                Typography.DrawCentered(drawList, center with { Y = center.Y + 24f * scale },
-                    Loc.T(L.Casino.SlotsCapNote, SlotsRules.PayoutCapMultiple.ToString(Loc.Culture)), ui.MutedInk,
-                    TextStyles.Caption1);
+                DrawBannerLine(drawList, CapNoteMarqueeId,
+                    Loc.T(L.Casino.SlotsCapNote, SlotsRules.PayoutCapMultiple.ToString(Loc.Culture)), center.X,
+                    center.Y + 24f * scale, width, TextStyles.Caption1, ui.MutedInk);
             }
         }
 
         DrawSkip(drawList, ui, left, y, width, scale);
         return y + height;
+    }
+
+    private static void DrawBannerLine(ImDrawListPtr drawList, MarqueeId id, string text, float centerX,
+        float centerY, float maxWidth, in TextStyle style, Vector4 color)
+    {
+        var top = centerY - Typography.Measure(text, style).Y * 0.5f;
+        Marquee.DrawCenteredAuto(drawList, id, text, centerX, top, maxWidth, style, color);
     }
 
     private void DrawSkip(ImDrawListPtr drawList, AppSkin ui, float left, float y, float width, float scale)

@@ -22,6 +22,7 @@ internal sealed class JackpotRail
     private const double ChaseMilliseconds = 2200.0;
     private const float MeterHeight = 4f;
     private const float MeterSmoothSeconds = 0.5f;
+    private const string HintMarqueeId = "casino.jackpot.hint";
 
     private static readonly Vector4 Ink = new(1f, 1f, 1f, 1f);
     private static readonly Vector4 Bed = new(0.180f, 0.075f, 0.020f, 1f);
@@ -74,8 +75,12 @@ internal sealed class JackpotRail
         potRoll.Update((int)coins, delta);
         var amountText = NumberText.Group(potRoll.Display);
         var available = width - inset * 2f;
+        var unit = Loc.T(L.Casino.JackpotUnit);
+        var unitSize = Typography.Measure(unit, TextStyles.Subheadline);
+        var unitGap = 8f * scale;
         var tallestHeight = Typography.Measure(amountText, AmountMaxScale, FontWeight.Bold).Y;
-        var restScale = Typography.FitScale(amountText, available - CurrencyGlyph.Reserve(tallestHeight),
+        var restScale = Typography.FitScale(amountText,
+            available - CurrencyGlyph.Reserve(tallestHeight) - unitGap - unitSize.X,
             AmountMaxScale, AmountMinScale, FontWeight.Bold);
         var restHeight = Typography.Measure(amountText, restScale, FontWeight.Bold).Y;
         var glyphSize = restHeight * CurrencyGlyph.GlyphFraction;
@@ -88,15 +93,12 @@ internal sealed class JackpotRail
         Typography.Draw(drawList, new Vector2(left + reserve, amountBottom - poppedSize.Y), amountText, Gold,
             poppedScale, FontWeight.Bold);
 
-        var unit = Loc.T(L.Casino.JackpotUnit);
-        var unitSize = Typography.Measure(unit, TextStyles.Subheadline);
         Typography.Draw(drawList,
-            new Vector2(left + reserve + poppedSize.X + 8f * scale, amountBottom - unitSize.Y), unit,
+            new Vector2(left + reserve + poppedSize.X + unitGap, amountBottom - unitSize.Y), unit,
             Palette.WithAlpha(Gold, 0.75f), TextStyles.Subheadline);
 
-        var hint = Typography.FitText(Loc.T(L.Casino.JackpotHint), available, TextStyles.Footnote);
-        Typography.Draw(drawList, new Vector2(left, amountBottom + 6f * scale), hint,
-            Palette.WithAlpha(Ink, 0.72f), TextStyles.Footnote);
+        Marquee.DrawLeft(drawList, HintMarqueeId, Loc.T(L.Casino.JackpotHint), left, amountBottom + 6f * scale,
+            available, TextStyles.Footnote, Palette.WithAlpha(Ink, 0.72f), hovered);
 
         DrawMeter(drawList, min, max, coins, delta, scale);
         Material.EdgeSquircle(drawList, min, max, rounding, scale);
