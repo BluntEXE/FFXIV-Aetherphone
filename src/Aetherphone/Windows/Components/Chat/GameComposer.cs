@@ -65,6 +65,7 @@ internal sealed class GameComposer
     private int capacityBytes;
     private long lastEnterMilliseconds;
     private bool wrappedMultiline;
+    private bool pendingSync;
     private bool enterPressed;
     private bool focus;
 
@@ -256,6 +257,7 @@ internal sealed class GameComposer
         wrappedWidth = 0f;
         display = text;
         lineCount = 1;
+        pendingSync = true;
     }
 
     private void DrawSingleLine(Vector2 fieldMin, Vector2 fieldMax, float innerWidth, PhoneTheme theme, float scale)
@@ -302,7 +304,13 @@ internal sealed class GameComposer
         {
             ImGui.InputTextMultiline("##linkpearl.composer", ref display, bufferBytes,
                 new Vector2(innerWidth, boxHeight),
-                ImGuiInputTextFlags.CallbackEdit | ImGuiInputTextFlags.CallbackCharFilter, multilineCallback);
+                ImGuiInputTextFlags.CallbackEdit | ImGuiInputTextFlags.CallbackCharFilter |
+                ImGuiInputTextFlags.CallbackAlways, multilineCallback);
+        }
+
+        if (!ImGui.IsItemActive())
+        {
+            pendingSync = false;
         }
 
         if (draft.Length > 0)
@@ -324,8 +332,32 @@ internal sealed class GameComposer
             return FilterCharacter(data);
         }
 
+        if (data.EventFlag == ImGuiInputTextFlags.CallbackAlways)
+        {
+            if (pendingSync)
+            {
+                pendingSync = false;
+                SyncBuffer(data);
+            }
+
+            return 0;
+        }
+
         ApplyWrap(data);
         return 0;
+    }
+
+    private void SyncBuffer(ImGuiInputTextCallbackDataPtr data)
+    {
+        data.DeleteChars(0, data.BufTextLen);
+        if (display.Length > 0)
+        {
+            data.InsertChars(0, display);
+        }
+
+        data.CursorPos = data.BufTextLen;
+        data.SelectionStart = data.CursorPos;
+        data.SelectionEnd = data.CursorPos;
     }
 
     private int FilterCharacter(ImGuiInputTextCallbackDataPtr data)
