@@ -181,6 +181,7 @@ internal sealed class PhoneServices : IDisposable
     public required Hunts.HuntZoneCatalog HuntZoneCatalog { get; init; }
     public required Hunts.HuntMobRewardCatalog HuntMobRewardCatalog { get; init; }
     public required Hunts.HuntsLauncher HuntsLauncher { get; init; }
+    public required Shell.MinimizedLayoutService MinimizedLayout { get; init; }
 
     public static PhoneServices Build(Configuration configuration, IChatGui chatGui, IDataManager dataManager,
         IObjectTable objectTable, IClientState clientState, IFramework framework, IDutyState dutyState,
@@ -364,6 +365,7 @@ internal sealed class PhoneServices : IDisposable
         {
             Installer = installer,
             Configuration = configuration,
+            MinimizedLayout = new Shell.MinimizedLayoutService(configuration),
             Themes = themes,
             GameData = gameData,
             CharacterWatch = characterWatch,

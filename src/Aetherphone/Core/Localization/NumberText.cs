@@ -31,4 +31,21 @@ internal static class NumberText
         GroupCache[value] = text;
         return text;
     }
+
+    public static string Compact(long value)
+    {
+        if (value >= 1_000_000)
+        {
+            var millions = value / 1_000_000f;
+            return millions.ToString(millions >= 10f ? "0" : "0.#", Loc.Culture) + "M";
+        }
+
+        if (value >= 1_000)
+        {
+            var thousands = value / 1_000f;
+            return thousands.ToString(thousands >= 10f ? "0" : "0.#", Loc.Culture) + "K";
+        }
+
+        return value.ToString(Loc.Culture);
+    }
 }

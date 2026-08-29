@@ -72,7 +72,7 @@ internal sealed class SettingsApp : IResumableApp, ISettingsNavigator, ISpotligh
             services.AccountState, aethernet.Media, gameData, remoteImages, lodestone, this, namePage, profilePage,
             encryptionPage, coinPage, photoLibrary, confirm, wallpaperImages);
         var appearance = new AppearancePage(configuration, themes, this, photoLibrary, confirm, wallpapers,
-            wallpaperImages);
+            wallpaperImages, services.MinimizedLayout);
         var language = new LanguagePage(configuration, services.Translation);
         var general = new GeneralPage(configuration, services.Translation, confirm);
         var tutorials = new TutorialsPage(configuration);

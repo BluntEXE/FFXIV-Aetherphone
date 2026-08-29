@@ -4952,6 +4952,26 @@ internal static class L
         public static readonly LocString OnlineEightScratchLoss = new("games.onlineEightScratchLoss", "{0} wins, the eight fell on a foul");
     }
 
+    internal static class Minimized
+    {
+        public static readonly LocString Title = new("minimized.title", "Minimized phone");
+        public static readonly LocString Hint = new("minimized.hint", "Pick what the small phone shows and the order it stacks in. Now playing, calls and alerts only take up room while something is happening.");
+        public static readonly LocString Reset = new("minimized.reset", "Reset to default");
+        public static readonly LocString Clock = new("minimized.clock", "Clock");
+        public static readonly LocString Date = new("minimized.date", "Date");
+        public static readonly LocString NowPlaying = new("minimized.nowPlaying", "Now playing");
+        public static readonly LocString Calls = new("minimized.calls", "Calls");
+        public static readonly LocString Alerts = new("minimized.alerts", "Notification cards");
+        public static readonly LocString Badge = new("minimized.badge", "Unread badge");
+        public static readonly LocString EorzeaClock = new("minimized.eorzeaClock", "Eorzea time");
+        public static readonly LocString Weather = new("minimized.weather", "Weather");
+        public static readonly LocString Resets = new("minimized.resets", "Next reset");
+        public static readonly LocString Gil = new("minimized.gil", "Gil");
+        public static readonly LocString Coin = new("minimized.coin", "Aether Coin");
+        public static readonly LocString Ventures = new("minimized.ventures", "Ventures");
+        public static readonly LocString Rings = new("minimized.rings", "Activity rings");
+    }
+
     internal static class Time
     {
         public static readonly LocString Now = new("time.now", "now");

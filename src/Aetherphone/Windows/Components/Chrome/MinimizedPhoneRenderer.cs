@@ -62,14 +62,31 @@ internal static class MinimizedPhoneRenderer
     private static readonly Vector4 White = new(1f, 1f, 1f, 1f);
     private static readonly Vector4 Black = new(0f, 0f, 0f, 1f);
 
-    public static float DrawClockBlock(ImDrawListPtr dl, Rect screen, float top, string time, string meridiem,
-        string date, float clockScale, Vector2 clockSize, Vector2 dateSize, PhoneTheme theme, float alpha,
-        float dnd, float scale)
+    public static float InlineMeridiemWidth(string meridiem, float scale) =>
+        Typography.Measure(meridiem, Text(MeridiemScale), FontWeight.Medium).X + MeridiemGap * scale;
+
+    public static void DrawTime(ImDrawListPtr dl, Rect screen, float top, string time, string inlineMeridiem,
+        float clockScale, Vector2 clockSize, PhoneTheme theme, float alpha, float scale)
     {
         var centerX = screen.Center.X;
-        Typography.Draw(dl, new Vector2(centerX - clockSize.X * 0.5f, top), time,
-            Palette.WithAlpha(theme.TextStrong, alpha), clockScale, FontWeight.Bold);
-        var dateTop = top + clockSize.Y + 2f * scale;
+        var meridiemWidth = inlineMeridiem.Length > 0 ? InlineMeridiemWidth(inlineMeridiem, scale) : 0f;
+        var left = centerX - (clockSize.X + meridiemWidth) * 0.5f;
+        Typography.Draw(dl, new Vector2(left, top), time, Palette.WithAlpha(theme.TextStrong, alpha), clockScale,
+            FontWeight.Bold);
+        if (inlineMeridiem.Length == 0)
+        {
+            return;
+        }
+
+        var meridiemSize = Typography.Measure(inlineMeridiem, Text(MeridiemScale), FontWeight.Medium);
+        Typography.Draw(dl, new Vector2(left + clockSize.X + MeridiemGap * scale, top + meridiemSize.Y * 0.35f),
+            inlineMeridiem, Palette.WithAlpha(theme.Accent, alpha), Text(MeridiemScale), FontWeight.Medium);
+    }
+
+    public static void DrawDateRow(ImDrawListPtr dl, Rect screen, float top, string meridiem, string date,
+        Vector2 dateSize, PhoneTheme theme, float alpha, float dnd, float scale)
+    {
+        var centerX = screen.Center.X;
         var meridiemSize = Vector2.Zero;
         var meridiemWidth = 0f;
         if (meridiem.Length > 0)
@@ -82,23 +99,21 @@ internal static class MinimizedPhoneRenderer
         var x = centerX - (meridiemWidth + dateSize.X + moonWidth) * 0.5f;
         if (meridiem.Length > 0)
         {
-            Typography.Draw(dl, new Vector2(x, dateTop + (dateSize.Y - meridiemSize.Y) * 0.5f), meridiem,
+            Typography.Draw(dl, new Vector2(x, top + (dateSize.Y - meridiemSize.Y) * 0.5f), meridiem,
                 Palette.WithAlpha(theme.Accent, alpha), Text(MeridiemScale), FontWeight.Medium);
             x += meridiemWidth;
         }
 
-        Typography.Draw(dl, new Vector2(x, dateTop), date, Palette.WithAlpha(theme.TextMuted, alpha),
-            Text(0.72f), FontWeight.Regular);
+        Typography.Draw(dl, new Vector2(x, top), date, Palette.WithAlpha(theme.TextMuted, alpha), Text(0.72f),
+            FontWeight.Regular);
         x += dateSize.X;
         if (dnd > 0.01f)
         {
             var moonCenter = new Vector2(x + MoonGap * scale * dnd + MoonHeight * scale * 0.5f,
-                dateTop + dateSize.Y * 0.5f);
+                top + dateSize.Y * 0.5f);
             ProgressRing.CenterIcon(dl, moonCenter, FontAwesomeIcon.Moon,
                 Palette.WithAlpha(StatusBar.DndTone, alpha * dnd), MoonHeight * scale);
         }
-
-        return dateTop + dateSize.Y;
     }
 
     public static void DrawMusicSection(ImDrawListPtr dl, Rect rect, PlaybackHub playback, float clock, float alpha,

@@ -11,9 +11,11 @@ internal static class ProgressRing
     private const float Top = -MathF.PI / 2f;
     private static Vector2 Dir(float a) => new(MathF.Cos(a), MathF.Sin(a));
 
-    private static void Arc(Vector2 c, float r, float thickness, float a0, float a1, uint col)
+    private static void Arc(Vector2 c, float r, float thickness, float a0, float a1, uint col) =>
+        Arc(ImGui.GetWindowDrawList(), c, r, thickness, a0, a1, col);
+
+    private static void Arc(ImDrawListPtr dl, Vector2 c, float r, float thickness, float a0, float a1, uint col)
     {
-        var dl = ImGui.GetWindowDrawList();
         var span = MathF.Abs(a1 - a0);
         var seg = Math.Max(2, (int)MathF.Ceiling(span / (MathF.PI / 48f)));
         var prev = c + Dir(a0) * r;
@@ -47,6 +49,9 @@ internal static class ProgressRing
     public static void Track(Vector2 c, float r, float thickness, Vector4 col) =>
         Arc(c, r, thickness, Top, Top + MathF.PI * 2f, ImGui.GetColorU32(col));
 
+    public static void Track(ImDrawListPtr dl, Vector2 c, float r, float thickness, Vector4 col) =>
+        Arc(dl, c, r, thickness, Top, Top + MathF.PI * 2f, ImGui.GetColorU32(col));
+
     public static void Fill(Vector2 c, float r, float thickness, float fraction, Vector4 col)
     {
         fraction = Math.Clamp(fraction, 0f, 1f);
@@ -56,6 +61,17 @@ internal static class ProgressRing
         }
 
         Arc(c, r, thickness, Top, Top + fraction * MathF.PI * 2f, ImGui.GetColorU32(col));
+    }
+
+    public static void Fill(ImDrawListPtr dl, Vector2 c, float r, float thickness, float fraction, Vector4 col)
+    {
+        fraction = Math.Clamp(fraction, 0f, 1f);
+        if (fraction <= 0.0001f)
+        {
+            return;
+        }
+
+        Arc(dl, c, r, thickness, Top, Top + fraction * MathF.PI * 2f, ImGui.GetColorU32(col));
     }
 
     public static void Sweep(Vector2 c, float r, float thickness, Vector4 col, double periodMs, float arcLen,

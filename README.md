@@ -56,7 +56,7 @@ Privacy and safety come first: text messages, attachments, and voice notes are e
 - **Utilities**: a market board tracker, a housing browser, a hunt train tracker, a venue and event directory, raid strategy cheatsheets from WTFDIG with your spot marked on every mechanic, in-game music with live community radio stations and Rolladeck DJ listings, weather, a wallet, timers and resets, a photo library and camera, shortcuts, and a pocket arcade of mini-games with Doom among them, among 42 apps.
 - **Watch together**: cast video, YouTube included, onto an in-world screen, with playback synced for everyone watching along. Local files work too: each viewer picks their own copy and stays in sync.
 - **Casino**: play-money blackjack, slots, scratch cards, a communal wheel, and bingo. No real money, and nothing has cash value.
-- **Make it yours**: any accent color, wallpapers, Lodestone character portraits, custom ringtones, subtle interface sounds, a text-size zoom, and a phone you can drag to any size.
+- **Make it yours**: any accent color, wallpapers, Lodestone character portraits, custom ringtones, subtle interface sounds, a text-size zoom, and a phone you can drag to any size. Minimized, it shows only the pieces you pick, in the order you pick: clock, date, Now Playing, calls, alert cards, unread badge, and widgets for Eorzea time, weather, the next reset, gil, Aether Coin, ventures, and your activity rings.
 
 Full feature tour, screenshots, and details live on the website:
 

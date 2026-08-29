@@ -7,64 +7,71 @@ namespace Aetherphone.Apps.Skywatcher;
 internal static class WeatherGlyph
 {
     public static void Draw(WeatherKind kind, Vector2 center, float radius, in SkyPalette palette, bool isDay,
-        Vector4 sky)
+        Vector4 sky) =>
+        Draw(ImGui.GetWindowDrawList(), kind, center, radius, palette, isDay, sky);
+
+    public static void Draw(ImDrawListPtr drawList, WeatherKind kind, Vector2 center, float radius,
+        in SkyPalette palette, bool isDay, Vector4 sky, float alpha = 1f)
     {
-        var drawList = ImGui.GetWindowDrawList();
+        var glow = Fade(palette.Glow, alpha);
+        var cloud = Fade(CloudFill(isDay), alpha);
         switch (kind)
         {
             case WeatherKind.Clear:
                 if (isDay)
                 {
-                    DrawSun(drawList, center, radius, palette.Glow);
+                    DrawSun(drawList, center, radius, glow);
                 }
                 else
                 {
-                    DrawMoon(drawList, center, radius, palette.Glow, sky);
+                    DrawMoon(drawList, center, radius, glow, sky);
                 }
 
                 break;
             case WeatherKind.Clouds:
                 DrawLuminary(drawList, center - new Vector2(radius * 0.30f, radius * 0.34f), radius * 0.62f,
-                    palette.Glow, sky, isDay);
-                DrawCloud(drawList, center + new Vector2(0f, radius * 0.10f), radius, CloudFill(isDay), true);
+                    glow, sky, isDay);
+                DrawCloud(drawList, center + new Vector2(0f, radius * 0.10f), radius, cloud, true);
                 break;
             case WeatherKind.Fog:
                 DrawLuminary(drawList, center - new Vector2(radius * 0.20f, radius * 0.40f), radius * 0.50f,
-                    palette.Glow with { W = 0.5f }, sky, isDay);
-                DrawFog(drawList, center, radius, CloudFill(isDay));
+                    glow with { W = 0.5f * alpha }, sky, isDay);
+                DrawFog(drawList, center, radius, cloud);
                 break;
             case WeatherKind.Rain:
-                DrawCloud(drawList, center - new Vector2(0f, radius * 0.24f), radius * 0.86f, CloudFill(isDay), true);
-                DrawRain(drawList, center, radius, new Vector4(0.62f, 0.80f, 0.98f, 1f));
+                DrawCloud(drawList, center - new Vector2(0f, radius * 0.24f), radius * 0.86f, cloud, true);
+                DrawRain(drawList, center, radius, new Vector4(0.62f, 0.80f, 0.98f, alpha));
                 break;
             case WeatherKind.Thunder:
-                DrawCloud(drawList, center - new Vector2(0f, radius * 0.24f), radius * 0.86f, CloudFill(isDay), true);
-                DrawBolt(drawList, center, radius, palette.Glow);
+                DrawCloud(drawList, center - new Vector2(0f, radius * 0.24f), radius * 0.86f, cloud, true);
+                DrawBolt(drawList, center, radius, glow);
                 break;
             case WeatherKind.Wind:
-                DrawWind(drawList, center, radius, Palette.Lighten(palette.Glow, 0.1f));
+                DrawWind(drawList, center, radius, Palette.Lighten(glow, 0.1f));
                 break;
             case WeatherKind.Sand:
                 DrawLuminary(drawList, center - new Vector2(radius * 0.18f, radius * 0.40f), radius * 0.46f,
-                    palette.Glow with { W = 0.7f }, sky, isDay);
-                DrawWind(drawList, center, radius, palette.Glow);
-                DrawDust(drawList, center, radius, palette.Glow);
+                    glow with { W = 0.7f * alpha }, sky, isDay);
+                DrawWind(drawList, center, radius, glow);
+                DrawDust(drawList, center, radius, glow);
                 break;
             case WeatherKind.Heat:
-                DrawSun(drawList, center - new Vector2(0f, radius * 0.18f), radius * 0.86f, palette.Glow);
-                DrawHeatWaves(drawList, center, radius, palette.Glow);
+                DrawSun(drawList, center - new Vector2(0f, radius * 0.18f), radius * 0.86f, glow);
+                DrawHeatWaves(drawList, center, radius, glow);
                 break;
             case WeatherKind.Snow:
-                DrawCloud(drawList, center - new Vector2(0f, radius * 0.24f), radius * 0.86f, CloudFill(isDay), true);
-                DrawSnow(drawList, center, radius, new Vector4(0.97f, 0.99f, 1.00f, 1f));
+                DrawCloud(drawList, center - new Vector2(0f, radius * 0.24f), radius * 0.86f, cloud, true);
+                DrawSnow(drawList, center, radius, new Vector4(0.97f, 0.99f, 1.00f, alpha));
                 break;
             default:
-                DrawCloud(drawList, center - new Vector2(0f, radius * 0.06f), radius, Palette.Darken(CloudFill(isDay), 0.45f),
-                    true);
-                DrawDust(drawList, center, radius, palette.Glow);
+                DrawCloud(drawList, center - new Vector2(0f, radius * 0.06f), radius,
+                    Palette.Darken(cloud, 0.45f), true);
+                DrawDust(drawList, center, radius, glow);
                 break;
         }
     }
+
+    private static Vector4 Fade(Vector4 color, float alpha) => color with { W = color.W * alpha };
 
     private static void DrawSun(ImDrawListPtr drawList, Vector2 center, float radius, Vector4 glow)
     {

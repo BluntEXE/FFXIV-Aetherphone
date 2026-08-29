@@ -4,6 +4,7 @@ using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Photos;
+using Aetherphone.Core.Shell;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows.Components;
@@ -29,11 +30,13 @@ internal sealed class AppearancePage : ISettingsPage
     private readonly ConfirmService confirm;
     private readonly WallpaperLibrary wallpapers;
     private readonly WallpaperImageCache wallpaperImages;
+    private readonly MinimizedLayoutService minimizedLayout;
 
     public AppearancePage(Configuration configuration, ThemeProvider themes, ISettingsNavigator navigator,
         PhotoLibrary photos, ConfirmService confirm, WallpaperLibrary wallpapers,
-        WallpaperImageCache wallpaperImages)
+        WallpaperImageCache wallpaperImages, MinimizedLayoutService minimizedLayout)
     {
+        this.minimizedLayout = minimizedLayout;
         this.configuration = configuration;
         this.themes = themes;
         this.navigator = navigator;
@@ -94,11 +97,16 @@ internal sealed class AppearancePage : ISettingsPage
 
             card.End();
             SettingsSection.Header(Loc.T(L.Settings.Display), theme);
-            var displayCard = GroupCard.Begin(theme, 3);
+            var displayCard = GroupCard.Begin(theme, 4);
             DrawTextSizeSlider(displayCard.NextRow(), Loc.T(L.Settings.TextSize), theme);
             DrawPhoneSizeSlider(displayCard.NextRow(), Loc.T(L.Settings.PhoneSize), theme);
             var use24Hour = SettingsRow.Bool(displayCard.NextRow(), Loc.T(L.Settings.Use24HourClock),
                 TimeText.Use24Hour, theme, null, TimeText.Clock(DateTime.Now));
+            if (SettingsRow.Disclosure(displayCard.NextRow(), Loc.T(L.Minimized.Title), string.Empty, theme))
+            {
+                navigator.Open(new MinimizedPhonePage(minimizedLayout));
+            }
+
             displayCard.End();
             if (use24Hour != TimeText.Use24Hour)
             {

@@ -56,6 +56,12 @@ internal static unsafe class WalletReader
         return new WalletEntry(GilItemId, iconId, name, 0, CurrencyKind.Gil);
     }
 
+    public static long CurrentGil()
+    {
+        var manager = InventoryManager.Instance();
+        return manager is null ? 0 : (long)manager->GetGil();
+    }
+
     public static WalletSection[] BuildSections(GameData gameData)
     {
         var sections = new List<WalletSection>(6) { new(L.Wallet.SectionCurrency, BuildCurrency(gameData)), };

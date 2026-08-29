@@ -17,6 +17,7 @@ using Aetherphone.Core.Jobs;
 using Aetherphone.Core.Market;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Radio;
+using Aetherphone.Core.Shell;
 using Aetherphone.Core.Shortcuts;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Songs;
@@ -59,7 +60,8 @@ internal sealed class VideoLocalFileMapRecord
 }
 
 [Serializable]
-internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, IControlConfiguration
+internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, IControlConfiguration,
+    IMinimizedConfiguration
 {
     public int Version { get; set; } = 1;
     public bool OpenOnStartup { get; set; } = true;
@@ -72,6 +74,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool ShowInGpose { get; set; } = true;
     public Vector2? MaximizedPosition { get; set; }
     public Vector2? MinimizedPosition { get; set; }
+    public MinimizedLayout? MinimizedLayout { get; set; }
     public bool DoNotDisturb { get; set; }
     public bool QuietWhileBusy { get; set; } = true;
     public bool Vibration { get; set; } = true;

@@ -100,7 +100,7 @@ internal sealed class PhoneShell : IDisposable
         coinFloats = new CoinEarnFloats(services.Coins);
         var controlCenter = new ControlCenter(configuration, themes, services.Playback, calls, navigation,
             notifications, router, services.Coins, services.AethernetSession);
-        minimizedPhone = new MinimizedPhone(services.Playback, calls, notifications, router, navigation, configuration);
+        minimizedPhone = new MinimizedPhone(services, router, navigation, services.MinimizedLayout);
         var spotlightIndex = new Spotlight.SpotlightIndex(apps, services.Installer, bundle.Contacts,
             services.DmLauncher, services.ChatInbox, services.ChatLog, services.LinkpearlLauncher,
             services.MarketIndex, services.MarketLauncher, services.Shortcuts, services.ShortcutRunner,
