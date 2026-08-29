@@ -26,7 +26,7 @@ internal static class SpotlightMath
             return false;
         }
 
-        formatted = value.ToString(ResultFormat, CultureInfo.CurrentCulture);
+        formatted = value.ToString(ResultFormat, CultureInfo.InvariantCulture);
         return true;
     }
 
