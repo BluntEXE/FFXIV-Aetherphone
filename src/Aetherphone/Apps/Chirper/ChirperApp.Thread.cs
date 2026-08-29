@@ -27,7 +27,6 @@ internal sealed partial class ChirperApp
     private static readonly TextStyle HeadHandleStyle = new(0.93f, FontWeight.Regular);
     private static readonly TextStyle StatNumberStyle = new(0.97f, FontWeight.Bold);
     private static readonly TextStyle StatWordStyle = new(0.93f, FontWeight.Regular);
-    private static readonly TextStyle ReplyingToStyle = new(0.9f, FontWeight.Regular);
     private static readonly Vector4 ThreadLine = new(1f, 1f, 1f, 0.14f);
 
     private CommentDto? sheetComment;
@@ -497,7 +496,6 @@ internal sealed partial class ChirperApp
         var threadOwner = store.Me is { } owner && owner.Id == post.AuthorId;
         var canModerate = mine || threadOwner;
         var nameHeight = Typography.LineHeight(ReplyNameStyle);
-        var replyingHeight = post.AuthorHandle.Length > 0 ? Typography.LineHeight(ReplyingToStyle) + 1f * scale : 0f;
         var commentKey = new TranslationKey(TranslationSurface.Comment, comment.Id);
         var commentView = translation.View(commentKey, comment.Text, comment.Lang);
         var commentText = commentView.Text;
@@ -518,7 +516,7 @@ internal sealed partial class ChirperApp
         var mediaHeight = comment.MediaUrl is not null && !CommentMediaHidden(comment.MediaUrl)
             ? CommentMedia.MeasureHeight(comment, bodyWidth, scale) + (commentText.Length > 0 ? 6f * scale : 0f)
             : 0f;
-        var bodyTop = origin.Y + padY + nameHeight + replyingHeight + 3f * scale;
+        var bodyTop = origin.Y + padY + nameHeight + 3f * scale;
         var actionsTop = bodyTop + textHeight + translateHeight + mediaHeight + 4f * scale;
         var bottom = MathF.Max(actionsTop + ReplyActionHeight * scale, avatarCenter.Y + radius) + padY;
 
@@ -584,31 +582,6 @@ internal sealed partial class ChirperApp
         Typography.Draw(drawList, new Vector2(metaLeft, metaY), metaFitted, ChirperInk.MutedInk, ReplyMetaStyle);
         CommentReviewTag.Draw(new Vector2(metaLeft + metaSize.X + 6f * scale, metaY), headerRight, comment.ScanStatus,
             ReplyMetaStyle.Scale);
-
-        if (replyingHeight > 0f)
-        {
-            var replyingTop = headerTop + nameHeight + 1f * scale;
-            var prefix = Loc.T(L.Chirper.ReplyingTo) + " ";
-            var prefixSize = Typography.Measure(prefix, ReplyingToStyle);
-            Typography.Draw(drawList, new Vector2(textLeft, replyingTop), prefix, ChirperInk.MutedInk, ReplyingToStyle);
-            var handleLabel = Typography.FitText("@" + post.AuthorHandle, MathF.Max(1f, bodyWidth - prefixSize.X),
-                ReplyingToStyle);
-            var handleSize = Typography.Measure(handleLabel, ReplyingToStyle);
-            var handleMin = new Vector2(textLeft + prefixSize.X, replyingTop);
-            var handleMax = handleMin + handleSize;
-            var handleHovered = UiInteract.Hover(handleMin, handleMax);
-            Typography.Draw(drawList, handleMin, handleLabel, handleHovered ? ChirperInk.MineInk : ChirperInk.AccentLink,
-                ReplyingToStyle);
-            if (handleHovered)
-            {
-                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-            }
-
-            if (UiInteract.Click(handleMin, handleMax, handleHovered))
-            {
-                OpenProfile(post.AuthorId);
-            }
-        }
 
         if (commentText.Length > 0)
         {

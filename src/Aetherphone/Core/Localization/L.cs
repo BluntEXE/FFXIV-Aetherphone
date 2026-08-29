@@ -3727,7 +3727,6 @@ internal static class L
         public static readonly LocString ChangeBanner = new("chirper.changeBanner", "Change banner");
         public static readonly LocPlural Reposts = new("chirper.reposts", "{0} repost", "{0} reposts");
         public static readonly LocPlural RepliesCount = new("chirper.repliesCount", "{0} reply", "{0} replies");
-        public static readonly LocString ReplyingTo = new("chirper.replyingTo", "Replying to");
         public static readonly LocString Trending = new("chirper.trending", "Trending");
         public static readonly LocPlural ChirpsToday = new("chirper.chirpsToday", "{0} chirp today", "{0} chirps today");
         public static readonly LocString SearchHint = new("chirper.searchHint", "Search people or #tags");
