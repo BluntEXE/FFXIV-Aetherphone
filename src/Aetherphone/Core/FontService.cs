@@ -450,30 +450,43 @@ internal sealed class FontService : IDisposable
     {
         var asset = SharedAssets[sourceIndex];
         var source = default(ImFontPtr);
+        IFontAtlasBuildToolkitPostBuild? postBuild = null;
         return atlas.NewDelegateFontHandle(e =>
         {
             e.OnPreBuild(tk =>
             {
+                postBuild = null;
                 source = tk.AddDalamudAssetFont(asset,
                     new SafeFontConfig { SizePx = sharedSize, GlyphRanges = sharedRanges, });
                 MergeGameSymbols(tk, source);
-            });
-            e.OnPostBuild(tk =>
-            {
-                for (var weightIndex = 0; weightIndex < WeightFiles.Length; weightIndex++)
-                {
-                    if (SharedSourceFor(weightIndex) != sourceIndex)
-                    {
-                        continue;
-                    }
 
-                    for (var sizeIndex = 0; sizeIndex < SizeMultipliers.Length; sizeIndex++)
-                    {
-                        tk.CopyGlyphsAcrossFonts(source, textFonts[weightIndex, sizeIndex], true, true);
-                    }
-                }
+                // Dalamud pours the merged game glyphs into the shared font from its own substance, which runs
+                // after every handle's post build callback, so the spread has to wait in the later queue.
+                tk.RegisterPostBuild(() => SpreadSharedGlyphs(postBuild, source, sourceIndex));
             });
+            e.OnPostBuild(tk => postBuild = tk);
         });
+    }
+
+    private void SpreadSharedGlyphs(IFontAtlasBuildToolkitPostBuild? toolkit, ImFontPtr source, int sourceIndex)
+    {
+        if (toolkit is null)
+        {
+            return;
+        }
+
+        for (var weightIndex = 0; weightIndex < WeightFiles.Length; weightIndex++)
+        {
+            if (SharedSourceFor(weightIndex) != sourceIndex)
+            {
+                continue;
+            }
+
+            for (var sizeIndex = 0; sizeIndex < SizeMultipliers.Length; sizeIndex++)
+            {
+                toolkit.CopyGlyphsAcrossFonts(source, textFonts[weightIndex, sizeIndex], true, true);
+            }
+        }
     }
 
     private void MergeGameSymbols(IFontAtlasBuildToolkitPreBuild toolkit, ImFontPtr primary)
