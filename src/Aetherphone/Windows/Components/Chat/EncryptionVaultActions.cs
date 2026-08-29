@@ -261,16 +261,25 @@ internal sealed class EncryptionVaultActions : IDisposable
         {
             try
             {
-                var recovered = await vault.RecoverWithCodeAsync(code, cancellation.Token).ConfigureAwait(false);
-                if (recovered)
+                var outcome = await vault.RecoverWithCodeAsync(code, cancellation.Token).ConfigureAwait(false);
+                if (outcome == RecoveryAttemptOutcome.Recovered)
                 {
                     CodeEntry = string.Empty;
                     status = string.Empty;
                     await RestorePreviousKeysSilentlyAsync(code).ConfigureAwait(false);
                 }
-                else
+                else if (outcome == RecoveryAttemptOutcome.OlderCode)
+                {
+                    CodeEntry = string.Empty;
+                    status = Loc.T(L.Encryption.RecoveryOlderCode);
+                }
+                else if (outcome == RecoveryAttemptOutcome.WrongCode)
                 {
                     status = Loc.T(L.Encryption.RecoveryWrongCode);
+                }
+                else
+                {
+                    status = Loc.T(L.Encryption.Failed);
                 }
             }
             catch (OperationCanceledException)
@@ -292,7 +301,15 @@ internal sealed class EncryptionVaultActions : IDisposable
     {
         try
         {
-            await vault.RestorePreviousKeysAsync(code, cancellation.Token).ConfigureAwait(false);
+            var restored = await vault.RestorePreviousKeysAsync(code, cancellation.Token).ConfigureAwait(false);
+            if (restored > 0)
+            {
+                status = Loc.T(L.Encryption.RestoreOlderDone, restored);
+            }
+            else if (restored < 0)
+            {
+                status = Loc.T(L.Encryption.RestoreOlderRetry);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -300,6 +317,7 @@ internal sealed class EncryptionVaultActions : IDisposable
         catch (Exception exception)
         {
             AepLog.Warning(exception, "Previous key restore failed");
+            status = Loc.T(L.Encryption.RestoreOlderRetry);
         }
     }
 
@@ -335,6 +353,10 @@ internal sealed class EncryptionVaultActions : IDisposable
                 {
                     CodeEntry = string.Empty;
                     status = Loc.T(L.Encryption.RestoreOlderDone, restored);
+                }
+                else if (restored < 0)
+                {
+                    status = Loc.T(L.Encryption.Failed);
                 }
                 else
                 {

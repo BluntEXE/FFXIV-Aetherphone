@@ -86,5 +86,5 @@ internal sealed class EncryptionGuide
 
     public const string AppId = "settings";
 
-    private const string GroupKey = "encryption.guide";
+    public const string GroupKey = "encryption.guide";
 }

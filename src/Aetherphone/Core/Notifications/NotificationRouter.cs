@@ -1,6 +1,7 @@
 using Aetherphone.Core.Announcements;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Casino;
+using Aetherphone.Core.Crypto;
 using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Hunts;
 using Aetherphone.Core.Moderation;
@@ -56,6 +57,7 @@ internal sealed class NotificationRouter
     private readonly YellowPagesLauncher yellowPagesLauncher;
     private readonly AnnouncementsLauncher announcementsLauncher;
     private readonly SafetyLauncher safetyLauncher;
+    private readonly EncryptionSetupLauncher encryptionSetupLauncher;
     private readonly RadioLauncher radioLauncher;
     private readonly CasinoLauncher casinoLauncher;
     private readonly AetherStreamLauncher aetherStreamLauncher;
@@ -65,13 +67,15 @@ internal sealed class NotificationRouter
         SocialNotificationService socialNotifications, LinkpearlLauncher linkpearlLauncher,
         VelvetLauncher velvetLauncher, DmLauncher dmLauncher, GramDmLauncher gramDmLauncher, SocialLauncher socialLauncher,
         MusterLauncher musterLauncher, YellowPagesLauncher yellowPagesLauncher,
-        AnnouncementsLauncher announcementsLauncher, SafetyLauncher safetyLauncher, RadioLauncher radioLauncher,
+        AnnouncementsLauncher announcementsLauncher, SafetyLauncher safetyLauncher,
+        EncryptionSetupLauncher encryptionSetupLauncher, RadioLauncher radioLauncher,
         CasinoLauncher casinoLauncher, AetherStreamLauncher aetherStreamLauncher, HuntsLauncher huntsLauncher)
     {
         this.radioLauncher = radioLauncher;
         this.casinoLauncher = casinoLauncher;
         this.aetherStreamLauncher = aetherStreamLauncher;
         this.huntsLauncher = huntsLauncher;
+        this.encryptionSetupLauncher = encryptionSetupLauncher;
         this.navigation = navigation;
         this.notifications = notifications;
         this.socialNotifications = socialNotifications;
@@ -172,6 +176,11 @@ internal sealed class NotificationRouter
                  && HuntsService.TryParseGroupKey(huntsKey, out var mobId, out var worldId, out var zoneInstance))
         {
             huntsLauncher.RequestDetail(mobId, worldId, zoneInstance);
+        }
+        else if (notification.AppId == SettingsAppId
+                 && string.Equals(notification.GroupKey, EncryptionGuide.GroupKey, StringComparison.Ordinal))
+        {
+            encryptionSetupLauncher.Request();
         }
         else if (notification.AppId == SettingsAppId)
         {

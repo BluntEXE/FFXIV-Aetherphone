@@ -31,6 +31,7 @@ internal sealed class NotificationsApp : IPhoneApp
     private readonly YellowPagesLauncher yellowPagesLauncher;
     private readonly AnnouncementsLauncher announcementsLauncher;
     private readonly SafetyLauncher safetyLauncher;
+    private readonly Core.Crypto.EncryptionSetupLauncher encryptionSetupLauncher;
     private readonly RadioLauncher radioLauncher;
     private readonly Core.Casino.CasinoLauncher casinoLauncher;
     private readonly Core.Video.AetherStreamLauncher aetherStreamLauncher;
@@ -41,7 +42,8 @@ internal sealed class NotificationsApp : IPhoneApp
         LinkpearlLauncher linkpearlLauncher,
         VelvetLauncher velvetLauncher, DmLauncher dmLauncher, GramDmLauncher gramDmLauncher,
         SocialLauncher socialLauncher, MusterLauncher musterLauncher, YellowPagesLauncher yellowPagesLauncher,
-        AnnouncementsLauncher announcementsLauncher, SafetyLauncher safetyLauncher, RadioLauncher radioLauncher,
+        AnnouncementsLauncher announcementsLauncher, SafetyLauncher safetyLauncher,
+        Core.Crypto.EncryptionSetupLauncher encryptionSetupLauncher, RadioLauncher radioLauncher,
         Core.Casino.CasinoLauncher casinoLauncher, Core.Video.AetherStreamLauncher aetherStreamLauncher,
         Core.Hunts.HuntsLauncher huntsLauncher)
     {
@@ -49,6 +51,7 @@ internal sealed class NotificationsApp : IPhoneApp
         this.casinoLauncher = casinoLauncher;
         this.aetherStreamLauncher = aetherStreamLauncher;
         this.huntsLauncher = huntsLauncher;
+        this.encryptionSetupLauncher = encryptionSetupLauncher;
         this.notifications = notifications;
         this.socialNotifications = socialNotifications;
         this.linkpearlLauncher = linkpearlLauncher;
@@ -77,8 +80,8 @@ internal sealed class NotificationsApp : IPhoneApp
         center ??= new NotificationCenter(notifications,
             new NotificationRouter(context.Navigation, notifications, socialNotifications, linkpearlLauncher,
                 velvetLauncher, dmLauncher, gramDmLauncher, socialLauncher, musterLauncher, yellowPagesLauncher,
-                announcementsLauncher, safetyLauncher, radioLauncher, casinoLauncher, aetherStreamLauncher,
-                huntsLauncher));
+                announcementsLauncher, safetyLauncher, encryptionSetupLauncher, radioLauncher, casinoLauncher,
+                aetherStreamLauncher, huntsLauncher));
         var scale = UiScale.Current;
         var content = context.Content;
         var body = new Rect(new Vector2(content.Min.X, content.Min.Y + AppHeader.Height * scale), content.Max);
