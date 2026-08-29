@@ -93,7 +93,8 @@ internal static class AppRegistry
         apps.Add(new AetherStreamApp(video, screen, videoQueue, services.Configuration, services.Confirm,
             services.RemoteImages, services.Http, services.AethernetSession, services.Lodestone, watchAlong,
             streamSuggestions, services.AetherStreamLauncher, screenWindow));
-        apps.Add(new ShortcutsApp(services.Shortcuts, services.ShortcutRunner, services.Confirm));
+        apps.Add(new ShortcutsApp(services.Shortcuts, services.ShortcutRunner, services.Confirm, photoLibrary,
+            services.WallpaperImages));
         apps.Add(new TimersApp(services.Configuration));
         apps.Add(new DailiesApp(services.Configuration, services.GameData));
         apps.Add(new FishingApp());

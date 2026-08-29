@@ -3,8 +3,10 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Onboarding;
+using Aetherphone.Core.Photos;
 using Aetherphone.Core.Shortcuts;
 using Aetherphone.Core.Theme;
+using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -21,6 +23,7 @@ internal sealed partial class ShortcutsApp : IPhoneApp
         Plugin,
         PluginPicker,
         Import,
+        CustomIcon,
     }
 
     private const float RowHeight = 62f;
@@ -34,6 +37,7 @@ internal sealed partial class ShortcutsApp : IPhoneApp
     private readonly ShortcutRunner runner;
     private readonly PluginCatalog catalog;
     private readonly ConfirmService confirm;
+    private readonly ImagePickCrop iconPicker;
     private readonly AppSkin ui = new(AppPalettes.Shortcuts);
     private readonly ViewRouter<ShortcutsScreen> router;
     private readonly RouterDraw<ShortcutsScreen> drawView;
@@ -56,12 +60,14 @@ internal sealed partial class ShortcutsApp : IPhoneApp
     private float copiedClock;
     private string pluginQuery = string.Empty;
 
-    public ShortcutsApp(ShortcutStore store, ShortcutRunner runner, ConfirmService confirm)
+    public ShortcutsApp(ShortcutStore store, ShortcutRunner runner, ConfirmService confirm, PhotoLibrary photoLibrary,
+        WallpaperImageCache wallpaperImages)
     {
         this.store = store;
         this.runner = runner;
         this.confirm = confirm;
         catalog = store.Catalog;
+        iconPicker = new ImagePickCrop(photoLibrary, wallpaperImages);
         router = new ViewRouter<ShortcutsScreen>(ShortcutsScreen.Home);
         drawView = DrawView;
         back = GoBack;
@@ -81,6 +87,7 @@ internal sealed partial class ShortcutsApp : IPhoneApp
     public void OnClosed()
     {
         router.Reset();
+        DiscardUnsavedIcon();
         draft = null;
         importEntry = null;
     }
@@ -96,6 +103,8 @@ internal sealed partial class ShortcutsApp : IPhoneApp
         {
             copiedClock -= delta;
         }
+
+        ConsumeBakedIcon();
 
         var scale = UiScale.Current;
         var screen = SceneChrome.ScreenFrom(context.Content, context.Theme, scale);
@@ -123,6 +132,9 @@ internal sealed partial class ShortcutsApp : IPhoneApp
                 return;
             case ShortcutsScreen.Import:
                 DrawImport(area, scale);
+                return;
+            case ShortcutsScreen.CustomIcon:
+                DrawCustomIconPicker(area);
                 return;
             default:
                 DrawHome(area, scale);
