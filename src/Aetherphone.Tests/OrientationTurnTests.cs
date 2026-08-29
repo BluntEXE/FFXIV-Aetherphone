@@ -106,6 +106,22 @@ public sealed class OrientationTurnTests
     }
 
     [Fact]
+    public void TravelRunsFromTheOriginToTheDestination()
+    {
+        var turn = new OrientationTurn();
+        Assert.Equal(0f, turn.TravelTo(true), 1e-5f);
+        Assert.Equal(1f, turn.TravelTo(false), 1e-5f);
+
+        turn.Advance(OrientationTurn.TurnSeconds * 0.5f, true, true);
+        Assert.Equal(0.5f, turn.TravelTo(true), 1e-4f);
+        Assert.Equal(0.5f, turn.TravelTo(false), 1e-4f);
+
+        turn.Advance(OrientationTurn.TurnSeconds, true, true);
+        Assert.Equal(1f, turn.TravelTo(true), 1e-5f);
+        Assert.Equal(0f, turn.TravelTo(false), 1e-5f);
+    }
+
+    [Fact]
     public void AFrozenPhoneSnapsInsteadOfTurning()
     {
         var turn = new OrientationTurn();

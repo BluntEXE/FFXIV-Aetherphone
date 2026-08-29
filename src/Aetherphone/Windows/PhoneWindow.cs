@@ -24,13 +24,18 @@ internal sealed class PhoneWindow : Window
     private bool dockGrowLeft;
     private bool dockGrowUp;
     private bool turning;
+    private bool turnToLandscape;
     private float turnScale = 1f;
+    private float turnTravelOrigin;
     private Vector2 deviceSize;
     private Vector2 turnFootprint;
-    private Vector2? turnCenter;
+    private Vector2 turnTarget;
+    private Vector2 pinCenter;
+    private Vector2? turnStart;
     private Vector2? pendingPosition;
     private Vector2? maximizedPosition;
     private Vector2? minimizedPosition;
+    private Vector2? landscapePosition;
 
     public PhoneWindow(PhoneShell shell, Configuration configuration)
         : base(AepConstants.Name, BaseFlags)
@@ -42,6 +47,7 @@ internal sealed class PhoneWindow : Window
         RespectCloseHotkey = false;
         maximizedPosition = configuration.MaximizedPosition;
         minimizedPosition = configuration.MinimizedPosition;
+        landscapePosition = configuration.LandscapePosition;
     }
 
     public bool IsMinimized => shell.MinimizedResting;
@@ -66,13 +72,15 @@ internal sealed class PhoneWindow : Window
 
     public void PersistPositions()
     {
-        if (configuration.MaximizedPosition == maximizedPosition && configuration.MinimizedPosition == minimizedPosition)
+        if (configuration.MaximizedPosition == maximizedPosition && configuration.MinimizedPosition == minimizedPosition &&
+            configuration.LandscapePosition == landscapePosition)
         {
             return;
         }
 
         configuration.MaximizedPosition = maximizedPosition;
         configuration.MinimizedPosition = minimizedPosition;
+        configuration.LandscapePosition = landscapePosition;
         configuration.SaveNow();
     }
 
@@ -81,7 +89,9 @@ internal sealed class PhoneWindow : Window
         shell.ForceMaximize();
         recenterFrames = RecenterFrameCount;
         pendingFrames = 0;
+        maximizedPosition = null;
         minimizedPosition = null;
+        landscapePosition = null;
         IsOpen = true;
     }
 
@@ -139,18 +149,20 @@ internal sealed class PhoneWindow : Window
         UiScale.SetPhone(zoom);
         Plugin.Fonts.SetPhoneZoom(zoom);
         var dockSize = shell.MinimizedSize;
+        var portraitSize = PhoneSizeCatalog.SizeFor(portraitWidth);
+        var landscapeSize = PhoneSizeCatalog.LandscapeSizeFor(landscapeWidth);
         var size = minimized
             ? dockSize / UiScale.Global
             : landscape
-                ? PhoneSizeCatalog.LandscapeSizeFor(landscapeWidth)
-                : PhoneSizeCatalog.SizeFor(portraitWidth);
+                ? landscapeSize
+                : portraitSize;
         deviceSize = size;
         turning = !minimized && turn.Turning && LastSize.Y > 0f;
         turnFootprint = size;
         turnScale = 1f;
         if (turning)
         {
-            turnCenter ??= LastPosition + LastSize * 0.5f;
+            pinCenter = GlideCenter(turn, portraitSize, landscapeSize);
             turnScale = turn.ScaleFor(landscapeWidth / MathF.Max(portraitWidth, 1f));
             turnFootprint = TurnFootprint(size, turn.Angle, turnScale);
             var room = Components.PhoneBounds.ViewportRoom();
@@ -160,9 +172,14 @@ internal sealed class PhoneWindow : Window
             size = Vector2.Max(size, turnFootprint);
             rotatePinFrames = RecenterFrameCount;
         }
+        else if (rotatePinFrames > 0 && phase == MinimizePhase.None)
+        {
+            pinCenter = turnTarget;
+        }
         else
         {
-            turnCenter = null;
+            rotatePinFrames = 0;
+            turnStart = null;
         }
 
         Size = size;
@@ -203,7 +220,7 @@ internal sealed class PhoneWindow : Window
         else if (!minimized && rotatePinFrames > 0 && LastSize.Y > 0f)
         {
             rotatePinFrames--;
-            Position = CenterPinnedPosition(size, turnFootprint);
+            Position = CenterPinnedPosition(size, turnFootprint, pinCenter);
             PositionCondition = ImGuiCond.Always;
         }
         else
@@ -295,15 +312,33 @@ internal sealed class PhoneWindow : Window
     private static bool PastCenterY(float y, ImGuiViewportPtr viewport) =>
         y > viewport.Pos.Y + viewport.Size.Y * 0.5f;
 
-    private Vector2 CenterPinnedPosition(Vector2 windowSize, Vector2 contentSize)
+    private Vector2 GlideCenter(OrientationTurn turn, Vector2 portraitSize, Vector2 landscapeSize)
+    {
+        var wantsLandscape = shell.LandscapeActive;
+        if (turnStart is not { } start || wantsLandscape != turnToLandscape)
+        {
+            start = LastPosition + LastSize * 0.5f;
+            turnStart = start;
+            turnToLandscape = wantsLandscape;
+            turnTravelOrigin = turn.TravelTo(wantsLandscape);
+        }
+
+        var home = wantsLandscape ? landscapePosition : maximizedPosition;
+        var restingSize = wantsLandscape ? landscapeSize : portraitSize;
+        turnTarget = home is { } spot ? spot + restingSize * UiScale.Global * 0.5f : start;
+        var travel = Easing.Segment(turn.TravelTo(wantsLandscape), turnTravelOrigin, 1f);
+        return Vector2.Lerp(start, turnTarget, travel);
+    }
+
+    private static Vector2 CenterPinnedPosition(Vector2 windowSize, Vector2 contentSize, Vector2 center)
     {
         var viewport = ImGui.GetMainViewport();
         var scaledWindow = windowSize * UiScale.Global;
         var scaledContent = contentSize * UiScale.Global;
         var middle = viewport.Pos + viewport.Size * 0.5f;
         var slack = Vector2.Max((viewport.Size - scaledContent) * 0.5f, Vector2.Zero);
-        var center = Vector2.Clamp(turnCenter ?? LastPosition + LastSize * 0.5f, middle - slack, middle + slack);
-        return center - scaledWindow * 0.5f;
+        var pinned = Vector2.Clamp(center, middle - slack, middle + slack);
+        return pinned - scaledWindow * 0.5f;
     }
 
     private static Vector2 ClampToViewport(Vector2 position, Vector2 size, ImGuiViewportPtr viewport)
@@ -353,9 +388,16 @@ internal sealed class PhoneWindow : Window
             }
         }
 
-        if (shell.MinimizePhase == MinimizePhase.None)
+        if (shell.MinimizePhase == MinimizePhase.None && !turning)
         {
-            maximizedPosition = device.Min;
+            if (shell.Turn.ShowsLandscape)
+            {
+                landscapePosition = device.Min;
+            }
+            else
+            {
+                maximizedPosition = device.Min;
+            }
         }
 
         if (shell.ConsumeCloseRequest())

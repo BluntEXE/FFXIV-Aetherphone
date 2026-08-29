@@ -33,6 +33,12 @@ internal sealed class OrientationTurn
         }
     }
 
+    public float TravelTo(bool landscape)
+    {
+        var eased = Easing.SmootherStep(progress);
+        return landscape ? eased : 1f - eased;
+    }
+
     public float ScaleFor(float growth)
     {
         var safe = MathF.Max(growth, MinimumGrowth);

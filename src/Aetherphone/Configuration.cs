@@ -74,6 +74,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool ShowInGpose { get; set; } = true;
     public Vector2? MaximizedPosition { get; set; }
     public Vector2? MinimizedPosition { get; set; }
+    public Vector2? LandscapePosition { get; set; }
     public MinimizedLayout? MinimizedLayout { get; set; }
     public bool DoNotDisturb { get; set; }
     public bool QuietWhileBusy { get; set; } = true;
