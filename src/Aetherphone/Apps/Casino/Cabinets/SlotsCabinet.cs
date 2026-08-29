@@ -31,6 +31,11 @@ internal sealed class SlotsCabinet
     private const string JackpotAmountMarqueeId = "casino.slots.banner.jackpotAmount";
     private const string BigWinMarqueeId = "casino.slots.banner.bigWin";
     private const string CapNoteMarqueeId = "casino.slots.banner.capNote";
+    private const float JackpotShakeSeconds = 0.55f;
+    private const float JackpotShakeAmplitude = 5f;
+    private const float JackpotFlashSeconds = 0.7f;
+    private const float JackpotBulbSpacing = 22f;
+    private const float JackpotChaseStepsPerSecond = 10f;
 
     private static readonly int[] AutoRounds = { 10, 25, 50, 100 };
 
@@ -60,6 +65,7 @@ internal sealed class SlotsCabinet
     private RollingValue jackpotRoll;
     private string inlineReason = string.Empty;
     private float lineTraceSeconds;
+    private float jackpotFlourishSeconds;
     private int celebratedSpinIndex = -1;
     private int autoRemaining;
     private int autoSettledSpin = -1;
@@ -153,8 +159,15 @@ internal sealed class SlotsCabinet
         var cellHeight = MathF.Min(cellWidth * 1.02f, 82f * scale);
         var frameHeight = cellHeight * SlotsRules.RowCount + 12f * scale;
         var frame = new Rect(new Vector2(left, y), new Vector2(left + width, y + frameHeight));
+        var jackpotFlourish = playback.JackpotLanded && ShowingJackpotBanner;
+        if (jackpotFlourish)
+        {
+            jackpotFlourishSeconds += delta;
+            frame = frame.Translate(JackpotShake(jackpotFlourishSeconds, scale));
+        }
+
         reelWindow = frame;
-        DrawReels(drawList, ui, frame, scale);
+        DrawReels(drawList, ui, frame, scale, jackpotFlourish ? jackpotFlourishSeconds : -1f);
         y = frame.Max.Y + Metrics.Space.Sm * scale;
 
         y = DrawBanner(drawList, ui, left, y, width, scale, delta);
@@ -221,6 +234,7 @@ internal sealed class SlotsCabinet
         var origin = new Vector2(reelWindow.Center.X, reelWindow.Min.Y + reelWindow.Height * 0.3f);
         if (playback.JackpotLanded && playback.SpinIndex == 0)
         {
+            jackpotFlourishSeconds = 0f;
             particles.Confetti(origin, 160, ConfettiPalette, 420f * scale, 6f, 2.4f);
             particles.Sparkle(origin, 48, Gold, 260f * scale, 5f, 1.6f);
             return;
@@ -325,16 +339,26 @@ internal sealed class SlotsCabinet
         return Math.Max(0, stack - (playback.TotalWin - playback.CommittedWin));
     }
 
-    private void DrawReels(ImDrawListPtr drawList, AppSkin ui, Rect frame, float scale)
+    private void DrawReels(ImDrawListPtr drawList, AppSkin ui, Rect frame, float scale, float jackpotSeconds)
     {
         var rounding = Metrics.Radius.Card * scale;
+        var jackpotGlow = jackpotSeconds >= 0f ? JackpotGlow(jackpotSeconds) : 0f;
         Squircle.FillVerticalGradient(drawList, frame.Min, frame.Max, rounding, ImGui.GetColorU32(FeltTop),
             ImGui.GetColorU32(FeltBottom));
-        Squircle.Stroke(drawList, frame.Min, frame.Max, rounding,
-            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.28f)), Metrics.Stroke.Thin * scale);
+        var strokeInk = jackpotGlow > 0f
+            ? Gold with { W = 0.45f + 0.45f * jackpotGlow }
+            : Palette.WithAlpha(ui.Accent, 0.28f);
+        Squircle.Stroke(drawList, frame.Min, frame.Max, rounding, ImGui.GetColorU32(strokeInk),
+            Metrics.Stroke.Thin * scale);
 
         var inset = 6f * scale;
         var inner = new Rect(frame.Min + new Vector2(inset, inset), frame.Max - new Vector2(inset, inset));
+        if (jackpotGlow > 0f)
+        {
+            drawList.AddRectFilled(inner.Min, inner.Max, ImGui.GetColorU32(Gold with { W = 0.45f * jackpotGlow }),
+                rounding * 0.6f);
+        }
+
         var cellWidth = inner.Width / SlotsRules.ReelCount;
         var cellHeight = inner.Height / SlotsRules.RowCount;
         var choreography = playback.Choreography;
@@ -363,7 +387,8 @@ internal sealed class SlotsCabinet
             drawList.PushClipRect(reelMin, reelMax, true);
             if (!spinningPhase || choreography.ReelStopped(reel))
             {
-                DrawRestedReel(drawList, grid, reel, reelMin, cellWidth, cellHeight, presenting, winningCells);
+                DrawRestedReel(drawList, grid, reel, reelMin, cellWidth, cellHeight, presenting, winningCells,
+                    jackpotGlow);
             }
             else
             {
@@ -393,6 +418,82 @@ internal sealed class SlotsCabinet
         if (presenting)
         {
             DrawLineTraces(drawList, playback.CurrentSpin, inner.Min, cellWidth, cellHeight, scale);
+        }
+
+        if (jackpotSeconds >= 0f)
+        {
+            DrawJackpotChase(drawList, frame, rounding, scale, jackpotSeconds);
+        }
+    }
+
+    private static Vector2 JackpotShake(float seconds, float scale)
+    {
+        if (seconds >= JackpotShakeSeconds)
+        {
+            return Vector2.Zero;
+        }
+
+        var envelope = 1f - seconds / JackpotShakeSeconds;
+        var amplitude = JackpotShakeAmplitude * scale * envelope * envelope;
+        return new Vector2(MathF.Sin(seconds * 70f) * amplitude, MathF.Cos(seconds * 53f) * amplitude * 0.6f);
+    }
+
+    private static float JackpotGlow(float seconds)
+    {
+        var flash = MathF.Max(0f, 1f - seconds / JackpotFlashSeconds);
+        return MathF.Max(flash * flash, 0.35f + 0.15f * MathF.Sin(seconds * 4f));
+    }
+
+    private static void DrawJackpotChase(ImDrawListPtr drawList, Rect frame, float rounding, float scale,
+        float seconds)
+    {
+        var spacing = JackpotBulbSpacing * scale;
+        var phase = (int)(seconds * JackpotChaseStepsPerSecond);
+        var allLit = seconds < JackpotFlashSeconds * 0.5f;
+        var halo = ImGui.GetColorU32(Gold with { W = 0.30f });
+        var lit = ImGui.GetColorU32(Gold);
+        var dim = ImGui.GetColorU32(Gold with { W = 0.28f });
+        var bulbIndex = 0;
+        DrawBulbEdge(drawList, new Vector2(frame.Min.X + rounding, frame.Min.Y),
+            new Vector2(frame.Max.X - rounding, frame.Min.Y), spacing, scale, phase, allLit, halo, lit, dim,
+            ref bulbIndex);
+        DrawBulbEdge(drawList, new Vector2(frame.Max.X, frame.Min.Y + rounding),
+            new Vector2(frame.Max.X, frame.Max.Y - rounding), spacing, scale, phase, allLit, halo, lit, dim,
+            ref bulbIndex);
+        DrawBulbEdge(drawList, new Vector2(frame.Max.X - rounding, frame.Max.Y),
+            new Vector2(frame.Min.X + rounding, frame.Max.Y), spacing, scale, phase, allLit, halo, lit, dim,
+            ref bulbIndex);
+        DrawBulbEdge(drawList, new Vector2(frame.Min.X, frame.Max.Y - rounding),
+            new Vector2(frame.Min.X, frame.Min.Y + rounding), spacing, scale, phase, allLit, halo, lit, dim,
+            ref bulbIndex);
+    }
+
+    private static void DrawBulbEdge(ImDrawListPtr drawList, Vector2 start, Vector2 end, float spacing,
+        float scale, int phase, bool allLit, uint halo, uint lit, uint dim, ref int bulbIndex)
+    {
+        var length = Vector2.Distance(start, end);
+        if (length < spacing * 0.5f)
+        {
+            return;
+        }
+
+        var count = Math.Max(1, (int)(length / spacing));
+        var direction = (end - start) / length;
+        var step = length / count;
+        for (var bulb = 0; bulb < count; bulb++)
+        {
+            var center = start + direction * ((bulb + 0.5f) * step);
+            if (allLit || (bulbIndex + phase) % 3 == 0)
+            {
+                drawList.AddCircleFilled(center, 6f * scale, halo, 12);
+                drawList.AddCircleFilled(center, 2.6f * scale, lit, 12);
+            }
+            else
+            {
+                drawList.AddCircleFilled(center, 2f * scale, dim, 10);
+            }
+
+            bulbIndex++;
         }
     }
 
@@ -435,7 +536,7 @@ internal sealed class SlotsCabinet
     }
 
     private void DrawRestedReel(ImDrawListPtr drawList, int[] grid, int reel, Vector2 reelMin, float cellWidth,
-        float cellHeight, bool presenting, ReadOnlySpan<bool> winningCells)
+        float cellHeight, bool presenting, ReadOnlySpan<bool> winningCells, float jackpotGlow)
     {
         var hasWins = presenting && playback.HasSpins
             && (playback.CurrentSpin.LineWins.Length > 0 || playback.CurrentSpin.ScatterCount >= 3);
@@ -445,14 +546,19 @@ internal sealed class SlotsCabinet
             var cellIndex = reel * SlotsRules.RowCount + row;
             var center = new Vector2(reelMin.X + cellWidth * 0.5f, reelMin.Y + (row + 0.5f) * cellHeight);
             var winning = hasWins && winningCells[cellIndex];
-            if (winning)
+            if (jackpotGlow > 0f)
+            {
+                drawList.AddCircleFilled(center, MathF.Min(cellWidth, cellHeight) * 0.46f,
+                    ImGui.GetColorU32(Gold with { W = 0.06f + 0.22f * jackpotGlow }), 24);
+            }
+            else if (winning)
             {
                 var glow = 0.10f + 0.06f * MathF.Sin(lineTraceSeconds * 5f);
                 drawList.AddCircleFilled(center, MathF.Min(cellWidth, cellHeight) * 0.46f,
                     ImGui.GetColorU32(Gold with { W = glow }), 24);
             }
 
-            var alpha = hasWins && !winning ? 0.4f : 1f;
+            var alpha = hasWins && !winning && jackpotGlow <= 0f ? 0.4f : 1f;
             SlotsSymbolArt.Draw(drawList, grid[cellIndex], center, extent, alpha);
         }
     }
