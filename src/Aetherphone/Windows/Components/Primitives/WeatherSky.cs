@@ -3,7 +3,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 
-namespace Aetherphone.Apps.Skywatcher;
+namespace Aetherphone.Windows.Components;
 
 internal enum WeatherKind
 {

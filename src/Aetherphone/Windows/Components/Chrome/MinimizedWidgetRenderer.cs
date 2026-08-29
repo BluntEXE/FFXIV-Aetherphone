@@ -1,4 +1,3 @@
-using Aetherphone.Apps.Skywatcher;
 using Aetherphone.Core;
 using Aetherphone.Core.Activity;
 using Aetherphone.Core.Game;
