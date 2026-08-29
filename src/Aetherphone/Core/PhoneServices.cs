@@ -268,8 +268,9 @@ internal sealed class PhoneServices : IDisposable
         var casinoPlay = new Casino.CasinoPlayStore(configuration, aethernetSession, casinoApi.Casino, casino);
         var casinoHistory = new Casino.CasinoHistoryStore(aethernetSession, casinoApi.Casino);
         var casinoSpin = new Casino.CasinoSpinStore(aethernetSession, casinoApi.Casino, coins);
+        var realtimeSignals = new RealtimeSignalBus();
         var peerKeys = new PeerKeyDirectory(configuration, aethernet.Keys);
-        var conversationKeys = new ConversationKeyStore(aethernet.Keys, keyVault);
+        var conversationKeys = new ConversationKeyStore(aethernet.Keys, keyVault, realtimeSignals);
         var translation = new TranslationService(aethernetSession, aethernet.Translation, configuration);
         var marketIndex = new MarketItemIndex(dataManager);
         var market = new MarketboardService(http);
@@ -304,7 +305,6 @@ internal sealed class PhoneServices : IDisposable
         var activity = new ActivityTracker(framework, clientState, dutyState, gameData, configDirectory, characterGate);
         var ringNotifier = new ActivityRingNotifier(framework, activity, configuration, notifications, characterGate);
         var health = new HealthTracker(framework, characterWatch, notifications, configDirectory);
-        var realtimeSignals = new RealtimeSignalBus();
         var visibility = new PhoneVisibility();
         var housingCacheRoot = new DirectoryInfo(Path.Combine(cacheRoot.FullName, "housing"));
         var housingGate = installer.Gate(HousingService.AppId);

@@ -62,6 +62,9 @@ internal sealed class CallSignalRouter : IDisposable
             case SignalType.ChatPing:
                 signals.PublishChat(new ChatSignal(message.ContentId, message.Message));
                 return;
+            case SignalType.KeysStale:
+                signals.PublishKeysStale();
+                return;
             case SignalType.VelvetPing:
                 signals.PublishVelvet();
                 return;

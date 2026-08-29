@@ -24,6 +24,7 @@ internal sealed class RealtimeSignalBus
     private volatile Action<CallControl>? outbound;
 
     public event Action<ChatSignal>? ChatPinged;
+    public event Action? KeysWentStale;
     public event Action? VelvetPinged;
     public event Action? GramPinged;
     public event Action? SocialPinged;
@@ -51,6 +52,11 @@ internal sealed class RealtimeSignalBus
     public void PublishChat(ChatSignal signal)
     {
         ChatPinged?.Invoke(signal);
+    }
+
+    public void PublishKeysStale()
+    {
+        KeysWentStale?.Invoke();
     }
 
     public void PublishVelvet()

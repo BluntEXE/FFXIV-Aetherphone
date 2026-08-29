@@ -791,7 +791,13 @@ internal sealed record ConversationKeysDto(
     string[] MissingWrapUserIds,
     bool NeedsNewGeneration);
 
-internal sealed record ConversationWrapsDto(string ConversationId, int CurrentGeneration, KeyWrapDto[] Wraps);
+internal sealed record WrapHealTargetDto(string UserId, string PublicKey, int KeyVersion, int[] Generations);
+
+internal sealed record ConversationWrapsDto(
+    string ConversationId,
+    int CurrentGeneration,
+    KeyWrapDto[] Wraps,
+    WrapHealTargetDto[]? HealTargets = null);
 
 internal sealed record MyConversationKeysDto(ConversationWrapsDto[] Items);
 

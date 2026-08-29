@@ -36,7 +36,7 @@ internal sealed class MessageCipher
     private readonly ConcurrentDictionary<string, DmDecryptedBody> decryptedBodies = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, (long AtUnix, string Text)> previewCache = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, int> generationByMessage = new(StringComparer.Ordinal);
-    private readonly ConcurrentDictionary<string, byte> olderKeyScopes = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> olderKeyMessagesByScope = new(StringComparer.Ordinal);
 
     public MessageCipher(KeyVault vault, ConversationKeyStore keys, DecryptedHistoryStore? history = null)
     {
@@ -59,12 +59,12 @@ internal sealed class MessageCipher
         decryptedBodies.Clear();
         previewCache.Clear();
         generationByMessage.Clear();
-        olderKeyScopes.Clear();
+        olderKeyMessagesByScope.Clear();
     }
 
     public bool HasOlderKeyMessages(string scope)
     {
-        return olderKeyScopes.ContainsKey(scope);
+        return olderKeyMessagesByScope.TryGetValue(scope, out var messages) && !messages.IsEmpty;
     }
 
     public void RecordGeneration(string messageId, int generation)
@@ -80,7 +80,14 @@ internal sealed class MessageCipher
         return generationByMessage.TryGetValue(messageId, out generation);
     }
 
-    public void Forget(string messageId) => decryptedBodies.TryRemove(messageId, out _);
+    public void Forget(string messageId)
+    {
+        decryptedBodies.TryRemove(messageId, out _);
+        foreach (var messages in olderKeyMessagesByScope.Values)
+        {
+            messages.TryRemove(messageId, out _);
+        }
+    }
 
     public bool TryEncrypt(string scope, int generation, string plaintext, string senderId, out EncryptedOutbound outbound)
     {
@@ -202,10 +209,8 @@ internal sealed class MessageCipher
         }
 
         RecordGeneration(messageId, generation);
-        if (resolved.State == DmBodyState.NoKey && vault.State == KeyVaultState.Unlocked)
-        {
-            olderKeyScopes[scope] = 1;
-        }
+        TrackOlderKeyMessage(scope, messageId,
+            resolved.State == DmBodyState.NoKey && vault.State == KeyVaultState.Unlocked);
 
         if (resolved.State is DmBodyState.NoKey or DmBodyState.Malformed
             && (!decryptedBodies.TryGetValue(messageId, out var previous) || previous.State != resolved.State))
@@ -216,6 +221,22 @@ internal sealed class MessageCipher
 
         decryptedBodies[messageId] = resolved;
         return resolved;
+    }
+
+    private void TrackOlderKeyMessage(string scope, string messageId, bool sealedToAnOlderKey)
+    {
+        if (sealedToAnOlderKey)
+        {
+            var messages = olderKeyMessagesByScope.GetOrAdd(scope,
+                _ => new ConcurrentDictionary<string, byte>(StringComparer.Ordinal));
+            messages[messageId] = 1;
+            return;
+        }
+
+        if (olderKeyMessagesByScope.TryGetValue(scope, out var tracked))
+        {
+            tracked.TryRemove(messageId, out _);
+        }
     }
 
     public string ResolveQuotedBody(string scope, string? replyToId, string? replyBody, string? replySenderId)

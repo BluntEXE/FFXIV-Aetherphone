@@ -174,6 +174,8 @@ namespace Aetherphone.Core.Aethernet;
 [JsonSerializable(typeof(CreateGenerationRequest))]
 [JsonSerializable(typeof(AddWrapsRequest))]
 [JsonSerializable(typeof(ConversationKeysDto))]
+[JsonSerializable(typeof(WrapHealTargetDto))]
+[JsonSerializable(typeof(WrapHealTargetDto[]))]
 [JsonSerializable(typeof(ConversationWrapsDto))]
 [JsonSerializable(typeof(MyConversationKeysDto))]
 [JsonSerializable(typeof(ArchivedKeyEscrowDto))]

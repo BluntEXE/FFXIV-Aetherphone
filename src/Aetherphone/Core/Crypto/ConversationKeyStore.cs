@@ -24,6 +24,8 @@ internal sealed class ConversationKeyStore
     private readonly ConcurrentDictionary<(string ScopeId, int Generation), DateTime> unreadableRekeys = new();
     private readonly ConcurrentDictionary<string, DateTime> previewHydrateRequests = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, byte> hydratedScopes = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<(string ScopeId, string UserId, int KeyVersion), byte> healedTargets = new();
+    private readonly ConcurrentDictionary<string, byte> healsInFlight = new(StringComparer.Ordinal);
     private static readonly TimeSpan PreviewHydrateCooldown = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan UnreadableRekeyCooldown = TimeSpan.FromMinutes(2);
 
@@ -38,7 +40,7 @@ internal sealed class ConversationKeyStore
         Func<string, AddWrapsRequest, CancellationToken, Task<bool>> AddWraps,
         bool RotatesGenerations);
 
-    public ConversationKeyStore(KeysClient client, KeyVault vault)
+    public ConversationKeyStore(KeysClient client, KeyVault vault, RealtimeSignalBus signals)
     {
         this.client = client;
         this.vault = vault;
@@ -64,6 +66,7 @@ internal sealed class ConversationKeyStore
             RotatesGenerations: false);
         vault.Changed += OnVaultChanged;
         vault.PreviousKeysRestored += OnPreviousKeysRestored;
+        signals.KeysWentStale += OnKeysWentStale;
     }
 
     public static string ChatScope(string conversationId)
@@ -118,6 +121,7 @@ internal sealed class ConversationKeyStore
         scheduledSelfRepairs.Clear();
         unreadableRekeys.Clear();
         hydratedScopes.Clear();
+        healedTargets.Clear();
     }
 
     public bool IsScopeHydrated(string scopeId)
@@ -141,7 +145,9 @@ internal sealed class ConversationKeyStore
         for (var index = 0; index < bulk.Items.Length; index++)
         {
             var item = bulk.Items[index];
-            CacheWraps(ChatScope(item.ConversationId), item.CurrentGeneration, item.Wraps);
+            var scope = ChatScope(item.ConversationId);
+            CacheWraps(scope, item.CurrentGeneration, item.Wraps);
+            ScheduleHeal(chatSurface, scope, item.ConversationId, item.HealTargets);
         }
     }
 
@@ -161,7 +167,13 @@ internal sealed class ConversationKeyStore
         for (var index = 0; index < bulk.Items.Length; index++)
         {
             var item = bulk.Items[index];
-            CacheWraps(VelvetScope(item.ConversationId), item.CurrentGeneration, item.Wraps);
+            var scope = VelvetScope(item.ConversationId);
+            CacheWraps(scope, item.CurrentGeneration, item.Wraps);
+            if (vault.MyUserId is { } myUserId
+                && OtherIdFromPairKey(item.ConversationId, myUserId) is { } otherId)
+            {
+                ScheduleHeal(velvetSurface, scope, otherId, item.HealTargets);
+            }
         }
     }
 
@@ -326,7 +338,13 @@ internal sealed class ConversationKeyStore
         for (var index = 0; index < bulk.Items.Length; index++)
         {
             var item = bulk.Items[index];
-            CacheWraps(GramScope(item.ConversationId), item.CurrentGeneration, item.Wraps);
+            var scope = GramScope(item.ConversationId);
+            CacheWraps(scope, item.CurrentGeneration, item.Wraps);
+            if (vault.MyUserId is { } myUserId
+                && OtherIdFromPairKey(item.ConversationId, myUserId) is { } otherId)
+            {
+                ScheduleHeal(gramSurface, scope, otherId, item.HealTargets);
+            }
         }
     }
 
@@ -346,7 +364,13 @@ internal sealed class ConversationKeyStore
         for (var index = 0; index < bulk.Items.Length; index++)
         {
             var item = bulk.Items[index];
-            CacheWraps(AdScope(item.ConversationId), item.CurrentGeneration, item.Wraps);
+            var scope = AdScope(item.ConversationId);
+            CacheWraps(scope, item.CurrentGeneration, item.Wraps);
+            if (vault.MyUserId is { } myUserId
+                && OtherIdFromPairKey(item.ConversationId, myUserId) is { } otherId)
+            {
+                ScheduleHeal(adSurface, scope, otherId, item.HealTargets);
+            }
         }
     }
 
@@ -375,6 +399,113 @@ internal sealed class ConversationKeyStore
         }
 
         await client.AddConversationWrapsAsync(conversationId, new AddWrapsRequest(generation, wraps), token).ConfigureAwait(false);
+    }
+
+    private void ScheduleHeal(KeySurface surface, string scopeId, string remoteId, WrapHealTargetDto[]? targets)
+    {
+        if (targets is null || targets.Length == 0 || vault.State != KeyVaultState.Unlocked)
+        {
+            return;
+        }
+
+        var pending = new List<WrapHealTargetDto>(targets.Length);
+        for (var index = 0; index < targets.Length; index++)
+        {
+            var target = targets[index];
+            if (!healedTargets.ContainsKey((scopeId, target.UserId, target.KeyVersion)))
+            {
+                pending.Add(target);
+            }
+        }
+
+        if (pending.Count == 0 || !healsInFlight.TryAdd(scopeId, 0))
+        {
+            return;
+        }
+
+        _ = Task.Run(() => HealScopeAsync(surface, scopeId, remoteId, pending));
+    }
+
+    private async Task HealScopeAsync(KeySurface surface, string scopeId, string remoteId, List<WrapHealTargetDto> targets)
+    {
+        try
+        {
+            var recipientsByGeneration = new Dictionary<int, List<UserPublicKeyDto>>();
+            for (var index = 0; index < targets.Count; index++)
+            {
+                var target = targets[index];
+                for (var generationIndex = 0; generationIndex < target.Generations.Length; generationIndex++)
+                {
+                    var generation = target.Generations[generationIndex];
+                    if (!TryGetCek(scopeId, generation, out _))
+                    {
+                        continue;
+                    }
+
+                    if (!recipientsByGeneration.TryGetValue(generation, out var recipients))
+                    {
+                        recipients = new List<UserPublicKeyDto>();
+                        recipientsByGeneration[generation] = recipients;
+                    }
+
+                    recipients.Add(new UserPublicKeyDto(target.UserId, target.PublicKey, target.KeyVersion));
+                }
+            }
+
+            if (recipientsByGeneration.Count == 0)
+            {
+                return;
+            }
+
+            var accepted = 0;
+            var attempted = 0;
+            foreach (var (generation, recipients) in recipientsByGeneration)
+            {
+                if (!TryGetCek(scopeId, generation, out var cek))
+                {
+                    continue;
+                }
+
+                var wraps = BuildWraps(cek, recipients);
+                if (wraps is null)
+                {
+                    continue;
+                }
+
+                attempted++;
+                if (await surface.AddWraps(remoteId, new AddWrapsRequest(generation, wraps), CancellationToken.None)
+                        .ConfigureAwait(false))
+                {
+                    accepted++;
+                }
+            }
+
+            if (attempted == 0 || accepted != attempted)
+            {
+                AepLog.Warning(
+                    $"[Crypto] handing keys back in {scopeId} covered {accepted} of {attempted} generation(s); the rest retry next hydrate.");
+                return;
+            }
+
+            for (var index = 0; index < targets.Count; index++)
+            {
+                healedTargets[(scopeId, targets[index].UserId, targets[index].KeyVersion)] = 1;
+            }
+
+            AepLog.Info(
+                $"[Crypto] handed the conversation keys for {scopeId} back to {targets.Count} member(s) across {accepted} generation(s).");
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning(exception, $"[Crypto] handing conversation keys back in {scopeId} failed");
+        }
+        finally
+        {
+            healsInFlight.TryRemove(scopeId, out _);
+        }
     }
 
     private static List<UserPublicKeyDto> CollectHealRecipients(
@@ -644,6 +775,16 @@ internal sealed class ConversationKeyStore
         }
 
         return string.Equals(second, myUserId, StringComparison.Ordinal) ? first : null;
+    }
+
+    private void OnKeysWentStale()
+    {
+        if (vault.State != KeyVaultState.Unlocked)
+        {
+            return;
+        }
+
+        _ = RetryUnreadableWrapsAsync();
     }
 
     private void OnPreviousKeysRestored()
