@@ -979,7 +979,7 @@ internal sealed class LinkpearlPopoutWindow : Window
             }
         }
 
-        if (configuration.LinkpearlPopoutTabs && keys.Count < PopoutTabs.MaxTabs)
+        if (configuration.LinkpearlPopoutTabs && keys.Count < PopoutTabs.MaxTabs && HasAddCandidates())
         {
             AddMenuRow(MenuAddTab, string.Empty, Loc.T(L.Linkpearl.AddTab), IconGlyph.Of(FontAwesomeIcon.Plus), false,
                 false);
@@ -1035,6 +1035,21 @@ internal sealed class LinkpearlPopoutWindow : Window
             AddMenuRow(MenuSwitchTo, row.Key, RowLabel(row), RowGlyph(row),
                 string.Equals(row.Key, Key, StringComparison.Ordinal), false);
         }
+    }
+
+    private bool HasAddCandidates() => HasCandidateIn(inbox.Pinned) || HasCandidateIn(inbox.Rows);
+
+    private bool HasCandidateIn(IReadOnlyList<InboxRow> rows)
+    {
+        for (var index = 0; index < rows.Count; index++)
+        {
+            if (!Holds(rows[index].Key))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void AddCandidateRows(IReadOnlyList<InboxRow> rows)
