@@ -2,6 +2,7 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Shell;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
+using Dalamud.Interface.GameFonts;
 using Dalamud.Interface.ManagedFontAtlas;
 using Dalamud.Plugin;
 
@@ -451,8 +452,12 @@ internal sealed class FontService : IDisposable
         var source = default(ImFontPtr);
         return atlas.NewDelegateFontHandle(e =>
         {
-            e.OnPreBuild(tk => source = tk.AddDalamudAssetFont(asset,
-                new SafeFontConfig { SizePx = sharedSize, GlyphRanges = sharedRanges, }));
+            e.OnPreBuild(tk =>
+            {
+                source = tk.AddDalamudAssetFont(asset,
+                    new SafeFontConfig { SizePx = sharedSize, GlyphRanges = sharedRanges, });
+                MergeGameSymbols(tk, source);
+            });
             e.OnPostBuild(tk =>
             {
                 for (var weightIndex = 0; weightIndex < WeightFiles.Length; weightIndex++)
@@ -469,6 +474,18 @@ internal sealed class FontService : IDisposable
                 }
             });
         });
+    }
+
+    private void MergeGameSymbols(IFontAtlasBuildToolkitPreBuild toolkit, ImFontPtr primary)
+    {
+        try
+        {
+            toolkit.AddGameGlyphs(new GameFontStyle(GameFontFamily.Axis, sharedSize), GlyphPlan.GameSymbols, primary);
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning(exception, "[Fonts] skipped merging the game symbol glyphs.");
+        }
     }
 
     private static int SharedSourceFor(int weightIndex) => weightIndex == 0 ? 0 : 1;

@@ -1,6 +1,7 @@
 using System.Text;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Home;
+using Aetherphone.Core.Localization;
 using Dalamud.Game.Chat;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
@@ -291,7 +292,7 @@ internal sealed class ChatCapture : IDisposable
         var keep = 0;
         for (var index = 0; index < value.Length; index++)
         {
-            if (!IsPrivateUse(value[index]))
+            if (!IsUnsupportedGlyph(value[index]))
             {
                 keep++;
             }
@@ -312,7 +313,7 @@ internal sealed class ChatCapture : IDisposable
             var target = 0;
             for (var index = 0; index < source.Length; index++)
             {
-                if (IsPrivateUse(source[index]))
+                if (IsUnsupportedGlyph(source[index]))
                 {
                     continue;
                 }
@@ -322,7 +323,8 @@ internal sealed class ChatCapture : IDisposable
         });
     }
 
-    private static bool IsPrivateUse(char value) => value >= PrivateUseFirst && value <= PrivateUseLast;
+    private static bool IsUnsupportedGlyph(char value) =>
+        value >= PrivateUseFirst && value <= PrivateUseLast && !GlyphPlan.IsGameSymbol(value);
 
     private readonly struct PendingLink
     {

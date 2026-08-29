@@ -109,6 +109,12 @@ internal sealed class GlyphCoverage
 internal static class GlyphPlan
 {
     public const int FirstSharedCodepoint = 0x0080;
+    public const int FirstGameSymbol = 0xE020;
+    public const int LastGameSymbol = 0xE0E9;
+
+    // Square Enix maps its chat symbols (boxed numbers and letters, arrows, quality marks) into this
+    // private use block; the bounds are the first and last member of Dalamud's SeIconChar.
+    private static readonly ushort[] GameSymbolRanges = { FirstGameSymbol, LastGameSymbol, 0x0000 };
 
     private static readonly ushort[] BaseRanges =
     {
@@ -143,6 +149,10 @@ internal static class GlyphPlan
     private static readonly ushort[] NativeNameRanges = ComposeNativeNameRanges();
 
     public static ushort[] SharedBase => SharedBaseRanges;
+
+    public static ushort[] GameSymbols => GameSymbolRanges;
+
+    public static bool IsGameSymbol(int codepoint) => codepoint >= FirstGameSymbol && codepoint <= LastGameSymbol;
 
     public static bool IsSharedBase(int codepoint)
     {
