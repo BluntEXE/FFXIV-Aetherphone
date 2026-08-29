@@ -416,8 +416,9 @@ internal sealed class PhoneShell : IDisposable
         using (ImRaii.Child("chrome", screen.Size, false, ChromeFlags))
         {
             DeviceChrome.MaskScreenCorners(ImGui.GetWindowDrawList(), chassis, theme, UiScale.Current);
-            StatusBar.Draw(screen, theme, screen.IsLandscape());
-            DrawHomeIndicator(screen, theme);
+            var ink = painter.SurfaceTheme(theme);
+            StatusBar.Draw(screen, ink, screen.IsLandscape());
+            DrawHomeIndicator(screen, ink);
             if (turn.Turning)
             {
                 DeviceChrome.DrawBrightnessVeil(ImGui.GetWindowDrawList(), chassis, configuration.ScreenBrightness);

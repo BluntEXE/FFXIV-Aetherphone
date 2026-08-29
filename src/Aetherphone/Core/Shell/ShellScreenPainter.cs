@@ -23,6 +23,9 @@ internal sealed class ShellScreenPainter
         this.home = home;
     }
 
+    public PhoneTheme SurfaceTheme(PhoneTheme wallpaperTheme) =>
+        navigation.Current is { } app ? themes.ForApp(app.WantsSystemTheme) : wallpaperTheme;
+
     public void PaintCurrent(Rect screen, float screenRadius, PhoneTheme theme, in HomeMotion motion)
     {
         using var stage = ScreenLayer.Begin(CurrentLayerId, screen, false);
@@ -36,8 +39,9 @@ internal sealed class ShellScreenPainter
         PaintCurrentInside(screen, screenRadius, theme, motion);
         using (ScreenLayer.BeginPassive("chrome", screen))
         {
-            StatusBar.Draw(screen, theme, landscape);
-            HomeIndicator.Draw(ImGui.GetWindowDrawList(), HomeIndicator.Bounds(screen, UiScale.Current), theme,
+            var ink = SurfaceTheme(theme);
+            StatusBar.Draw(screen, ink, landscape);
+            HomeIndicator.Draw(ImGui.GetWindowDrawList(), HomeIndicator.Bounds(screen, UiScale.Current), ink,
                 false);
         }
 
