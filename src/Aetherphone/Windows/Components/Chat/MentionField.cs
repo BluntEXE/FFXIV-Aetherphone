@@ -13,11 +13,11 @@ internal static class MentionField
         public int Cursor;
         public bool TabRequested;
         public bool RefocusRequested;
+        public bool CaretToEndRequested;
         public readonly ImGui.ImGuiInputTextCallbackPtrDelegate Callback;
 
-        public Editor(int maxLength)
+        public Editor()
         {
-            MaxLength = maxLength;
             Callback = Apply;
         }
 
@@ -37,12 +37,23 @@ internal static class MentionField
             var current = Encoding.UTF8.GetString(data.BufSpan[..data.BufTextLen]);
             if (PendingHandle is null)
             {
+                if (CaretToEndRequested)
+                {
+                    CaretToEndRequested = false;
+                    data.CursorPos = data.BufTextLen;
+                    data.SelectionStart = data.BufTextLen;
+                    data.SelectionEnd = data.BufTextLen;
+                    Cursor = current.Length;
+                    return 0;
+                }
+
                 Cursor = ByteIndexToCharIndex(current, data.CursorPos);
                 return 0;
             }
 
             var handle = PendingHandle;
             PendingHandle = null;
+            CaretToEndRequested = false;
             if (!MentionTokenScanner.TryFind(current, Cursor, out var start, out var length))
             {
                 return 0;
@@ -98,7 +109,7 @@ internal static class MentionField
             return ImGui.InputTextWithHint(id, hint, ref value, maxLength, ImGuiInputTextFlags.EnterReturnsTrue);
         }
 
-        var editor = GetEditor(id, maxLength);
+        var editor = GetEditor(id);
         editor.MaxLength = maxLength;
         editor.TabRequested = false;
 
@@ -112,6 +123,7 @@ internal static class MentionField
         if (editor.PendingHandle is not null || editor.RefocusRequested)
         {
             ImGui.SetKeyboardFocusHere();
+            editor.CaretToEndRequested = editor.PendingHandle is null;
             editor.RefocusRequested = false;
         }
 
@@ -149,11 +161,16 @@ internal static class MentionField
         return submitted;
     }
 
-    private static Editor GetEditor(string id, int maxLength)
+    public static void CaretToEnd(string id)
+    {
+        GetEditor(id).CaretToEndRequested = true;
+    }
+
+    private static Editor GetEditor(string id)
     {
         if (!Editors.TryGetValue(id, out var editor))
         {
-            editor = new Editor(maxLength);
+            editor = new Editor();
             Editors[id] = editor;
         }
 

@@ -80,6 +80,7 @@ internal static class CommentComposerBar
         if (focusPending && !InputShield.Active)
         {
             ImGui.SetKeyboardFocusHere();
+            MentionField.CaretToEnd(inputId);
             focusPending = false;
         }
 
