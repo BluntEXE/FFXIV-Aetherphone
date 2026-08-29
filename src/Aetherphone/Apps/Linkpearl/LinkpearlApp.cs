@@ -302,7 +302,7 @@ internal sealed partial class LinkpearlApp : IResumableApp
             OpenNewChat();
         }
 
-        if (ui.IconButton(actions.Slot(1), actions.Radius, IconGlyph.Of(FontAwesomeIcon.EllipsisH),
+        if (ui.IconButton(actions.Slot(1), actions.Radius, IconGlyph.Of(FontAwesomeIcon.Cog),
                 frameTheme.TextStrong, AppSkin.Transparent, 1f, Loc.T(L.Linkpearl.More), HoverLabelSide.Below))
         {
             OpenMoreMenu(actions.Bounds(1));
