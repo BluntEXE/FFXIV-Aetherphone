@@ -12,14 +12,16 @@ internal sealed class ShortcutStore : IShortcutSource
 
     private readonly Configuration configuration;
     private readonly PluginCatalog catalog;
+    private readonly ShortcutIconLibrary icons;
     private HomeLayoutService? layout;
 
     public event Action? Changed;
 
-    public ShortcutStore(Configuration configuration, PluginCatalog catalog)
+    public ShortcutStore(Configuration configuration, PluginCatalog catalog, ShortcutIconLibrary icons)
     {
         this.configuration = configuration;
         this.catalog = catalog;
+        this.icons = icons;
     }
 
     public PluginCatalog Catalog => catalog;
@@ -77,6 +79,12 @@ internal sealed class ShortcutStore : IShortcutSource
 
     public void Remove(Guid id)
     {
+        var existing = Find(id);
+        if (existing is not null && existing.IconImage.Length > 0)
+        {
+            icons.Remove(existing.IconImage);
+        }
+
         layout?.RemoveShortcut(id);
         configuration.Shortcuts.RemoveAll(entry => entry.Id == id);
         Save();
@@ -105,8 +113,31 @@ internal sealed class ShortcutStore : IShortcutSource
         Unpin(id);
     }
 
-    public IDalamudTextureWrap? Icon(ShortcutEntry entry) =>
-        entry.IconPlugin.Length == 0 ? null : catalog.Icon(entry.IconPlugin);
+    public IDalamudTextureWrap? Icon(ShortcutEntry entry)
+    {
+        if (entry.IconImage.Length > 0)
+        {
+            return icons.Icon(entry.IconImage);
+        }
+
+        return entry.IconPlugin.Length == 0 ? null : catalog.Icon(entry.IconPlugin);
+    }
+
+    public void SetCustomIcon(ShortcutEntry entry, byte[] bakedBytes)
+    {
+        entry.IconImage = icons.Commit(bakedBytes);
+        entry.IconPlugin = string.Empty;
+    }
+
+    public void ReleaseIcon(string id)
+    {
+        if (id.Length > 0)
+        {
+            icons.Remove(id);
+        }
+    }
+
+    public string? DuplicateIcon(string id) => id.Length == 0 ? null : icons.Duplicate(id);
 
     public static string Monogram(string name)
     {

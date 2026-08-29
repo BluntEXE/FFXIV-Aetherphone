@@ -242,6 +242,9 @@ internal sealed class PhoneServices : IDisposable
         var imageDisk = new DiskCache(imageRoot, 128L * 1024 * 1024);
         var remoteImages = new RemoteImageCache(http, imageDisk);
         var pluginCatalog = new PluginCatalog(remoteImages, http, imageDisk);
+        var wallpaperImages = new WallpaperImageCache();
+        var shortcutIconDirectory = new DirectoryInfo(Path.Combine(configDirectory.FullName, "ShortcutIcons"));
+        var shortcutIcons = new ShortcutIconLibrary(shortcutIconDirectory, configuration, wallpaperImages);
         var lodestone = new LodestoneService(configuration, gameData, http, media, cacheRoot);
         var lookup = new LookupService(lodestone);
         var availability = new AppAvailability(http, aethernetSession, configuration, gameData);
@@ -421,7 +424,7 @@ internal sealed class PhoneServices : IDisposable
             GameRooms = gameRooms,
             AetherStreamLauncher = new Video.AetherStreamLauncher(),
             PluginCatalog = pluginCatalog,
-            Shortcuts = new ShortcutStore(configuration, pluginCatalog),
+            Shortcuts = new ShortcutStore(configuration, pluginCatalog, shortcutIcons),
             ShortcutRunner = new ShortcutRunner(clientState, condition),
             Lodestone = lodestone,
             Lookup = lookup,
@@ -478,7 +481,7 @@ internal sealed class PhoneServices : IDisposable
             Share = new ShareService(installer),
             Conduct = new ConductGateService(configuration),
             Wallpapers = wallpapers,
-            WallpaperImages = new WallpaperImageCache(),
+            WallpaperImages = wallpaperImages,
             Hunts = hunts,
             HuntMobCatalog = huntMobCatalog,
             HuntZoneCatalog = huntZoneCatalog,

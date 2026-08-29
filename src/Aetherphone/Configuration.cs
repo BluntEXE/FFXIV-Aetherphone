@@ -339,6 +339,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public List<CalendarCustomEvent> CalendarCustomEvents { get; set; } = new();
     public List<PhoneNote> Notes { get; set; } = new();
     public List<ShortcutEntry> Shortcuts { get; set; } = new();
+    public List<string> CustomShortcutIconIds { get; set; } = new();
     public List<ReminderItem> Reminders { get; set; } = new();
     public List<WorldClockEntry> WorldClocks { get; set; } = new();
     public List<AlarmEntry> Alarms { get; set; } = new();
