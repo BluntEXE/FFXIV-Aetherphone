@@ -1672,6 +1672,8 @@ internal static class L
                 "A fresh phone now starts with a curated Control Center, four toggles across the top row, the media tile beside the brightness and volume sliders, then settings and the accent row, with everything else waiting in Add a Control, and Reset returns to that layout rather than to every module at once. Layouts you already saved are untouched"),
             new("changelog.r1013.23",
                 "A fresh install now opens the phone minimized at login instead of putting the full phone on screen. Phones already set up keep what they chose"),
+            new("changelog.r1013.36",
+                "Added customization to the minimized phone: pick which pieces it shows and in what order, from the clock, date, Now playing, calls, notification cards and unread badge, plus new widgets for Eorzea time, weather, the next reset, gil, Aether Coin, ventures and your activity rings, all in Settings > Appearance > Minimized phone"),
             new("changelog.r1013.25",
                 "Row and post menus in Aethergram, Message, Linkpearl, Music, Yellow Pages and Velvet, and destructive confirmations across the phone, now open as a bottom sheet instead of a small anchored dropdown"),
             new("changelog.r1013.26",
