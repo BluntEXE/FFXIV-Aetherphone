@@ -1481,10 +1481,35 @@ internal sealed partial class ChirperApp : IResumableApp
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        if (UiInteract.Click(min, max, hovered))
+        var emojiZoneRight = min.X + padLeft + emojiSpan + 5f * scale;
+        var pointedKind = hovered ? SummaryKindAt(ImGui.GetMousePos().X, min.X + padLeft, step, emojiZoneRight, order, shown) : -1;
+        var emojiZone = new Rect(min, new Vector2(emojiZoneRight, max.Y));
+        var countZone = new Rect(new Vector2(emojiZoneRight, min.Y), max);
+        HoverTooltip.Show(emojiZone, pointedKind >= 0 ? ChirperReactions.Label(pointedKind) : string.Empty, HoverLabelSide.Above);
+        HoverTooltip.Show(countZone, Loc.T(L.Social.LikedByTitle), HoverLabelSide.Above);
+        if (!UiInteract.Click(min, max, hovered))
         {
-            OpenUserList(post.Id, UserListKind.Likers);
+            return;
         }
+
+        if (pointedKind >= 0)
+        {
+            store.ToggleReaction(post, pointedKind);
+            return;
+        }
+
+        OpenUserList(post.Id, UserListKind.Likers);
+    }
+
+    private static int SummaryKindAt(float mouseX, float emojiLeft, float step, float emojiZoneRight, Span<int> order, int shown)
+    {
+        if (mouseX >= emojiZoneRight)
+        {
+            return -1;
+        }
+
+        var slot = (int)MathF.Floor((mouseX - emojiLeft) / step);
+        return order[Math.Clamp(slot, 0, shown - 1)];
     }
 
     private static float ReactionChipWidth(PostDto post, int kind)
