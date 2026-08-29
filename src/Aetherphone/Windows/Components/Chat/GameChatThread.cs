@@ -49,6 +49,7 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
     private readonly List<ChatEntry> ghostEntries = new(4);
     private TranscriptMessage[] mapped = Array.Empty<TranscriptMessage>();
     private int mappedCount;
+    private int mappedRequired = -1;
     private long mappedRevision = -1;
     private GameChatTarget target;
     private string activeChannel = string.Empty;
@@ -294,10 +295,15 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
 
             SyncFollow();
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+            ChatEntry? previous = null;
             for (var index = 0; index < entries.Count; index++)
             {
                 var entry = entries[index];
-                var previous = index > 0 ? entries[index - 1] : null;
+                if (Hidden(entry))
+                {
+                    continue;
+                }
+
                 if (previous is null || !TimeText.SameLocalDay(Seconds(previous.At), Seconds(entry.At)))
                 {
                     DrawDaySeparator(entry.At, theme);
@@ -325,6 +331,8 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
                     revealId = null;
                     followBottom = false;
                 }
+
+                previous = entry;
             }
 
             for (var index = 0; index < ghostEntries.Count; index++)
@@ -509,29 +517,40 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
     {
         var entries = view.Entries;
         var required = entries.Count + ghostEntries.Count;
-        if (mappedRevision == view.Revision && mappedCount == required)
+        if (mappedRevision == view.Revision && mappedRequired == required)
         {
             return;
         }
 
         mappedRevision = view.Revision;
+        mappedRequired = required;
         if (mapped.Length < required)
         {
             mapped = new TranscriptMessage[Math.Max(required, 64)];
         }
 
+        var written = 0;
         for (var index = 0; index < entries.Count; index++)
         {
-            mapped[index] = Map(entries[index], theme, 0);
+            var entry = entries[index];
+            if (Hidden(entry))
+            {
+                continue;
+            }
+
+            mapped[written++] = Map(entry, theme, 0);
         }
 
         for (var index = 0; index < ghostEntries.Count; index++)
         {
-            mapped[entries.Count + index] = Map(ghostEntries[index], theme, TranscriptFlags.Placeholder);
+            mapped[written++] = Map(ghostEntries[index], theme, TranscriptFlags.Placeholder);
         }
 
-        mappedCount = required;
+        mappedCount = written;
     }
+
+    private static bool Hidden(ChatEntry entry) =>
+        entry.IsSelf && ChannelStyles.Shared.HidesOutgoing(entry.ChannelKey);
 
     private TranscriptMessage Map(ChatEntry entry, PhoneTheme theme, byte flags)
     {
@@ -544,9 +563,12 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
         }
 
         var runs = ChatRuns.For(entry);
+        var overrides = ChannelStyles.Shared.For(entry.ChannelKey);
+        var packedName = overrides is null ? 0u : entry.IsSelf ? overrides.OutgoingName : overrides.IncomingName;
+        var senderTint = packedName != 0u ? ChannelInk.Unpack(packedName) : SenderTint.Of(entry.AuthorName);
         return new TranscriptMessage(entry.Id, entry.IsSelf ? SelfId : entry.SenderKey, entry.Text, 0,
-            Seconds(entry.At), 0, 0, null, entry.AuthorName, SenderTint.Of(entry.AuthorName), flags,
-            channelTag: tag, channelTint: tagTint, runs: runs.HasLinks ? runs.Runs : null);
+            Seconds(entry.At), 0, 0, null, entry.AuthorName, senderTint, flags,
+            channelTag: tag, channelTint: tagTint, runs: runs.HasLinks || runs.HasEmoji ? runs.Runs : null);
     }
 
     private void SyncGhosts()

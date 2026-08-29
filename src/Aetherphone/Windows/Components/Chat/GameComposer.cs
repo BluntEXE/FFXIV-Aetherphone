@@ -41,11 +41,13 @@ internal sealed class GameComposer
     private const float RingThreshold = 0.55f;
     private const float RowHeight = 38f;
     private const float PillInset = 7f;
+    private const float EmojiRadius = 9f;
     private const int MinimumLines = 1;
     private const int MaximumLines = 10;
     private const long DoubleEnterWindowMilliseconds = 700;
 
     private readonly DropdownMenu channelMenu = new();
+    private readonly GameEmojiComposer emoji = new();
     private readonly List<DropdownMenu.Item> menuItems = new(24);
     private readonly List<string> menuKeys = new(24);
     private readonly List<string> splitScratch = new(MessageSplitter.MaxParts);
@@ -72,7 +74,11 @@ internal sealed class GameComposer
 
     public void Gate() => channelMenu.Gate();
 
-    public void CloseMenus() => channelMenu.Close();
+    public void CloseMenus()
+    {
+        channelMenu.Close();
+        emoji.Close();
+    }
 
     public void Bind(string nextConversationKey)
     {
@@ -103,6 +109,7 @@ internal sealed class GameComposer
         Adopt(string.Empty);
         focus = false;
         channelMenu.Close();
+        emoji.Close();
     }
 
     public void Refill(string text)
@@ -154,7 +161,10 @@ internal sealed class GameComposer
         var chipMax = new Vector2(chipMin.X + chipWidth, pillMax.Y - 3f * scale);
         var sendDiameter = rowHeight - 6f * scale;
         var sendCenter = new Vector2(pillMax.X - sendDiameter * 0.5f, pillMax.Y - rowHeight * 0.5f);
-        var fieldMin = new Vector2(chipMax.X + Metrics.Space.Xs * scale, pillMin.Y);
+        var emojiRadius = GameEmojiComposer.PickerEnabled ? EmojiRadius * scale : 0f;
+        var emojiCenter = new Vector2(chipMax.X + Metrics.Space.Xs * scale + emojiRadius,
+            (pillMin.Y + pillMax.Y) * 0.5f);
+        var fieldMin = new Vector2(emojiCenter.X + emojiRadius + Metrics.Space.Xs * scale, pillMin.Y);
         var fieldMax = new Vector2(sendCenter.X - sendDiameter * 0.5f - Metrics.Space.Xs * scale, pillMax.Y);
         Squircle.Fill(drawList, fieldMin, fieldMax, MathF.Min(fieldMax.Y - fieldMin.Y, rowHeight) * 0.5f,
             ImGui.GetColorU32(theme.GroupedCard));
@@ -163,6 +173,8 @@ internal sealed class GameComposer
         {
             channelMenu.Toggle("linkpearl.composer.channel", new Rect(chipMin, chipMax));
         }
+
+        emoji.DrawToggle(emojiCenter, emojiRadius, theme);
 
         var innerWidth = MathF.Max(1f, fieldMax.X - fieldMin.X - Metrics.Space.Md * scale);
         enterPressed = false;
@@ -180,6 +192,13 @@ internal sealed class GameComposer
         else
         {
             DrawSingleLine(fieldMin, fieldMax, innerWidth, theme, scale);
+        }
+
+        emoji.DrawSuggestions(bar, model.Screen, theme, ref draft);
+        var pickedEmoji = emoji.DrawPanel(bar, model.Screen, theme);
+        if (pickedEmoji is not null && Encoding.UTF8.GetByteCount(draft) + pickedEmoji.Length <= capacityBytes)
+        {
+            Adopt(draft + pickedEmoji);
         }
 
         if (ChatCommands.TryAbsorb(draft, out var absorbed, out var remainder) && Offered(model.Channels, absorbed.Key))
@@ -454,7 +473,10 @@ internal sealed class GameComposer
     {
         var chipWidth = MathF.Min(ChipMaxWidth * scale, ChipWidthOf(channel, scale));
         var sendDiameter = (RowHeight - 6f) * scale;
-        var fieldWidth = barWidth - Metrics.Space.Md * 2f * scale - chipWidth - sendDiameter -
+        var emojiWidth = GameEmojiComposer.PickerEnabled
+            ? EmojiRadius * 2f * scale + Metrics.Space.Xs * scale
+            : 0f;
+        var fieldWidth = barWidth - Metrics.Space.Md * 2f * scale - chipWidth - sendDiameter - emojiWidth -
                          Metrics.Space.Xs * 2f * scale;
         return MathF.Max(1f, fieldWidth - Metrics.Space.Md * scale);
     }
