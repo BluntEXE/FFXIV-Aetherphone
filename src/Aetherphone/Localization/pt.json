@@ -4989,6 +4989,7 @@
   "changelog.r1013.41": "Corrigido o brilho dos painéis terminar em uma linha dura logo antes dos cantos arredondados",
   "changelog.r1013.42": "Os valores em gil e as contagens de espectadores agora seguem a formatação numérica do seu idioma",
   "changelog.r1013.43": "Conversas seladas com uma chave que você não tem mais agora voltam sozinhas, entregues pelas pessoas com quem você conversava",
+  "changelog.r1013.48": "Corrigimos o botão de publicar cobrindo a barra de rolagem ao lado dele no Aethergram, Chirper, Velvet, Fotos, Muster e Message, para que a barra volte a ser arrastada, contribuição de Farroness",
   "changelog.r1012.0": "Adicionado Mods, um navegador do Heliosphere: pesquise o catálogo por nome ou categoria, ordene por alta, downloads ou data e veja as imagens, o changelog e as permissões de cada mod sem sair do jogo",
   "changelog.r1012.1": "Instalar e atualizar pelo Mods passa pelo plugin do Heliosphere, então os criadores mantêm suas contagens de downloads e o celular nunca toca na pasta de mods do Penumbra",
   "changelog.r1012.2": "A aba Instalados do Mods lista seus mods do Heliosphere com as capas, marca os que têm atualização e os ativa ou desativa na sua coleção",

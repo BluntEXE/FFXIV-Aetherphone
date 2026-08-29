@@ -4989,6 +4989,7 @@
   "changelog.r1013.41": "Behoben, dass der Glanzstreifen an Flächen kurz vor den abgerundeten Ecken hart abbrach",
   "changelog.r1013.42": "Gil-Beträge und Zuschauerzahlen folgen jetzt der Zahlenformatierung deiner Sprache",
   "changelog.r1013.43": "Chats, die mit einem Schlüssel versiegelt sind, den du nicht mehr hast, kehren jetzt von selbst zurück, übergeben von den Personen, mit denen du geschrieben hast",
+  "changelog.r1013.48": "Behoben, dass der Verfassen-Knopf die Bildlaufleiste daneben verdeckte, in Aethergram, Chirper, Velvet, Fotos, Muster und Message, sodass sich die Leiste wieder ziehen lässt, beigetragen von Farroness",
   "changelog.r1012.0": "Neu: Mods, ein Heliosphere-Browser: durchsuche den Katalog nach Name oder Kategorie, sortiere nach Trend, Downloads oder Datum und sieh dir Bilder, Changelog und Berechtigungen jedes Mods an, ohne das Spiel zu verlassen",
   "changelog.r1012.1": "Installieren und Aktualisieren aus Mods läuft über das Heliosphere-Plugin, sodass Ersteller ihre Download-Zahlen behalten und das Handy den Mod-Ordner von Penumbra nie anfasst",
   "changelog.r1012.2": "Der Tab Installiert in Mods zeigt deine Heliosphere-Mods mit Cover, markiert die mit einem Update und schaltet sie in deiner Sammlung ein oder aus",

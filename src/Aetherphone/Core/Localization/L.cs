@@ -1737,6 +1737,8 @@ internal static class L
                 "Chats sealed to a key you no longer have now come back on their own, handed over by the people you were talking to"),
             new("changelog.r1013.44",
                 "Fixed the older key notice staying up in a chat after those messages had already come back"),
+            new("changelog.r1013.48",
+                "Fixed the compose button covering the scrollbar beside it in Aethergram, Chirper, Velvet, Photos, Muster and Message, so that bar can be dragged again, contributed by Farroness"),
         };
 
         public static readonly LocString[] Release1012 =

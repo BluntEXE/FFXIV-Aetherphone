@@ -4989,6 +4989,7 @@
   "changelog.r1013.41": "Fixed the glossy highlight on panels ending in a hard line short of their rounded corners",
   "changelog.r1013.42": "Gil figures and viewer counts now follow your language's number formatting",
   "changelog.r1013.43": "Chats sealed to a key you no longer have now come back on their own, handed over by the people you were talking to",
+  "changelog.r1013.48": "Fixed the compose button covering the scrollbar beside it in Aethergram, Chirper, Velvet, Photos, Muster and Message, so that bar can be dragged again, contributed by Farroness",
   "changelog.r1012.0": "Added Mods, a Heliosphere browser: search the catalog by name or category, sort by trending, downloads or date, and read each mod's images, changelog and permissions without leaving the game",
   "changelog.r1012.1": "Installing and updating from Mods goes through the Heliosphere plugin, so creators keep their download counts and the phone never touches Penumbra's mod folder",
   "changelog.r1012.2": "The Installed tab in Mods lists your Heliosphere mods with their covers, flags the ones with an update, and switches them on or off in your collection",

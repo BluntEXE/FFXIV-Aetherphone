@@ -4989,6 +4989,7 @@
   "changelog.r1013.41": "Panellerdeki parlaklığın yuvarlatılmış köşelere varmadan sert bir çizgiyle kesilmesi düzeltildi",
   "changelog.r1013.42": "Gil tutarları ve izleyici sayıları artık dilinin sayı biçimini izliyor",
   "changelog.r1013.43": "Artık sende olmayan bir anahtarla mühürlenmiş sohbetler, konuştuğun kişiler anahtarı geri verdiği için kendiliğinden geri geliyor",
+  "changelog.r1013.48": "Aethergram, Chirper, Velvet, Fotoğraflar, Muster ve Message'ta oluşturma düğmesinin yanındaki kaydırma çubuğunu kapatması düzeltildi, çubuk yeniden sürüklenebiliyor, Farroness katkısıyla",
   "changelog.r1012.0": "Heliosphere tarayıcısı Modlar eklendi: kataloğu ada veya kategoriye göre arayın, trend, indirme veya tarihe göre sıralayın ve her modun görsellerini, değişiklik günlüğünü ve izinlerini oyundan çıkmadan okuyun",
   "changelog.r1012.1": "Modlar'dan kurulum ve güncelleme Heliosphere eklentisi üzerinden yapılır, böylece yapımcılar indirme sayılarını korur ve telefon Penumbra'nın mod klasörüne asla dokunmaz",
   "changelog.r1012.2": "Modlar'daki Kurulu sekmesi Heliosphere modlarınızı kapaklarıyla listeler, güncellemesi olanları işaretler ve koleksiyonunuzda açıp kapatır",
