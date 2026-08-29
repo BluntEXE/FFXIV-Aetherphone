@@ -99,6 +99,7 @@ internal sealed class LinkpearlPopoutWindow : Window
     private bool suppressed;
     private bool positionForced;
     private bool dragging;
+    private bool focusedLastFrame;
     private Spring collapseSpring;
     private Spring fadeSpring;
     private LinkpearlPopoutState? savedPlacement;
@@ -348,11 +349,16 @@ internal sealed class LinkpearlPopoutWindow : Window
             return true;
         }
 
+        CloseMenus();
+        confirm.CancelHost(confirmHost);
+        return true;
+    }
+
+    private void CloseMenus()
+    {
         switchMenu.Close();
         chatMenu.Close();
         thread.CloseMenus();
-        confirm.CancelHost(confirmHost);
-        return true;
     }
 
     private void ToggleCollapsed(bool value)
@@ -523,6 +529,12 @@ internal sealed class LinkpearlPopoutWindow : Window
         }
 
         UpdateAttention(row, !collapsed && lively);
+        if (focusedLastFrame && !focusedWindow)
+        {
+            CloseMenus();
+        }
+
+        focusedLastFrame = focusedWindow;
         chatMenu.Gate();
         switchMenu.Gate();
         thread.Gate();
