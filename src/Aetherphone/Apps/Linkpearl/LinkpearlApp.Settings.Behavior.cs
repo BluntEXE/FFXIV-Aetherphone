@@ -28,6 +28,12 @@ internal sealed partial class LinkpearlApp
         "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
     };
 
+    private void DrawBehaviorSettings(float scale)
+    {
+        DrawPresenceSettings(scale);
+        DrawOpenChatSettings();
+    }
+
     private void DrawPresenceSettings(float scale)
     {
         SettingsSection.Header(Loc.T(L.Linkpearl.PresenceSection), frameTheme);

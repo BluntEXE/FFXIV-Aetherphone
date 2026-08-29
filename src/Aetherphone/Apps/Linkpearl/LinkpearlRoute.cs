@@ -4,10 +4,8 @@ namespace Aetherphone.Apps.Linkpearl;
 
 internal enum LinkpearlSettingsSection : byte
 {
-    Alerts,
     Popouts,
-    Presence,
-    OpenChat,
+    Behavior,
     Composer,
     Channels,
     History,
@@ -42,7 +40,7 @@ internal readonly struct LinkpearlRoute
     public readonly LinkpearlSettingsSection Section;
 
     private LinkpearlRoute(LinkpearlScreen screen, string conversationKey, FriendEntry? friend, string lookupId,
-        string lookupName, string lookupWorld, LinkpearlSettingsSection section = LinkpearlSettingsSection.Alerts)
+        string lookupName, string lookupWorld, LinkpearlSettingsSection section = LinkpearlSettingsSection.Popouts)
     {
         Screen = screen;
         ConversationKey = conversationKey;

@@ -3468,6 +3468,7 @@ internal static class L
         public static readonly LocString StartChat = new("linkpearl.startChat", "Start a chat");
         public static readonly LocString ChatSettings = new("linkpearl.chatSettings", "Chat settings");
         public static readonly LocString MarkAllRead = new("linkpearl.markAllRead", "Mark all as read");
+        public static readonly LocString BehaviorSection = new("linkpearl.behaviorSection", "Behavior");
         public static readonly LocString PresenceSection = new("linkpearl.presenceSection", "Hide while busy");
         public static readonly LocString HideInCombat = new("linkpearl.hideInCombat", "Hide in combat");
         public static readonly LocString HideInDuty = new("linkpearl.hideInDuty", "Hide in duties");

@@ -26,16 +26,13 @@ internal sealed partial class LinkpearlApp
 
     private static readonly LinkpearlSettingsSection[] SettingsSections =
     {
-        LinkpearlSettingsSection.Alerts, LinkpearlSettingsSection.Popouts, LinkpearlSettingsSection.Presence,
-        LinkpearlSettingsSection.OpenChat, LinkpearlSettingsSection.Composer, LinkpearlSettingsSection.Channels,
-        LinkpearlSettingsSection.History,
+        LinkpearlSettingsSection.Popouts, LinkpearlSettingsSection.Behavior, LinkpearlSettingsSection.Composer,
+        LinkpearlSettingsSection.Channels, LinkpearlSettingsSection.History,
     };
 
     private static readonly Vector4[] SettingsSectionTints =
     {
-        new(0.95f, 0.40f, 0.42f, 1f),
         new(0.36f, 0.55f, 0.95f, 1f),
-        new(0.52f, 0.54f, 0.60f, 1f),
         new(0.95f, 0.68f, 0.25f, 1f),
         new(0.20f, 0.70f, 0.62f, 1f),
         new(0.62f, 0.45f, 0.92f, 1f),
@@ -51,6 +48,17 @@ internal sealed partial class LinkpearlApp
         using (AppSurface.Begin(body))
         {
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
+            var alerts = GroupCard.Begin(frameTheme, 1);
+            var paused = SettingsRow.Bool(alerts.NextRow(), Loc.T(L.Messages.PauseNotifications),
+                notificationGate.Paused, frameTheme, "linkpearl.settings.pause");
+            if (paused != notificationGate.Paused)
+            {
+                notificationGate.SetPaused(paused);
+            }
+
+            alerts.End();
+            SettingsSection.Hint(Loc.T(L.Linkpearl.PauseHint), frameTheme);
+            ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
             var card = GroupCard.Begin(frameTheme, SettingsSections.Length, SettingsLinkRowHeight);
             for (var index = 0; index < SettingsSections.Length; index++)
             {
@@ -77,17 +85,11 @@ internal sealed partial class LinkpearlApp
         {
             switch (section)
             {
-                case LinkpearlSettingsSection.Alerts:
-                    DrawNotificationSettings(scale);
-                    break;
                 case LinkpearlSettingsSection.Popouts:
                     DrawPopoutSettings(scale);
                     break;
-                case LinkpearlSettingsSection.Presence:
-                    DrawPresenceSettings(scale);
-                    break;
-                case LinkpearlSettingsSection.OpenChat:
-                    DrawOpenChatSettings();
+                case LinkpearlSettingsSection.Behavior:
+                    DrawBehaviorSettings(scale);
                     break;
                 case LinkpearlSettingsSection.Composer:
                     DrawComposerSettings(scale);
@@ -108,10 +110,8 @@ internal sealed partial class LinkpearlApp
 
     private static FontAwesomeIcon SectionIcon(LinkpearlSettingsSection section) => section switch
     {
-        LinkpearlSettingsSection.Alerts => FontAwesomeIcon.Bell,
         LinkpearlSettingsSection.Popouts => FontAwesomeIcon.ExternalLinkAlt,
-        LinkpearlSettingsSection.Presence => FontAwesomeIcon.EyeSlash,
-        LinkpearlSettingsSection.OpenChat => FontAwesomeIcon.Bolt,
+        LinkpearlSettingsSection.Behavior => FontAwesomeIcon.SlidersH,
         LinkpearlSettingsSection.Composer => FontAwesomeIcon.PenAlt,
         LinkpearlSettingsSection.Channels => FontAwesomeIcon.Hashtag,
         _ => FontAwesomeIcon.History,
@@ -119,28 +119,12 @@ internal sealed partial class LinkpearlApp
 
     private static LocString SectionTitle(LinkpearlSettingsSection section) => section switch
     {
-        LinkpearlSettingsSection.Alerts => L.Common.Alerts,
         LinkpearlSettingsSection.Popouts => L.Linkpearl.PopoutSection,
-        LinkpearlSettingsSection.Presence => L.Linkpearl.PresenceSection,
-        LinkpearlSettingsSection.OpenChat => L.Linkpearl.OpenChatSection,
+        LinkpearlSettingsSection.Behavior => L.Linkpearl.BehaviorSection,
         LinkpearlSettingsSection.Composer => L.Linkpearl.ComposerSection,
         LinkpearlSettingsSection.Channels => L.Linkpearl.ChannelStyleSection,
         _ => L.Linkpearl.KeepHistory,
     };
-    private void DrawNotificationSettings(float scale)
-    {
-        SettingsSection.Header(Loc.T(L.Common.Alerts), frameTheme);
-        var card = GroupCard.Begin(frameTheme, 1);
-        var paused = SettingsRow.Bool(card.NextRow(), Loc.T(L.Messages.PauseNotifications), notificationGate.Paused,
-            frameTheme, "linkpearl.settings.pause");
-        if (paused != notificationGate.Paused)
-        {
-            notificationGate.SetPaused(paused);
-        }
-
-        card.End();
-        SettingsSection.Hint(Loc.T(L.Linkpearl.PauseHint), frameTheme);
-    }
 
     private void DrawPopoutSettings(float scale)
     {
