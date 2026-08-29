@@ -85,12 +85,12 @@ Ordered by severity. Client file references are relative to src/Aetherphone; bac
 
 ### High: lifecycle correctness and dead ends
 
-4. **A correct code against a stale escrow reports "wrong code".** RecoverWithCodeAsync returns plain false both for a bad code and for an escrow that no longer matches the account public key (KeyVault.cs:339-344). A user whose key rotated elsewhere will retype a correct code forever. Distinguish the cases and route the user to "Older chats" or reset.
+4. **A correct code against a stale escrow reports "wrong code".** Fixed since the audit: RecoverWithCodeAsync now returns a RecoveryAttemptOutcome, tries archived escrows when the current escrow does not open, keeps any older key the code does open (persisted locally), and the UI explains that the code is from before the key changed instead of calling it wrong.
 5. **Peer rotation notices are nearly unreachable and not persisted.** The only ResolveAsync trigger is opening a 1:1 thread's encryption info page (MessageApp.Encryption.cs:34-38); group threads never show the banner (Thread.cs early-returns for groups); the new version is persisted before the user sees the notice, and the notice itself is memory only, so a restart destroys it. In practice almost nobody will ever see "security key changed". Resolve peer keys when a thread opens, persist an unacknowledged-rotation flag, and show the banner in groups.
 6. **Franking verification failures are invisible.** TranscriptFlags.Encrypted and Unverified are set (MessageApp.Thread.cs:368-375) but no renderer reads them; a message whose commitment tag failed verification renders identically to a verified one. Silent integrity failure; also weakens the report flow.
-7. **Encryption guide notifications open the wrong page.** NotificationRouter routes every settings notification through the Safety launcher (NotificationRouter.cs:176-179), so "Save your recovery code" lands on the Safety page.
+7. **Encryption guide notifications open the wrong page.** Fixed since the audit: NotificationRouter now routes notifications carrying the encryption guide group key through the EncryptionSetupLauncher, so they open the Encryption page.
 8. **Same-conversation replay is unprevented.** The AAD is scope, generation, sender: no message id or counter. The server does not deduplicate envelopes. A relayed identical envelope appears as a legitimate new message from the same sender.
-9. **Restored archived keys are memory only.** RestorePreviousKeysAsync keeps recovered old keys in a list that dies with the session (KeyVault.cs:583-592); the user must re-enter the old code every launch to read old-generation history, unlike locally retired keys which persist. Persist them like RetireStoredBlob does.
+9. **Restored archived keys are memory only.** Fixed since the audit: every key restored from an archived escrow is now persisted into the local retired-key store (RetireStoredBlob), so it survives restarts, and a Locked device also loads its retired keys so already-restored chats stay readable while locked.
 10. **Backend main lags dev on encryption.** The deployed contract (device link endpoints, DeviceLinkRequests table) exists only on the backend dev branch; main has neither the endpoints nor tests. Anyone auditing or deploying from main ships a client whose device-link flow 404s.
 
 ### Medium
@@ -110,7 +110,7 @@ Ordered by severity. Client file references are relative to src/Aetherphone; bac
 20. UnwrapFailureCache holds one entry per scope and generation, so two distinct failing wraps for one generation alternate retries forever (wasted work only).
 21. MessageCipher caches and ConversationKeyStore bookkeeping maps are unbounded for the session.
 22. Recovery copy buttons put the code on the OS clipboard with no warning or clearing.
-23. Silent archived-escrow restore after recovery swallows all errors, so "Older chats" may silently stay locked.
+23. Silent archived-escrow restore after recovery swallows all errors, so "Older chats" may silently stay locked. Fixed since the audit: the restore now reports how many keys it recovered and points the user at Older chats when the check fails.
 24. WrapCek writes a single-byte ephemeral key length with no overflow guard (fine for P-256, a trap for any future curve).
 25. KeyVault.OnSessionChanged refreshes only on sign-out; sign-in relies on chat surfaces ticking, so a user with the messages gate closed never provisions and never gets device-link prompts. Deserves at least a comment; it reads like an inverted guard.
 26. Encryption.LockedBody is an orphaned LocString; testing-and-release.md's crypto test inventory omits three of the nine test files; messaging-and-chat.md still says "safety-number-changed banner" for what is now the security code plus header lock.

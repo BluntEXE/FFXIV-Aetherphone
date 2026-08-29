@@ -3096,6 +3096,7 @@ internal static class L
         public static readonly LocString RecoveryCodeLabel = new("encryption.recoveryCodeLabel", "Recovery code");
         public static readonly LocString RecoveryUnlockButton = new("encryption.recoveryUnlockButton", "Unlock my chats");
         public static readonly LocString RecoveryWrongCode = new("encryption.recoveryWrongCode", "That code didn't work. Check it and try again.");
+        public static readonly LocString RecoveryOlderCode = new("encryption.recoveryOlderCode", "That code is from before your key changed, so it can't unlock current chats, but the older chats it protects were unlocked on this PC. To unlock everything, use your newest code, your other PC, or create a new key.");
         public static readonly LocString RecoveryKeyChanged = new("encryption.recoveryKeyChanged", "Your encryption key changed on another device, so this device can't create a recovery code right now. Wait a moment for this device to update, then try again.");
         public static readonly LocString RestoreOlderTitle = new("encryption.restoreOlderTitle", "Older chats");
         public static readonly LocString RestoreOlderBody = new("encryption.restoreOlderBody", "Keys replaced on this PC are tried automatically. Messages sealed to a key that was never here can be unlocked with the recovery code you had at the time.");
@@ -3104,6 +3105,7 @@ internal static class L
         public static readonly LocString RestoreOlderConfirm = new("encryption.restoreOlderConfirm", "Unlock older chats");
         public static readonly LocString RestoreOlderDone = new("encryption.restoreOlderDone", "Keys restored: {0}. Older messages are now readable on this device.");
         public static readonly LocString RestoreOlderNoMatch = new("encryption.restoreOlderNoMatch", "That code didn't match any older keys.");
+        public static readonly LocString RestoreOlderRetry = new("encryption.restoreOlderRetry", "Your chats are unlocked, but checking for older keys failed. Open Older chats and enter the same code to try again.");
         public static readonly LocString ForgotBody = new("encryption.forgotBody", "A new key will be created. The key it replaces stays on this PC, so older messages keep opening here. Keep your current recovery code: it is what opens them on another PC.");
         public static readonly LocString LockedNoRecoveryBanner = new("encryption.lockedNoRecoveryBanner", "Your old chats can't be opened on this PC. Tap to see what happened.");
         public static readonly LocString UnreadableKeyBody = new("encryption.unreadableKeyBody", "Windows could not open the encryption key saved on this PC. This usually means the game is running as a different Windows user, or Windows was reinstalled. Your key is still here and untouched: start the game the way you normally do and it should unlock. Creating a new key would leave your old messages unreadable.");

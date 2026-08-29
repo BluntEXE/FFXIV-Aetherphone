@@ -29,6 +29,14 @@ internal enum RecoveryCodeCreationStatus
     KeyChangedElsewhere = 2,
 }
 
+internal enum RecoveryAttemptOutcome
+{
+    Failed = 0,
+    Recovered = 1,
+    WrongCode = 2,
+    OlderCode = 3,
+}
+
 internal readonly record struct RecoveryCodeCreation(RecoveryCodeCreationStatus Status, string? Code)
 {
     public static readonly RecoveryCodeCreation Failure = new(RecoveryCodeCreationStatus.Failed, null);
@@ -195,6 +203,7 @@ internal sealed class KeyVault : IDisposable
 
             ImportStoredKey(accountId, out var localStatus);
             LocalKeyUnreadable = localStatus == LocalKeyStatus.Unreadable;
+            LoadRetiredKeys();
             AepLog.Warning(
                 $"[Encryption] no usable local key for this account; locking this device instead of creating a new key (stored key: {localStatus}, recovery available: {bundle.PrivateKey is not null}).");
             SetState(KeyVaultState.Locked);
@@ -295,8 +304,9 @@ internal sealed class KeyVault : IDisposable
         }
     }
 
-    public async Task<bool> RecoverWithCodeAsync(string code, CancellationToken token)
+    public async Task<RecoveryAttemptOutcome> RecoverWithCodeAsync(string code, CancellationToken token)
     {
+        var olderKeysRestored = 0;
         await gate.WaitAsync(token).ConfigureAwait(false);
         try
         {
@@ -305,27 +315,29 @@ internal sealed class KeyVault : IDisposable
             if (bundle is null)
             {
                 AepLog.Warning("[Encryption] recovery failed: the keys endpoint was unreachable.");
-                return false;
+                return RecoveryAttemptOutcome.Failed;
             }
 
             if (accountId is null || !string.Equals(MyUserId, accountId, StringComparison.Ordinal))
             {
                 AepLog.Warning("[Encryption] recovery stopped: the account changed while the escrow was being fetched.");
-                return false;
+                return RecoveryAttemptOutcome.Failed;
             }
 
             serverBundle = bundle;
             if (bundle.PrivateKey is null)
             {
-                AepLog.Warning("[Encryption] recovery failed: no recovery escrow exists for this account.");
-                return false;
+                AepLog.Warning("[Encryption] recovery found no escrow for the current key; checking archived escrows.");
+                olderKeysRestored = await RestoreArchivedKeysAsync(code, token).ConfigureAwait(false);
+                return olderKeysRestored > 0 ? RecoveryAttemptOutcome.OlderCode : RecoveryAttemptOutcome.Failed;
             }
 
             var pkcs8 = RecoveryKey.Unwrap(bundle.PrivateKey, code);
             if (pkcs8 is null)
             {
-                AepLog.Info("[Encryption] recovery failed: the entered code did not open the escrow.");
-                return false;
+                AepLog.Info("[Encryption] the entered code did not open the current escrow; checking archived escrows.");
+                olderKeysRestored = await RestoreArchivedKeysAsync(code, token).ConfigureAwait(false);
+                return olderKeysRestored > 0 ? RecoveryAttemptOutcome.OlderCode : RecoveryAttemptOutcome.WrongCode;
             }
 
             var imported = CryptoBox.ImportPrivateKey(pkcs8);
@@ -333,14 +345,24 @@ internal sealed class KeyVault : IDisposable
             {
                 CryptographicOperations.ZeroMemory(pkcs8);
                 AepLog.Warning("[Encryption] recovery failed: the escrow opened but its private key could not be imported.");
-                return false;
+                return RecoveryAttemptOutcome.Failed;
             }
 
             if (!string.Equals(CryptoBox.ExportPublicKey(imported), bundle.PublicKey, StringComparison.Ordinal))
             {
                 CryptographicOperations.ZeroMemory(pkcs8);
-                AepLog.Warning("[Encryption] recovery failed: the escrowed key does not match the account's current public key (stale escrow).");
-                return false;
+                AepLog.Warning(
+                    "[Encryption] the entered code opened an escrow for a key that is no longer current; keeping that key so older chats open.");
+                var stale = new List<EcPrivateKey>();
+                var stalePublicKey = CryptoBox.TryExportPublicKey(imported);
+                if (stalePublicKey is not null && !CollectKnownPublicKeys().Contains(stalePublicKey))
+                {
+                    stale.Add(imported);
+                }
+
+                olderKeysRestored = AdoptOlderKeys(stale);
+                olderKeysRestored += await RestoreArchivedKeysAsync(code, token).ConfigureAwait(false);
+                return RecoveryAttemptOutcome.OlderCode;
             }
 
             ClearKey();
@@ -350,11 +372,15 @@ internal sealed class KeyVault : IDisposable
             LocalKeyUnreadable = false;
             AepLog.Info("[Encryption] a recovery code restored this account's key on this device.");
             SetState(KeyVaultState.Unlocked);
-            return true;
+            return RecoveryAttemptOutcome.Recovered;
         }
         finally
         {
             gate.Release();
+            if (olderKeysRestored > 0)
+            {
+                PreviousKeysRestored?.Invoke();
+            }
         }
     }
 
@@ -544,51 +570,10 @@ internal sealed class KeyVault : IDisposable
             if (escrows is null)
             {
                 AepLog.Warning("[Encryption] restoring older keys failed: the escrows endpoint was unreachable.");
-                return 0;
+                return -1;
             }
 
-            if (escrows.Items.Length == 0)
-            {
-                return 0;
-            }
-
-            var knownPublicKeys = CollectKnownPublicKeys();
-            var restored = new List<EcPrivateKey>();
-            for (var index = 0; index < escrows.Items.Length; index++)
-            {
-                var item = escrows.Items[index];
-                if (!knownPublicKeys.Add(item.PublicKey))
-                {
-                    continue;
-                }
-
-                var imported = TryRecoverArchivedKey(item, canonical);
-                if (imported is null)
-                {
-                    knownPublicKeys.Remove(item.PublicKey);
-                    continue;
-                }
-
-                restored.Add(imported);
-            }
-
-            if (restored.Count == 0)
-            {
-                AepLog.Info($"[Encryption] the entered code did not open any of the {escrows.Items.Length} archived keys.");
-                return 0;
-            }
-
-            AepLog.Info($"[Encryption] restored {restored.Count} of {escrows.Items.Length} archived keys.");
-
-            var merged = new EcPrivateKey[recoveredPreviousKeys.Length + restored.Count];
-            recoveredPreviousKeys.CopyTo(merged, 0);
-            for (var index = 0; index < restored.Count; index++)
-            {
-                merged[recoveredPreviousKeys.Length + index] = restored[index];
-            }
-
-            recoveredPreviousKeys = merged;
-            restoredCount = restored.Count;
+            restoredCount = RestoreFromEscrows(escrows.Items, canonical);
             return restoredCount;
         }
         finally
@@ -598,6 +583,108 @@ internal sealed class KeyVault : IDisposable
             {
                 PreviousKeysRestored?.Invoke();
             }
+        }
+    }
+
+    private async Task<int> RestoreArchivedKeysAsync(string code, CancellationToken token)
+    {
+        var canonical = RecoveryKey.Canonicalize(code);
+        if (canonical.Length == 0)
+        {
+            return 0;
+        }
+
+        var escrows = await client.MyKeyEscrowsAsync(token).ConfigureAwait(false);
+        if (escrows is null)
+        {
+            AepLog.Warning("[Encryption] archived escrows could not be checked: the escrows endpoint was unreachable.");
+            return 0;
+        }
+
+        return RestoreFromEscrows(escrows.Items, canonical);
+    }
+
+    private int RestoreFromEscrows(ArchivedKeyEscrowDto[] items, string canonical)
+    {
+        if (items.Length == 0)
+        {
+            return 0;
+        }
+
+        var knownPublicKeys = CollectKnownPublicKeys();
+        var restored = new List<EcPrivateKey>();
+        for (var index = 0; index < items.Length; index++)
+        {
+            var item = items[index];
+            if (!knownPublicKeys.Add(item.PublicKey))
+            {
+                continue;
+            }
+
+            var imported = TryRecoverArchivedKey(item, canonical);
+            if (imported is null)
+            {
+                knownPublicKeys.Remove(item.PublicKey);
+                continue;
+            }
+
+            restored.Add(imported);
+        }
+
+        if (restored.Count == 0)
+        {
+            AepLog.Info($"[Encryption] the entered code did not open any of the {items.Length} archived keys.");
+            return 0;
+        }
+
+        AepLog.Info($"[Encryption] restored {restored.Count} of {items.Length} archived keys.");
+        return AdoptOlderKeys(restored);
+    }
+
+    private int AdoptOlderKeys(List<EcPrivateKey> restored)
+    {
+        if (restored.Count == 0)
+        {
+            return 0;
+        }
+
+        var merged = new EcPrivateKey[recoveredPreviousKeys.Length + restored.Count];
+        recoveredPreviousKeys.CopyTo(merged, 0);
+        for (var index = 0; index < restored.Count; index++)
+        {
+            merged[recoveredPreviousKeys.Length + index] = restored[index];
+        }
+
+        recoveredPreviousKeys = merged;
+        PersistRestoredKeys(restored);
+        return restored.Count;
+    }
+
+    private void PersistRestoredKeys(List<EcPrivateKey> restored)
+    {
+        var userId = MyUserId;
+        if (userId is null)
+        {
+            return;
+        }
+
+        var persisted = false;
+        for (var index = 0; index < restored.Count; index++)
+        {
+            var pkcs8 = CryptoBox.TryExportPrivateKey(restored[index]);
+            if (pkcs8 is null)
+            {
+                continue;
+            }
+
+            RetireStoredBlob(LocalKeyProtector.Protect(pkcs8, userId), userId);
+            CryptographicOperations.ZeroMemory(pkcs8);
+            persisted = true;
+        }
+
+        if (persisted)
+        {
+            configuration.Save();
         }
     }
 
