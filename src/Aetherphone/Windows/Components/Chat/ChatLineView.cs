@@ -25,7 +25,7 @@ internal readonly struct ChatLineStyle
 internal static class ChatLineView
 {
     private const float RailWidth = 2f;
-    private const float TextInset = 12f;
+    private const float TextInset = 14f;
     private const float LineGap = 4f;
     private const float MentionTint = 0.10f;
     private const float GhostAlpha = 0.55f;

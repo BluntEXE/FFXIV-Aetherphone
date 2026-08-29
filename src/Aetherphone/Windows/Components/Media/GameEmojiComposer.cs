@@ -56,7 +56,7 @@ internal sealed class GameEmojiComposer
         var max = center + new Vector2(radius, radius);
         var hovered = UiInteract.Hover(min, max);
         var color = open ? theme.Accent : hovered ? theme.TextStrong : theme.TextMuted;
-        AppSkin.Icon(center, IconGlyph.Of(FontAwesomeIcon.Smile), color, 0.9f);
+        AppSkin.Icon(center, IconGlyph.Of(FontAwesomeIcon.Smile), color, 1.1f);
         HoverTooltip.Show(new Rect(min, max), Loc.T(L.Common.Emoji), HoverLabelSide.Above);
         if (!hovered)
         {

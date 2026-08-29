@@ -41,7 +41,7 @@ internal sealed class GameComposer
     private const float RingThreshold = 0.55f;
     private const float RowHeight = 38f;
     private const float PillInset = 7f;
-    private const float EmojiRadius = 9f;
+    private const float EmojiRadius = 12f;
     private const int MinimumLines = 1;
     private const int MaximumLines = 10;
     private const long DoubleEnterWindowMilliseconds = 700;
@@ -727,7 +727,7 @@ internal sealed class GameComposer
         var radius = diameter * 0.5f;
         drawList.AddCircleFilled(center, radius,
             ImGui.GetColorU32(hasText ? theme.Accent : theme.SurfaceMuted), 24);
-        AppSkin.Icon(drawList, center, IconGlyph.Of(FontAwesomeIcon.ArrowUp), new Vector4(1f, 1f, 1f, 1f), 0.72f);
+        AppSkin.Icon(drawList, center, IconGlyph.Of(FontAwesomeIcon.ArrowUp), new Vector4(1f, 1f, 1f, 1f), 0.88f);
         if (parts > 1)
         {
             DrawPartBadge(drawList, center, radius, parts, theme, scale);

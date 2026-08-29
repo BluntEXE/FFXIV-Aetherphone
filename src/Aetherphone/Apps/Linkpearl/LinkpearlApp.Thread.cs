@@ -70,22 +70,24 @@ internal sealed partial class LinkpearlApp
         }
 
         if (ui.IconButton(actions.Slot(0), actions.Radius, IconGlyph.Of(FontAwesomeIcon.EllipsisH),
-                frameTheme.TextStrong, AppSkin.Transparent, 1f, Loc.T(L.Linkpearl.More), HoverLabelSide.Below))
+                frameTheme.TextStrong, AppSkin.Transparent, HeaderActions.GlyphScale, Loc.T(L.Linkpearl.More),
+                HoverLabelSide.Below))
         {
             OpenConversationSheet(row);
         }
 
         if (ui.IconButton(actions.Slot(1), actions.Radius, IconGlyph.Of(FontAwesomeIcon.Search),
-                chatThread.SearchOpen ? frameTheme.Accent : frameTheme.TextStrong, AppSkin.Transparent, 0.95f,
-                Loc.T(L.Common.Search), HoverLabelSide.Below))
+                chatThread.SearchOpen ? frameTheme.Accent : frameTheme.TextStrong, AppSkin.Transparent,
+                HeaderActions.GlyphScale, Loc.T(L.Common.Search), HoverLabelSide.Below))
         {
             chatThread.ToggleSearch();
         }
 
         if (ui.IconButton(actions.Slot(2), actions.Radius,
                 IconGlyph.Of((row.Muted ? FontAwesomeIcon.BellSlash : FontAwesomeIcon.Bell)),
-                row.Muted ? frameTheme.Accent : frameTheme.TextStrong, AppSkin.Transparent, 0.95f,
-                Loc.T(row.Muted ? L.Linkpearl.Unmute : L.Linkpearl.Mute), HoverLabelSide.Below))
+                row.Muted ? frameTheme.Accent : frameTheme.TextStrong, AppSkin.Transparent,
+                HeaderActions.GlyphScale, Loc.T(row.Muted ? L.Linkpearl.Unmute : L.Linkpearl.Mute),
+                HoverLabelSide.Below))
         {
             inbox.ToggleMuted(row);
         }

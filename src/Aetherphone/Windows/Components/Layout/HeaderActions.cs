@@ -5,6 +5,8 @@ namespace Aetherphone.Windows.Components;
 
 internal readonly struct HeaderActions
 {
+    public const float GlyphScale = 1.2f;
+
     private const float SlotPitch = 34f;
     private const float SlotRadius = 16f;
     private const float EdgeInset = 20f;

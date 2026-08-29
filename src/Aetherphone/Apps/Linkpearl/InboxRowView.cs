@@ -24,12 +24,12 @@ internal static class InboxRowView
     public const float Height = 66f;
 
     private const float AvatarRadius = 22f;
-    private const float QuickRadius = 15f;
-    private const float QuickPitch = 34f;
+    private const float QuickRadius = 17f;
+    private const float QuickPitch = 38f;
     private const float RevealSmoothTime = 0.10f;
     private const float MaxFrameSeconds = 0.1f;
-    private const float MarkGlyphScale = 0.58f;
-    private const float MarkGap = 16f;
+    private const float MarkGlyphScale = 0.72f;
+    private const float MarkGap = 18f;
 
     private static readonly Dictionary<string, Spring> Reveals = new(StringComparer.Ordinal);
     private static readonly Vector4 White = new(1f, 1f, 1f, 1f);

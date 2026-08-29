@@ -23,6 +23,7 @@ internal sealed partial class LinkpearlApp
     }
 
     private const float SearchRowHeight = 44f;
+    private const float HitRowHeight = 56f;
     private const float PausedBannerHeight = 34f;
     private const float SectionLabelHeight = 22f;
     private const int FilterRailMinimumRows = 4;
@@ -115,7 +116,7 @@ internal sealed partial class LinkpearlApp
         Squircle.Fill(drawList, banner.Min, banner.Max, banner.Height * 0.5f,
             ImGui.GetColorU32(Palette.WithAlpha(frameTheme.Accent, 0.14f)));
         var iconCenter = new Vector2(banner.Min.X + 18f * scale, banner.Center.Y);
-        AppSkin.Icon(drawList, iconCenter, IconGlyph.Of(FontAwesomeIcon.BellSlash), frameTheme.Accent, 0.7f);
+        AppSkin.Icon(drawList, iconCenter, IconGlyph.Of(FontAwesomeIcon.BellSlash), frameTheme.Accent, 0.88f);
         var resume = Loc.T(L.Linkpearl.Resume);
         var resumeSize = Typography.Measure(resume, TextStyles.FootnoteEmphasized);
         var resumeCenter = new Vector2(banner.Max.X - Metrics.Space.Lg * scale - resumeSize.X * 0.5f, banner.Center.Y);
@@ -135,7 +136,7 @@ internal sealed partial class LinkpearlApp
 
     private void DrawConversationList(Rect body, float scale)
     {
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             var pinned = inbox.Pinned;
             var drewPinned = false;
@@ -247,7 +248,7 @@ internal sealed partial class LinkpearlApp
             return;
         }
 
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             for (var index = 0; index < hits.Count; index++)
             {
@@ -261,19 +262,9 @@ internal sealed partial class LinkpearlApp
 
     private bool DrawHitRow(ChatHit hit, float scale)
     {
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ScrollLayout.StableContentWidth();
-        var row = new Rect(origin, new Vector2(origin.X + width, origin.Y + 56f * scale));
-        ImGui.Dummy(new Vector2(width, 56f * scale));
-        var hovered = UiInteract.Hover(row.Min, row.Max);
         var drawList = ImGui.GetWindowDrawList();
-        if (hovered)
-        {
-            Squircle.Fill(drawList, new Vector2(row.Min.X + Metrics.Space.Xs * scale, row.Min.Y + 2f * scale),
-                new Vector2(row.Max.X - Metrics.Space.Xs * scale, row.Max.Y - 2f * scale), Metrics.Radius.Md * scale,
-                ImGui.GetColorU32(Palette.WithAlpha(frameTheme.TextStrong, 0.05f)));
-        }
-
+        var cell = FeedCell.Begin(drawList, HitRowHeight * scale, frameTheme.HoverWash);
+        var row = cell.Bounds;
         var left = row.Min.X + Metrics.Space.Lg * scale;
         var right = row.Max.X - Metrics.Space.Lg * scale;
         var stamp = TimeText.Short(hit.Entry.At);
@@ -289,12 +280,8 @@ internal sealed partial class LinkpearlApp
             : hit.Entry.Text;
         Typography.Draw(drawList, new Vector2(left, row.Min.Y + 29f * scale),
             Typography.FitText(preview, right - left, TextStyles.Caption1), frameTheme.TextMuted, TextStyles.Caption1);
-        if (hovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        return UiInteract.Click(row.Min, row.Max, hovered);
+        FeedCell.End(drawList, cell, frameTheme.Hairline);
+        return cell.Tapped;
     }
 
     private void OpenHit(ChatHit hit)

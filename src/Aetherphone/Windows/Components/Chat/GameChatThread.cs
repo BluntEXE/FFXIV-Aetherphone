@@ -284,7 +284,7 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
         var entries = view.Entries;
         entrance.Sync(target.Key, entries.Count, entries.Count > 0 ? entries[entries.Count - 1].Id : null,
             ImGui.GetIO().DeltaTime, false);
-        using (AppSurface.Begin(listRect))
+        using (AppSurface.BeginEdgeToEdge(listRect))
         {
             if (entries.Count == 0 && ghostEntries.Count == 0)
             {
@@ -384,8 +384,8 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
         var downCenter = new Vector2(bar.Max.X - 22f * scale, bar.Center.Y);
         var enabled = matches.Count > 0;
         var ink = enabled ? theme.Accent : theme.TextMuted;
-        AppSkin.Icon(drawList, upCenter, IconGlyph.Of(FontAwesomeIcon.ChevronUp), ink, 0.7f);
-        AppSkin.Icon(drawList, downCenter, IconGlyph.Of(FontAwesomeIcon.ChevronDown), ink, 0.7f);
+        AppSkin.Icon(drawList, upCenter, IconGlyph.Of(FontAwesomeIcon.ChevronUp), ink, 0.9f);
+        AppSkin.Icon(drawList, downCenter, IconGlyph.Of(FontAwesomeIcon.ChevronDown), ink, 0.9f);
         if (!enabled)
         {
             return;
@@ -471,7 +471,7 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
         Squircle.Stroke(drawList, min, max, height * 0.5f,
             ImGui.GetColorU32(Palette.WithAlpha(theme.TextMuted, 0.35f)), 1f);
         AppSkin.Icon(drawList, new Vector2(min.X + 13f * scale, min.Y + height * 0.5f),
-            IconGlyph.Of(FontAwesomeIcon.ArrowDown), theme.Accent, 0.62f);
+            IconGlyph.Of(FontAwesomeIcon.ArrowDown), theme.Accent, 0.78f);
         Typography.Draw(drawList, new Vector2(min.X + 22f * scale, min.Y + height * 0.5f - size.Y * 0.5f), label,
             theme.TextStrong, TextStyles.Caption1);
         if (UiInteract.HoverClick(min, max))

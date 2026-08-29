@@ -296,7 +296,8 @@ internal sealed partial class LinkpearlApp : IResumableApp
         {
             UiAnchors.Report("contacts.refresh", actions.Bounds(0));
             if (ui.IconButton(actions.Slot(0), actions.Radius, IconGlyph.Of(FontAwesomeIcon.Sync),
-                    frameTheme.TextStrong, AppSkin.Transparent, 1f, Loc.T(L.Common.Refresh), HoverLabelSide.Below))
+                    frameTheme.TextStrong, AppSkin.Transparent, HeaderActions.GlyphScale, Loc.T(L.Common.Refresh),
+                    HoverLabelSide.Below))
             {
                 RequestRefresh();
             }
@@ -306,13 +307,15 @@ internal sealed partial class LinkpearlApp : IResumableApp
 
         UiAnchors.Report("messages.new", actions.Bounds(0));
         if (ui.IconButton(actions.Slot(0), actions.Radius, IconGlyph.Of(FontAwesomeIcon.Plus), frameTheme.Accent,
-                Palette.WithAlpha(frameTheme.Accent, 0.16f), 1.05f, Loc.T(L.Linkpearl.NewChat), HoverLabelSide.Below))
+                Palette.WithAlpha(frameTheme.Accent, 0.16f), HeaderActions.GlyphScale, Loc.T(L.Linkpearl.NewChat),
+                HoverLabelSide.Below))
         {
             OpenNewChat();
         }
 
         if (ui.IconButton(actions.Slot(1), actions.Radius, IconGlyph.Of(FontAwesomeIcon.Cog),
-                frameTheme.TextStrong, AppSkin.Transparent, 1f, Loc.T(L.Linkpearl.More), HoverLabelSide.Below))
+                frameTheme.TextStrong, AppSkin.Transparent, HeaderActions.GlyphScale, Loc.T(L.Linkpearl.More),
+                HoverLabelSide.Below))
         {
             OpenMoreMenu(actions.Bounds(1));
         }
