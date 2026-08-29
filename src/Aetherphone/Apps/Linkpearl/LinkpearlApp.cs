@@ -53,6 +53,7 @@ internal sealed partial class LinkpearlApp : IResumableApp
     private readonly ViewRouter<LinkpearlRoute> router;
     private readonly RouterDraw<LinkpearlRoute> drawView;
     private readonly Action backToList;
+    private readonly Action backToSettings;
     private readonly Action leaveTabEditor;
     private readonly GameChatThread chatThread;
     private readonly GameChatMenu chatMenu = new("linkpearl.chat.menu");
@@ -116,6 +117,11 @@ internal sealed partial class LinkpearlApp : IResumableApp
             chatMenu.Close();
             inbox.Viewing = string.Empty;
             threadKey = string.Empty;
+            router.Pop();
+        };
+        backToSettings = () =>
+        {
+            settingsMenu.Close();
             router.Pop();
         };
         leaveTabEditor = LeaveTabEditor;
@@ -229,6 +235,9 @@ internal sealed partial class LinkpearlApp : IResumableApp
                 break;
             case LinkpearlScreen.Settings:
                 DrawSettings(area);
+                break;
+            case LinkpearlScreen.SettingsSection:
+                DrawSettingsSection(area, route.Section);
                 break;
             case LinkpearlScreen.FriendDetail when route.Friend is { } friend:
                 DrawFriendDetail(area, friend);

@@ -7,6 +7,7 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Linkpearl;
 
@@ -15,12 +16,31 @@ internal sealed partial class LinkpearlApp
     private const float SettingsSliderRowHeight = 52f;
     private const float SliderLabelWidth = 0.42f;
     private const float PopoutOpacityMinimum = 0.5f;
+    private const float SettingsLinkRowHeight = 62f;
     private const float IdleOpacityMinimum = 0.15f;
     private const float OpacityEpsilon = 0.002f;
 
     private static readonly float[] TextScaleChoices = { 0.8f, 0.9f, 1f, 1.15f, 1.3f, 1.5f };
 
     private readonly List<DropdownMenu.Item> settingsItems = new(6);
+
+    private static readonly LinkpearlSettingsSection[] SettingsSections =
+    {
+        LinkpearlSettingsSection.Alerts, LinkpearlSettingsSection.Popouts, LinkpearlSettingsSection.Presence,
+        LinkpearlSettingsSection.OpenChat, LinkpearlSettingsSection.Composer, LinkpearlSettingsSection.Channels,
+        LinkpearlSettingsSection.History,
+    };
+
+    private static readonly Vector4[] SettingsSectionTints =
+    {
+        new(0.95f, 0.40f, 0.42f, 1f),
+        new(0.36f, 0.55f, 0.95f, 1f),
+        new(0.52f, 0.54f, 0.60f, 1f),
+        new(0.95f, 0.68f, 0.25f, 1f),
+        new(0.20f, 0.70f, 0.62f, 1f),
+        new(0.62f, 0.45f, 0.92f, 1f),
+        new(0.40f, 0.62f, 0.48f, 1f),
+    };
 
     private void DrawSettings(Rect area)
     {
@@ -30,17 +50,97 @@ internal sealed partial class LinkpearlApp
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         using (AppSurface.Begin(body))
         {
-            DrawNotificationSettings(scale);
-            DrawPopoutSettings(scale);
-            DrawPresenceSettings(scale);
-            DrawComposerSettings(scale);
-            DrawChannelSettings(scale);
-            DrawHistorySettings(scale);
+            ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
+            var card = GroupCard.Begin(frameTheme, SettingsSections.Length, SettingsLinkRowHeight);
+            for (var index = 0; index < SettingsSections.Length; index++)
+            {
+                var section = SettingsSections[index];
+                if (SettingsRow.Link(card.NextRow(), SectionIcon(section), SettingsSectionTints[index],
+                        Loc.T(SectionTitle(section)), Loc.T(SectionSummary(section)), frameTheme))
+                {
+                    router.Push(LinkpearlRoute.SettingsFor(section));
+                }
+            }
+
+            card.End();
+            ImGui.Dummy(new Vector2(0f, Metrics.Space.Xxl * scale));
+        }
+    }
+
+    private void DrawSettingsSection(Rect area, LinkpearlSettingsSection section)
+    {
+        var scale = UiScale.Current;
+        var context = new PhoneContext(area, frameTheme, frameNavigation);
+        AppHeader.Draw(context, Loc.T(SectionTitle(section)), backToSettings);
+        var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
+        using (AppSurface.Begin(body))
+        {
+            switch (section)
+            {
+                case LinkpearlSettingsSection.Alerts:
+                    DrawNotificationSettings(scale);
+                    break;
+                case LinkpearlSettingsSection.Popouts:
+                    DrawPopoutSettings(scale);
+                    break;
+                case LinkpearlSettingsSection.Presence:
+                    DrawPresenceSettings(scale);
+                    break;
+                case LinkpearlSettingsSection.OpenChat:
+                    DrawOpenChatSettings();
+                    break;
+                case LinkpearlSettingsSection.Composer:
+                    DrawComposerSettings(scale);
+                    break;
+                case LinkpearlSettingsSection.Channels:
+                    DrawChannelSettings(scale);
+                    break;
+                default:
+                    DrawHistorySettings(scale);
+                    break;
+            }
+
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Xxl * scale));
         }
 
-        DrawSettingsMenu(area);
+        if (section == LinkpearlSettingsSection.Popouts)
+        {
+            DrawSettingsMenu(area);
+        }
     }
+
+    private static FontAwesomeIcon SectionIcon(LinkpearlSettingsSection section) => section switch
+    {
+        LinkpearlSettingsSection.Alerts => FontAwesomeIcon.Bell,
+        LinkpearlSettingsSection.Popouts => FontAwesomeIcon.ExternalLinkAlt,
+        LinkpearlSettingsSection.Presence => FontAwesomeIcon.EyeSlash,
+        LinkpearlSettingsSection.OpenChat => FontAwesomeIcon.Bolt,
+        LinkpearlSettingsSection.Composer => FontAwesomeIcon.PenAlt,
+        LinkpearlSettingsSection.Channels => FontAwesomeIcon.Hashtag,
+        _ => FontAwesomeIcon.History,
+    };
+
+    private static LocString SectionTitle(LinkpearlSettingsSection section) => section switch
+    {
+        LinkpearlSettingsSection.Alerts => L.Common.Alerts,
+        LinkpearlSettingsSection.Popouts => L.Linkpearl.PopoutSection,
+        LinkpearlSettingsSection.Presence => L.Linkpearl.PresenceSection,
+        LinkpearlSettingsSection.OpenChat => L.Linkpearl.OpenChatSection,
+        LinkpearlSettingsSection.Composer => L.Linkpearl.ComposerSection,
+        LinkpearlSettingsSection.Channels => L.Linkpearl.ChannelStyleSection,
+        _ => L.Linkpearl.KeepHistory,
+    };
+
+    private static LocString SectionSummary(LinkpearlSettingsSection section) => section switch
+    {
+        LinkpearlSettingsSection.Alerts => L.Linkpearl.AlertsSummary,
+        LinkpearlSettingsSection.Popouts => L.Linkpearl.PopoutSummary,
+        LinkpearlSettingsSection.Presence => L.Linkpearl.PresenceSummary,
+        LinkpearlSettingsSection.OpenChat => L.Linkpearl.OpenChatSummary,
+        LinkpearlSettingsSection.Composer => L.Linkpearl.ComposerSummary,
+        LinkpearlSettingsSection.Channels => L.Linkpearl.ChannelSummary,
+        _ => L.Linkpearl.HistorySummary,
+    };
 
     private void DrawNotificationSettings(float scale)
     {

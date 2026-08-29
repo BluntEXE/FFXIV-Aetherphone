@@ -69,7 +69,6 @@ internal sealed partial class LinkpearlApp
         card.End();
         SettingsSection.Hint(Loc.T(L.Linkpearl.PresenceHint), frameTheme);
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
-        DrawOpenChatSettings();
     }
 
     private void DrawOpenChatSettings()

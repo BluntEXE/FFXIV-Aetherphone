@@ -2,12 +2,24 @@ using Aetherphone.Core.Contacts;
 
 namespace Aetherphone.Apps.Linkpearl;
 
+internal enum LinkpearlSettingsSection : byte
+{
+    Alerts,
+    Popouts,
+    Presence,
+    OpenChat,
+    Composer,
+    Channels,
+    History,
+}
+
 internal enum LinkpearlScreen : byte
 {
     Root,
     Conversation,
     TabEditor,
     Settings,
+    SettingsSection,
     FriendDetail,
     CharacterDetail,
     FreeCompanyDetail,
@@ -27,9 +39,10 @@ internal readonly struct LinkpearlRoute
     public readonly string LookupId;
     public readonly string LookupName;
     public readonly string LookupWorld;
+    public readonly LinkpearlSettingsSection Section;
 
     private LinkpearlRoute(LinkpearlScreen screen, string conversationKey, FriendEntry? friend, string lookupId,
-        string lookupName, string lookupWorld)
+        string lookupName, string lookupWorld, LinkpearlSettingsSection section = LinkpearlSettingsSection.Alerts)
     {
         Screen = screen;
         ConversationKey = conversationKey;
@@ -37,7 +50,11 @@ internal readonly struct LinkpearlRoute
         LookupId = lookupId;
         LookupName = lookupName;
         LookupWorld = lookupWorld;
+        Section = section;
     }
+
+    public static LinkpearlRoute SettingsFor(LinkpearlSettingsSection section) =>
+        new(LinkpearlScreen.SettingsSection, string.Empty, null, string.Empty, string.Empty, string.Empty, section);
 
     public static LinkpearlRoute Conversation(string key) =>
         new(LinkpearlScreen.Conversation, key, null, string.Empty, string.Empty, string.Empty);
