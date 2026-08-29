@@ -116,7 +116,7 @@ internal sealed partial class LinkpearlApp
 
     private void OpenThread(InboxRow row)
     {
-        if (string.Equals(threadKey, row.Key, StringComparison.Ordinal))
+        if (string.Equals(threadKey, row.Key, StringComparison.Ordinal) && chatThread.IsOpenFor(row.Key))
         {
             return;
         }

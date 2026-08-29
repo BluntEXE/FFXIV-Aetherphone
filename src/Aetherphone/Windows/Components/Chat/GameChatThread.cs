@@ -83,6 +83,9 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
 
     public bool SearchOpen => searchOpen;
 
+    public bool IsOpenFor(string key) =>
+        target.Streams is not null && string.Equals(target.Key, key, StringComparison.Ordinal);
+
     public void ToggleSearch()
     {
         searchOpen = !searchOpen;

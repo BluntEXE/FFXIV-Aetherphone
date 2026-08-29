@@ -758,7 +758,7 @@ internal sealed class LinkpearlPopoutWindow : Window
 
     private void OpenThread(InboxRow row)
     {
-        if (string.Equals(threadKey, row.Key, StringComparison.Ordinal))
+        if (string.Equals(threadKey, row.Key, StringComparison.Ordinal) && thread.IsOpenFor(row.Key))
         {
             return;
         }
