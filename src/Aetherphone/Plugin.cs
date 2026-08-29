@@ -136,7 +136,7 @@ public sealed class Plugin : IDalamudPlugin
             linkpearlPopouts = new LinkpearlPopouts(Cfg, services.ChatInbox, services.ChatLog, services.ChatSend,
                 services.ChatTabs, services.TellPreferences, services.LinkpearlNotificationGate, services.Visibility,
                 linkpearlGate, services.GameData, services.Themes, services.Lodestone,
-                services.Notifications);
+                services.Notifications, services.Confirm);
             linkpearlPresence = new PopoutPresence(Cfg, linkpearlPopouts, services.ChatLog, services.ChatInbox);
             linkpearlHotkey = new LinkpearlHotkey(Cfg, services.ChatInbox, linkpearlPopouts);
             var bundle = AppRegistry.BuildDefault(services, video, screenController, videoQueue, watchAlong,

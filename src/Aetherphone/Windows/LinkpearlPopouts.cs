@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Home;
@@ -31,7 +32,7 @@ internal sealed class LinkpearlPopouts : IDisposable
     public LinkpearlPopouts(Configuration configuration, ChatInbox inbox, ChatLog log, ChatSend send, TabStore tabs,
         TellPreferences tellPreferences, LinkpearlNotificationGate gate, PhoneVisibility visibility,
         AppGate installed, GameData gameData, ThemeProvider themes, LodestoneService lodestone,
-        NotificationService notifications)
+        NotificationService notifications, ConfirmService confirm)
     {
         this.configuration = configuration;
         this.inbox = inbox;
@@ -45,7 +46,7 @@ internal sealed class LinkpearlPopouts : IDisposable
         for (var slot = 0; slot < MaxWindows; slot++)
         {
             windows[slot] = new LinkpearlPopoutWindow(this, slot, configuration, inbox, tabs, log, send, gameData,
-                themes, lodestone, notifications);
+                themes, lodestone, notifications, confirm);
         }
 
         var saved = configuration.LinkpearlPopouts;

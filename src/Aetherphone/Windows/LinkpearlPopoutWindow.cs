@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using Aetherphone.Core;
 using Aetherphone.Core.Animation;
+using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Localization;
@@ -68,6 +69,9 @@ internal sealed class LinkpearlPopoutWindow : Window
     private readonly NotificationService notifications;
     private readonly GameChatThread thread;
     private readonly GameChatMenu chatMenu;
+    private readonly ConfirmService confirm;
+    private readonly ConfirmOverlay confirmOverlay;
+    private readonly int confirmHost = ConfirmHosts.Reserve();
     private readonly DropdownMenu switchMenu = new();
     private readonly List<DropdownMenu.Item> switchItems = new(SwitchMenuLimit);
     private readonly List<string> switchKeys = new(SwitchMenuLimit);
@@ -108,7 +112,7 @@ internal sealed class LinkpearlPopoutWindow : Window
 
     public LinkpearlPopoutWindow(LinkpearlPopouts owner, int slot, Configuration configuration, ChatInbox inbox,
         TabStore tabs, ChatLog log, ChatSend send, GameData gameData, ThemeProvider themes,
-        LodestoneService lodestone, NotificationService notifications)
+        LodestoneService lodestone, NotificationService notifications, ConfirmService confirm)
         : base($"{AepConstants.Name}##LinkpearlPopout{slot}", PopoutFlags)
     {
         this.owner = owner;
@@ -119,6 +123,8 @@ internal sealed class LinkpearlPopoutWindow : Window
         this.themes = themes;
         this.lodestone = lodestone;
         this.notifications = notifications;
+        this.confirm = confirm;
+        confirmOverlay = new ConfirmOverlay(confirm, confirmHost);
         var slotText = slot.ToString(Loc.Culture);
         switchMenuId = "linkpearl.popout.switch." + slotText;
         addMenuId = "linkpearl.popout.add." + slotText;
@@ -262,6 +268,11 @@ internal sealed class LinkpearlPopoutWindow : Window
         }
 
         suppressed = value;
+        if (value)
+        {
+            confirm.CancelHost(confirmHost);
+        }
+
         if (!Bound)
         {
             return;
@@ -346,6 +357,7 @@ internal sealed class LinkpearlPopoutWindow : Window
         switchMenu.Close();
         chatMenu.Close();
         thread.CloseMenus();
+        confirm.CancelHost(confirmHost);
         return true;
     }
 
@@ -402,6 +414,7 @@ internal sealed class LinkpearlPopoutWindow : Window
         thread.Close();
         chatMenu.Close();
         switchMenu.Close();
+        confirm.CancelHost(confirmHost);
         IsOpen = false;
     }
 
@@ -528,6 +541,13 @@ internal sealed class LinkpearlPopoutWindow : Window
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
         fadeSpring.Step(lively || !configuration.LinkpearlPopoutFade ? 1f : 0f,
             TransitionTiming.PresentSmoothTime, delta);
+        var confirming = confirmOverlay.CapturesPointer;
+        if (confirming && focusedWindow)
+        {
+            HandleConfirmEscape();
+        }
+
+        using (ConfirmHosts.Enter(confirmHost))
         using (Plugin.Fonts.Push(1f))
         {
             var theme = themes.ForApp(true);
@@ -540,36 +560,52 @@ internal sealed class LinkpearlPopoutWindow : Window
                 expandedSize = frame.Size / UiScale.Global;
             }
 
-            DrawSurface(theme, scale, lively, barHeight + (bodyOpen ? railHeight : 0f));
-            var titleBar = new Rect(frame.Min, new Vector2(frame.Max.X, frame.Min.Y + barHeight));
-            DrawTitleBar(titleBar, row, theme, scale, delta);
-            if (bodyOpen)
+            using (InputShield.Engage(confirming))
             {
-                var bodyTop = DrawTabRail(titleBar.Max.Y, theme, scale);
-                var inset = BodyInset * scale;
-                var body = new Rect(new Vector2(frame.Min.X + inset, bodyTop),
-                    new Vector2(frame.Max.X - inset, frame.Max.Y - inset));
-                if (row is null)
+                DrawSurface(theme, scale, lively, barHeight + (bodyOpen ? railHeight : 0f));
+                var titleBar = new Rect(frame.Min, new Vector2(frame.Max.X, frame.Min.Y + barHeight));
+                DrawTitleBar(titleBar, row, theme, scale, delta);
+                if (bodyOpen)
                 {
-                    Typography.DrawCentered(ImGui.GetWindowDrawList(), body.Center, Loc.T(L.Messages.Empty),
-                        theme.TextMuted, TextStyles.Callout);
-                }
-                else
-                {
-                    OpenThread(row);
-                    thread.Draw(body, theme);
+                    var bodyTop = DrawTabRail(titleBar.Max.Y, theme, scale);
+                    var inset = BodyInset * scale;
+                    var body = new Rect(new Vector2(frame.Min.X + inset, bodyTop),
+                        new Vector2(frame.Max.X - inset, frame.Max.Y - inset));
+                    if (row is null)
+                    {
+                        Typography.DrawCentered(ImGui.GetWindowDrawList(), body.Center, Loc.T(L.Messages.Empty),
+                            theme.TextMuted, TextStyles.Callout);
+                    }
+                    else
+                    {
+                        OpenThread(row);
+                        thread.Draw(body, theme);
+                    }
+
+                    DrawGrip(scale);
                 }
 
-                DrawGrip(scale);
+                DrawSwitchMenu(theme);
+                chatMenu.Draw(frame, theme);
             }
 
-            DrawSwitchMenu(theme);
-            chatMenu.Draw(frame, theme);
             ShellToast.DrawSecondary(frame, theme);
+            confirmOverlay.Draw(frame, theme);
             DrawDropHighlight(theme, scale);
         }
 
         HoverTooltip.Flush();
+    }
+
+    private void HandleConfirmEscape()
+    {
+        ImGui.SetNextFrameWantCaptureKeyboard(true);
+        if (!ImGui.IsKeyPressed(ImGuiKey.Escape))
+        {
+            return;
+        }
+
+        confirmOverlay.CancelActive();
     }
 
     private bool TabbedNow => keys.Count > 1;

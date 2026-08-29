@@ -52,6 +52,7 @@ internal sealed class ConfirmRequest
     public Action<Action<bool>>? ConfirmAsync;
     public Action? Confirm;
     public Action? Cancel;
+    public int Host;
 }
 
 internal sealed class ConfirmService
@@ -65,6 +66,7 @@ internal sealed class ConfirmService
 
     public void Ask(ConfirmRequest request)
     {
+        request.Host = ConfirmHosts.Current;
         if (Active is not null)
         {
             queued.Enqueue(request);
@@ -166,6 +168,29 @@ internal sealed class ConfirmService
         }
 
         request.Cancel?.Invoke();
+        Advance();
+    }
+
+    public void CancelHost(int host)
+    {
+        for (var index = queued.Count; index > 0; index--)
+        {
+            var request = queued.Dequeue();
+            if (request.Host == host)
+            {
+                request.Cancel?.Invoke();
+                continue;
+            }
+
+            queued.Enqueue(request);
+        }
+
+        if (Busy || Active is not { } active || active.Host != host)
+        {
+            return;
+        }
+
+        active.Cancel?.Invoke();
         Advance();
     }
 

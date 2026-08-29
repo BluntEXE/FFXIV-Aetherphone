@@ -10,6 +10,9 @@ internal static class UrlActions
 {
     private const int DestinationMaxLength = 72;
     private const string Ellipsis = "…";
+    private const string SchemeSeparator = "://";
+    private const string BareHostPrefix = "www.";
+    private const string DefaultScheme = "https://";
     private static readonly char[] PathStarts = ['/', '?', '#'];
     private static ConfirmService? confirm;
 
@@ -18,8 +21,9 @@ internal static class UrlActions
         confirm = service;
     }
 
-    public static void OpenInBrowser(string url, Action<Exception>? onError = null)
+    public static void OpenInBrowser(string rawUrl, Action<Exception>? onError = null)
     {
+        var url = Normalize(rawUrl);
         if (!IsWebUrl(url))
         {
             var rejected = new NotSupportedException("Only http and https links can be opened.");
@@ -40,8 +44,9 @@ internal static class UrlActions
         }
     }
 
-    public static void AskThenOpen(string url, Action<Exception>? onError = null)
+    public static void AskThenOpen(string rawUrl, Action<Exception>? onError = null)
     {
+        var url = Normalize(rawUrl);
         if (confirm is null)
         {
             OpenInBrowser(url, onError);
@@ -103,6 +108,21 @@ internal static class UrlActions
         {
             Plugin.Log.Error(exception, $"Failed to open the folder: {path}");
         }
+    }
+
+    private static string Normalize(string url)
+    {
+        if (url.Contains(SchemeSeparator, StringComparison.Ordinal))
+        {
+            return url;
+        }
+
+        if (!url.StartsWith(BareHostPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return url;
+        }
+
+        return DefaultScheme + url;
     }
 
     private static bool IsWebUrl(string url)
