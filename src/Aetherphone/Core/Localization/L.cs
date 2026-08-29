@@ -3455,13 +3455,6 @@ internal static class L
         public static readonly LocString EmojiShortcodes = new("linkpearl.emojiShortcodes", "Draw shortcodes as emoji");
         public static readonly LocString EmojiShortcodesHint = new("linkpearl.emojiShortcodesHint", "A code like :smile: is drawn as the picture on your screen. Everyone else still reads the code, because the game cannot carry emoji.");
         public static readonly LocString EmojiPickerRow = new("linkpearl.emojiPickerRow", "Show the emoji button");
-        public static readonly LocString AlertsSummary = new("linkpearl.alertsSummary", "Pause every chat notification");
-        public static readonly LocString PopoutSummary = new("linkpearl.popoutSummary", "Tabs, fading, opacity and text size");
-        public static readonly LocString PresenceSummary = new("linkpearl.presenceSummary", "In combat, in a duty, and coming back after");
-        public static readonly LocString OpenChatSummary = new("linkpearl.openChatSummary", "A hotkey, and the right click menu on a player");
-        public static readonly LocString ComposerSummary = new("linkpearl.composerSummary", "Lines, long messages, emoji and what you sent");
-        public static readonly LocString ChannelSummary = new("linkpearl.channelSummary", "Colors, unread, and what the game log shows");
-        public static readonly LocString HistorySummary = new("linkpearl.historySummary", "What stays on this PC, and for how long");
         public static readonly LocString NewMessages = new("linkpearl.newMessages", "New messages");
         public static readonly LocString ClearHistory = new("linkpearl.clearHistory", "Clear history");
         public static readonly LocString ClearHistoryConfirm = new("linkpearl.clearHistoryConfirm", "Clear the stored history for this conversation? This only affects your phone.");

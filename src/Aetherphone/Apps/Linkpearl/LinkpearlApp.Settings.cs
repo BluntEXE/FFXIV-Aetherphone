@@ -56,7 +56,7 @@ internal sealed partial class LinkpearlApp
             {
                 var section = SettingsSections[index];
                 if (SettingsRow.Link(card.NextRow(), SectionIcon(section), SettingsSectionTints[index],
-                        Loc.T(SectionTitle(section)), Loc.T(SectionSummary(section)), frameTheme))
+                        Loc.T(SectionTitle(section)), string.Empty, frameTheme))
                 {
                     router.Push(LinkpearlRoute.SettingsFor(section));
                 }
@@ -130,18 +130,6 @@ internal sealed partial class LinkpearlApp
         LinkpearlSettingsSection.Channels => L.Linkpearl.ChannelStyleSection,
         _ => L.Linkpearl.KeepHistory,
     };
-
-    private static LocString SectionSummary(LinkpearlSettingsSection section) => section switch
-    {
-        LinkpearlSettingsSection.Alerts => L.Linkpearl.AlertsSummary,
-        LinkpearlSettingsSection.Popouts => L.Linkpearl.PopoutSummary,
-        LinkpearlSettingsSection.Presence => L.Linkpearl.PresenceSummary,
-        LinkpearlSettingsSection.OpenChat => L.Linkpearl.OpenChatSummary,
-        LinkpearlSettingsSection.Composer => L.Linkpearl.ComposerSummary,
-        LinkpearlSettingsSection.Channels => L.Linkpearl.ChannelSummary,
-        _ => L.Linkpearl.HistorySummary,
-    };
-
     private void DrawNotificationSettings(float scale)
     {
         SettingsSection.Header(Loc.T(L.Common.Alerts), frameTheme);
