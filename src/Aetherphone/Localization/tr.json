@@ -5203,7 +5203,7 @@
   "casino.slots.capRule": "Bir tur asla bahsin {0} katından fazla ödemez.",
   "casino.slots.paylinesNote": "{0} hattın tamamı her zaman devrededir. Bir hat, en soldaki makaradan başlayıp boşluk bırakmadan {1} ya da daha fazla aynı sembol dizildiğinde öder ve en iyi eşleşmesini bir kez öder. Farklı hatlardaki kazançlar toplanır ve makaralar durunca makine her kazanan hattı altın rengiyle çizer.",
   "casino.slots.jackpotName": "Ev jackpotu",
-  "casino.slots.jackpotNote": "Ödenen her çevirme ayrıca salonun ortak kasası için de çekilişe girer ve makaraların eşleşmesi gerekmez. Yatırdığın her çip bir bilettir; çevirme başına {0} ile kasa yaklaşık {1} çevirmede bir tutar. Tutarsa tüm kasa, hat kazançlarının üstüne ödenir.",
+  "casino.slots.jackpotNote": "Ödenen her çevirme, makaralar ne gösterirse göstersin ortak kasa çekilişine de girer. Bahsin senin biletlerindir: çevirme başına {0} çip, {2} bilet içinde {0} bilet demektir, yaklaşık {1} çevirmede 1, ve bahsi yükselttikçe şansın da aynı oranda artar. Tutarsa tüm kasa, hat kazançlarının üstüne ödenir.",
   "casino.cabinet.noChipsTitle": "Hiç fişin yok",
   "casino.cabinet.noChipsHint": "Kasadan fiş al ve salondaki her oyunda oyna.",
   "casino.slots.lowStack": "Bu bahis için yeterli fiş yok. Vezneden takviye yap.",

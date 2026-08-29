@@ -5203,7 +5203,7 @@
   "casino.slots.capRule": "Eine Runde zahlt nie mehr als {0}x den Einsatz.",
   "casino.slots.paylinesNote": "Alle {0} Linien sind immer aktiv. Eine Linie zahlt, wenn {1} oder mehr gleiche Symbole ab der linken Walze lückenlos auf ihr liegen, und sie zahlt ihren besten Treffer einmal. Gewinne auf verschiedenen Linien addieren sich, und der Automat zeichnet jede Gewinnlinie in Gold nach, sobald die Walzen stehen.",
   "casino.slots.jackpotName": "Haustopf",
-  "casino.slots.jackpotNote": "Jeder bezahlte Dreh zieht außerdem für den Topf des ganzen Parketts, und die Walzen müssen dafür nicht übereinstimmen. Jeder gesetzte Chip ist ein Los, bei {0} pro Dreh trifft der Topf also etwa einmal in {1} Drehs. Ein Treffer zahlt den ganzen Topf zusätzlich zu deinen Liniengewinnen.",
+  "casino.slots.jackpotNote": "Jeder bezahlte Dreh nimmt außerdem an der Ziehung für den gemeinsamen Topf teil, egal was die Walzen zeigen. Dein Einsatz sind deine Lose: {0} Chips pro Dreh sind {0} Lose von {2}, etwa 1 zu {1}, und mit dem Einsatz steigen auch deine Chancen. Ein Treffer zahlt den ganzen Topf zusätzlich zu allen Liniengewinnen.",
   "casino.cabinet.noChipsTitle": "Du hast keine Chips",
   "casino.cabinet.noChipsHint": "Kaufe Chips an der Kasse und setze sie an jedem Spiel im Haus ein.",
   "casino.slots.lowStack": "Nicht genug Chips für diesen Einsatz. Stock an der Kasse auf.",

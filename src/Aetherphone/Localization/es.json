@@ -5203,7 +5203,7 @@
   "casino.slots.capRule": "Una ronda nunca paga más de {0}x la apuesta.",
   "casino.slots.paylinesNote": "Las {0} líneas están siempre activas. Una línea paga cuando {1} o más símbolos iguales la recorren desde el rodillo izquierdo sin huecos, y paga su mejor combinación una vez. Los premios de distintas líneas se suman, y la máquina traza cada línea ganadora en dorado cuando los rodillos se detienen.",
   "casino.slots.jackpotName": "Bote de la casa",
-  "casino.slots.jackpotNote": "Cada tirada pagada también sortea el bote de todo el salón, y los rodillos no necesitan coincidir. Cada ficha que apuestas es un boleto, así que con {0} por tirada el bote sale más o menos una vez cada {1} tiradas. Si sale, paga el bote entero además de tus premios por línea.",
+  "casino.slots.jackpotNote": "Cada tirada pagada también entra en el sorteo del bote compartido, muestren lo que muestren los rodillos. Tu apuesta son tus boletos: {0} fichas por tirada son {0} boletos de {2}, más o menos 1 entre {1}, y al subir la apuesta suben tus opciones en la misma medida. Si sale, paga el bote entero además de cualquier premio por línea.",
   "casino.cabinet.noChipsTitle": "No tienes fichas",
   "casino.cabinet.noChipsHint": "Compra fichas en la caja y juégalas en cualquier juego del salón.",
   "casino.slots.lowStack": "No hay fichas suficientes para esa apuesta. Recarga en la caja.",

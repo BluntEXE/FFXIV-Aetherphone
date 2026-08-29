@@ -5203,7 +5203,7 @@
   "casino.slots.capRule": "Une manche ne paie jamais plus de {0}x la mise.",
   "casino.slots.paylinesNote": "Les {0} lignes sont toujours actives. Une ligne paie quand {1} symboles identiques ou plus la suivent depuis le rouleau de gauche sans trou, et elle paie sa meilleure combinaison une fois. Les gains de lignes différentes s'additionnent, et la machine trace chaque ligne gagnante en or une fois les rouleaux arrêtés.",
   "casino.slots.jackpotName": "Jackpot de la maison",
-  "casino.slots.jackpotNote": "Chaque tour payé participe aussi au tirage du pot de toute la salle, et les rouleaux n'ont pas besoin de correspondre. Chaque jeton misé est un ticket : à {0} par tour, le pot tombe environ une fois tous les {1} tours. Un tirage gagnant paie tout le pot en plus de tes gains de ligne.",
+  "casino.slots.jackpotNote": "Chaque tour payé participe aussi au tirage du pot commun, quoi que montrent les rouleaux. Ta mise, ce sont tes tickets : {0} jetons par tour font {0} tickets sur {2}, soit environ 1 chance sur {1}, et monter la mise augmente tes chances d'autant. Un tirage gagnant paie tout le pot en plus des gains de ligne.",
   "casino.cabinet.noChipsTitle": "Tu n'as aucun jeton",
   "casino.cabinet.noChipsHint": "Achète des jetons à la caisse et joue-les à tous les jeux de la salle.",
   "casino.slots.lowStack": "Pas assez de jetons pour cette mise. Rechargez à la caisse.",

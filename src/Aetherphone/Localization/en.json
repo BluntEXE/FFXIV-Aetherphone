@@ -5203,7 +5203,7 @@
   "casino.slots.capRule": "One round never pays more than {0}x the stake.",
   "casino.slots.paylinesNote": "All {0} lines are always in play. A line pays when {1} or more matching symbols run along it from the leftmost reel with no gap, and it pays its best match once. Wins on different lines add up, and the machine traces each winning line in gold after the reels stop.",
   "casino.slots.jackpotName": "House jackpot",
-  "casino.slots.jackpotNote": "Every paid spin also draws for the floor-wide pot, and the reels do not need to match. Each chip you stake is one ticket, so at {0} a spin the pot hits about once in {1} spins. A hit pays the whole pot on top of your line wins.",
+  "casino.slots.jackpotNote": "Every paid spin also enters the draw for the shared pot, whatever the reels show. Your stake is your tickets: {0} chips a spin is {0} tickets out of {2}, about 1 in {1}, and raising the stake raises your odds to match. A hit pays the whole pot on top of any line wins.",
   "casino.cabinet.noChipsTitle": "You have no chips",
   "casino.cabinet.noChipsHint": "Buy chips at the cashier and play them at any game on the floor.",
   "casino.slots.lowStack": "Not enough chips for that stake. Top up at the cashier.",

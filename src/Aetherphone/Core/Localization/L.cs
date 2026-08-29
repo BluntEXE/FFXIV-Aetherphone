@@ -5316,7 +5316,7 @@ internal static class L
         public static readonly LocString SlotsCapRule = new("casino.slots.capRule", "One round never pays more than {0}x the stake.");
         public static readonly LocString SlotsPaylinesNote = new("casino.slots.paylinesNote", "All {0} lines are always in play. A line pays when {1} or more matching symbols run along it from the leftmost reel with no gap, and it pays its best match once. Wins on different lines add up, and the machine traces each winning line in gold after the reels stop.");
         public static readonly LocString SlotsJackpotName = new("casino.slots.jackpotName", "House jackpot");
-        public static readonly LocString SlotsJackpotNote = new("casino.slots.jackpotNote", "Every paid spin also draws for the floor-wide pot, and the reels do not need to match. Each chip you stake is one ticket, so at {0} a spin the pot hits about once in {1} spins. A hit pays the whole pot on top of your line wins.");
+        public static readonly LocString SlotsJackpotNote = new("casino.slots.jackpotNote", "Every paid spin also enters the draw for the shared pot, whatever the reels show. Your stake is your tickets: {0} chips a spin is {0} tickets out of {2}, about 1 in {1}, and raising the stake raises your odds to match. A hit pays the whole pot on top of any line wins.");
         public static readonly LocString CabinetNoChipsTitle = new("casino.cabinet.noChipsTitle", "You have no chips");
         public static readonly LocString CabinetNoChipsHint = new("casino.cabinet.noChipsHint", "Buy chips at the cashier and play them at any game on the floor.");
         public static readonly LocString SlotsLowStack = new("casino.slots.lowStack", "Not enough chips for that stake. Top up at the cashier.");

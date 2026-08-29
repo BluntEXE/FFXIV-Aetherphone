@@ -133,7 +133,7 @@ internal sealed class SlotsPayTableSheet
         ImGui.Dummy(new Vector2(width, 6f * scale));
         DrawSectionHeading(ui, drawList, width, scale, Loc.T(L.Casino.SlotsJackpotName));
         DrawFootnote(ui, width, scale, Loc.T(L.Casino.SlotsJackpotNote, NumberText.Group(stake),
-            NumberText.Group(SlotsRules.JackpotSpinsPerHit(stake))));
+            NumberText.Group(SlotsRules.JackpotSpinsPerHit(stake)), NumberText.Group(SlotsRules.JackpotChipsPerHit)));
         ImGui.Dummy(new Vector2(width, Metrics.Space.Lg * scale));
     }
 
