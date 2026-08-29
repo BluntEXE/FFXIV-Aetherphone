@@ -5,6 +5,7 @@ internal sealed class ChannelStyleStore
     private readonly Configuration configuration;
     private readonly ChannelStyle?[] byIndex;
     private int overrides;
+    private int revision;
     private bool stale = true;
 
     public ChannelStyleStore(Configuration configuration)
@@ -12,6 +13,8 @@ internal sealed class ChannelStyleStore
         this.configuration = configuration;
         byIndex = new ChannelStyle?[GameChannels.All.Length];
     }
+
+    public int Revision => revision;
 
     public bool HasOverrides
     {
@@ -73,7 +76,7 @@ internal sealed class ChannelStyleStore
         }
 
         stored.CopyFrom(style);
-        stale = true;
+        Touch();
     }
 
     public void Reset(string channelKey)
@@ -83,10 +86,16 @@ internal sealed class ChannelStyleStore
             return;
         }
 
-        stale = true;
+        Touch();
     }
 
-    public void Invalidate() => stale = true;
+    public void Invalidate() => Touch();
+
+    private void Touch()
+    {
+        stale = true;
+        revision++;
+    }
 
     private void Sync()
     {

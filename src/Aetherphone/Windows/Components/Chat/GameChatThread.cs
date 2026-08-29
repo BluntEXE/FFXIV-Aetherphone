@@ -50,6 +50,7 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
     private TranscriptMessage[] mapped = Array.Empty<TranscriptMessage>();
     private int mappedCount;
     private int mappedRequired = -1;
+    private int mappedStyleRevision = -1;
     private long mappedRevision = -1;
     private GameChatTarget target;
     private string activeChannel = string.Empty;
@@ -499,6 +500,7 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
             EmptyText = Loc.T(L.Messages.Empty),
             LoadingText = Loc.T(L.Messages.Empty),
             IsGroup = target.Streams.Length > 1 || target.SendTarget.Length == 0,
+            LabelsOwnMessages = target.Streams.Length > 1 || target.SendTarget.Length == 0,
             Interactions = this,
         };
         if (snapToBottom)
@@ -520,13 +522,16 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
     {
         var entries = view.Entries;
         var required = entries.Count + ghostEntries.Count;
-        if (mappedRevision == view.Revision && mappedRequired == required)
+        var styleRevision = ChannelStyles.Shared.Revision;
+        if (mappedRevision == view.Revision && mappedRequired == required &&
+            mappedStyleRevision == styleRevision)
         {
             return;
         }
 
         mappedRevision = view.Revision;
         mappedRequired = required;
+        mappedStyleRevision = styleRevision;
         if (mapped.Length < required)
         {
             mapped = new TranscriptMessage[Math.Max(required, 64)];
@@ -568,10 +573,15 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
         var runs = ChatRuns.For(entry);
         var overrides = ChannelStyles.Shared.For(entry.ChannelKey);
         var packedName = overrides is null ? 0u : entry.IsSelf ? overrides.OutgoingName : overrides.IncomingName;
-        var senderTint = packedName != 0u ? ChannelInk.Unpack(packedName) : SenderTint.Of(entry.AuthorName);
+        var packedBody = overrides is null ? 0u : entry.IsSelf ? overrides.OutgoingBody : overrides.IncomingBody;
+        var senderTint = packedName != 0u
+            ? ChannelInk.Unpack(packedName)
+            : entry.IsSelf ? theme.Accent : SenderTint.Of(entry.AuthorName);
+        var bodyInk = packedBody != 0u ? ChannelInk.Unpack(packedBody) : default;
         return new TranscriptMessage(entry.Id, entry.IsSelf ? SelfId : entry.SenderKey, entry.Text, 0,
             Seconds(entry.At), 0, 0, null, entry.AuthorName, senderTint, flags,
-            channelTag: tag, channelTint: tagTint, runs: runs.HasLinks || runs.HasEmoji ? runs.Runs : null);
+            channelTag: tag, channelTint: tagTint, runs: runs.HasLinks || runs.HasEmoji ? runs.Runs : null,
+            bodyInk: bodyInk);
     }
 
     private void SyncGhosts()

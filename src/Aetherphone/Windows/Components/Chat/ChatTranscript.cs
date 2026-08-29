@@ -93,6 +93,7 @@ internal readonly struct TranscriptMessage
     public readonly string[]? SenderBadgeIds;
     public readonly string ChannelTag;
     public readonly Vector4 ChannelTint;
+    public readonly Vector4 BodyInk;
     public readonly TextRun[]? Runs;
 
     public TranscriptMessage(string id, string senderId, string body, int kind, long createdAtUnix, int mediaWidth,
@@ -100,10 +101,11 @@ internal readonly struct TranscriptMessage
         string? replyToId = null, string replySenderName = "", string replyBody = "", int replyKind = 0,
         int durationSecs = 0, TranscriptReaction[]? reactions = null, int senderBadges = 0,
         string[]? senderBadgeIds = null, string channelTag = "", Vector4 channelTint = default,
-        TextRun[]? runs = null)
+        TextRun[]? runs = null, Vector4 bodyInk = default)
     {
         ChannelTag = channelTag;
         ChannelTint = channelTint;
+        BodyInk = bodyInk;
         Runs = runs;
         SenderBadges = senderBadges;
         SenderBadgeIds = senderBadgeIds;
@@ -210,6 +212,7 @@ internal readonly ref struct ChatTranscriptModel
     public bool OtherTyping { get; init; }
     public bool Loading { get; init; }
     public bool IsGroup { get; init; }
+    public bool LabelsOwnMessages { get; init; }
     public IChatTranscriptMedia? Media { get; init; }
     public IChatTranscriptInteractions? Interactions { get; init; }
     public IChatTranscriptVoice? Voice { get; init; }
@@ -332,9 +335,11 @@ internal sealed class ChatTranscript
                     continue;
                 }
 
-                if (model.IsGroup && !grouped && message.SenderId != model.MyUserId)
+                var ownMessage = message.SenderId == model.MyUserId;
+                if (!grouped && message.SenderName.Length > 0 &&
+                    (ownMessage ? model.LabelsOwnMessages : model.IsGroup))
                 {
-                    DrawSenderLabel(message, model.Theme);
+                    DrawSenderLabel(message, model.Theme, ownMessage);
                 }
 
                 if (message.Kind == KindImage)
@@ -486,27 +491,31 @@ internal sealed class ChatTranscript
         }
     }
 
-    private static void DrawSenderLabel(TranscriptMessage message, PhoneTheme theme)
+    private static void DrawSenderLabel(TranscriptMessage message, PhoneTheme theme, bool mine)
     {
         var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
-        var textLeft = origin.X + 4f * scale;
-        var maxWidth = ScrollLayout.StableContentWidth() - 4f * scale;
-        var rect = new Vector2(textLeft, origin.Y);
-        var hovering = UiInteract.Hover(rect, new Vector2(rect.X + maxWidth, rect.Y + 16f * scale));
+        var available = ScrollLayout.StableContentWidth();
+        var maxWidth = available - 4f * scale;
         var name = FirstName(message.SenderName);
         var nameStyle = new TextStyle(0.78f, FontWeight.SemiBold);
-        UserName.Draw("chattranscript.sender." + message.Id, name, message.SenderBadges, message.SenderBadgeIds, textLeft, origin.Y, maxWidth,
-            nameStyle, message.SenderTint, hovering, theme);
+        var nameWidth = MathF.Min(maxWidth, Typography.Measure(name, nameStyle).X);
+        var tagWidth = message.ChannelTag.Length > 0
+            ? 16f * scale + Typography.Measure(message.ChannelTag, TextStyles.Caption2).X
+            : 0f;
+        var blockWidth = mine ? MathF.Min(maxWidth, nameWidth + tagWidth) : maxWidth;
+        var textLeft = mine ? origin.X + available - blockWidth : origin.X + 4f * scale;
+        var rect = new Vector2(textLeft, origin.Y);
+        var hovering = UiInteract.Hover(rect, new Vector2(rect.X + blockWidth, rect.Y + 16f * scale));
+        UserName.Draw("chattranscript.sender." + message.Id, name, message.SenderBadges, message.SenderBadgeIds,
+            textLeft, origin.Y, mine ? nameWidth : maxWidth, nameStyle, message.SenderTint, hovering, theme);
         if (message.ChannelTag.Length > 0)
         {
-            var tagLeft = textLeft + MathF.Min(maxWidth, Typography.Measure(name, nameStyle).X) + 6f * scale;
-            DrawChannelTag(message, tagLeft, origin.Y, origin.X + maxWidth, scale);
+            DrawChannelTag(message, textLeft + nameWidth + 6f * scale, origin.Y, origin.X + available, scale);
         }
 
         if (!string.Equals(name, message.SenderName, StringComparison.Ordinal))
         {
-            var nameWidth = MathF.Min(maxWidth, Typography.Measure(name, new TextStyle(0.78f, FontWeight.SemiBold)).X);
             HoverTooltip.Show("chattranscript.senderfull." + message.Id,
                 new Rect(rect, new Vector2(rect.X + nameWidth, rect.Y + 16f * scale)), message.SenderName,
                 HoverLabelSide.Above);
@@ -624,7 +633,9 @@ internal sealed class ChatTranscript
         var scaledMax = fx.Apply(bubbleMax);
         var placeholder = (message.Flags & TranscriptFlags.Placeholder) != 0;
         var fill = mine ? model.Accent : ChatInk.IncomingBubble(model.Theme);
-        var ink = mine ? new Vector4(1f, 1f, 1f, 1f) : model.Theme.TextStrong;
+        var ink = message.BodyInk.W > 0f
+            ? message.BodyInk
+            : mine ? new Vector4(1f, 1f, 1f, 1f) : model.Theme.TextStrong;
         if (placeholder || deleted)
         {
             fill = Palette.WithAlpha(fill, fill.W * 0.55f);
