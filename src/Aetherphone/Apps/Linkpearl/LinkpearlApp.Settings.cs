@@ -103,10 +103,7 @@ internal sealed partial class LinkpearlApp
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Xxl * scale));
         }
 
-        if (section == LinkpearlSettingsSection.Popouts)
-        {
-            DrawSettingsMenu(area);
-        }
+        DrawSettingsMenu(area);
     }
 
     private static FontAwesomeIcon SectionIcon(LinkpearlSettingsSection section) => section switch
