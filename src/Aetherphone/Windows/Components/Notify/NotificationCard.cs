@@ -58,8 +58,9 @@ internal static class NotificationCard
             titleY, titleMaxWidth, TextStyles.Headline, Palette.WithAlpha(theme.TextStrong, opacity));
         var bodyMaxWidth = textRight - textLeft;
         var bodyY = min.Y + 35f * scale;
-        Marquee.DrawLeftAuto(drawList, new MarqueeId("notificationcard.body.", notification.Id), notification.SingleLineBody, textLeft,
-            bodyY, bodyMaxWidth, TextStyles.Subheadline, Palette.WithAlpha(theme.TextMuted, opacity));
+        EmojiText.DrawLine(drawList, new MarqueeId("notificationcard.body.", notification.Id),
+            notification.SingleLineBody, new Vector2(textLeft, bodyY), bodyMaxWidth, theme.TextMuted, opacity,
+            TextStyles.Subheadline);
     }
 
     public static Vector2 BadgeAnchor(Rect rect, float scale)

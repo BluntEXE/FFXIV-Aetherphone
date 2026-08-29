@@ -292,8 +292,8 @@ internal sealed class NotificationBanner : IDisposable
         var bodyMaxWidth = textRight - textLeft;
         var bodyTop = titleTop + BodyOffset * scale;
         var bodyStyle = new TextStyle(0.88f, FontWeight.Regular);
-        Marquee.DrawLeftAuto(dl, new MarqueeId("notificationbanner.body.", notification.Id), notification.SingleLineBody, textLeft,
-            bodyTop, bodyMaxWidth, bodyStyle, Palette.WithAlpha(theme.TextMuted, opacity));
+        EmojiText.DrawLine(dl, new MarqueeId("notificationbanner.body.", notification.Id), notification.SingleLineBody,
+            new Vector2(textLeft, bodyTop), bodyMaxWidth, theme.TextMuted, opacity, bodyStyle);
     }
 
     private void OnPresented(PhoneNotification notification)

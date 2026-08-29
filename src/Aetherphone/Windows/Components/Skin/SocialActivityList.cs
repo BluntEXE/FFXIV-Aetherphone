@@ -7,12 +7,13 @@ using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
 
 internal static class SocialActivityList
 {
+    private static readonly TextStyle BodyStyle = new(0.88f, FontWeight.Regular);
+
     public static void Draw(Rect area, AppSkin ui, AppPalette palette, PhoneTheme theme, NotificationDto[] items,
         string app, RemoteImageCache images, LodestoneService lodestone, Action<NotificationDto> openActor,
         Action<NotificationDto> openPost, Action? loadOlder = null)
@@ -76,7 +77,7 @@ internal static class SocialActivityList
         var actorLabel = SocialActivity.ActorLabel(item);
         var body = SocialActivity.Body(item);
         var actorSize = Typography.Measure(actorLabel, 0.95f, FontWeight.SemiBold);
-        var bodyHeight = body.Length > 0 ? Typography.MeasureWrapped(body, textWidth, 0.88f) : 0f;
+        var bodyHeight = body.Length > 0 ? EmojiText.BlockHeight(body, BodyStyle, textWidth) : 0f;
         var contentHeight = actorSize.Y + 4f * scale + bodyHeight;
         var rowHeight = MathF.Max(radius * 2f + pad * 2f, contentHeight + pad * 2f);
         var rowMax = new Vector2(origin.X + width, origin.Y + rowHeight);
@@ -96,13 +97,8 @@ internal static class SocialActivityList
             palette.MutedInk, 0.78f);
         if (body.Length > 0)
         {
-            ImGui.SetCursorScreenPos(new Vector2(textLeft, textTop + actorSize.Y + 4f * scale));
-            using (Typography.WrapAt(textRight))
-            using (Plugin.Fonts.Push(0.88f))
-            using (ImRaii.PushColor(ImGuiCol.Text, palette.BodyInk))
-            {
-                Typography.Wrapped(body);
-            }
+            EmojiText.DrawBlock(new Vector2(textLeft, textTop + actorSize.Y + 4f * scale), body, palette.BodyInk,
+                BodyStyle, textWidth);
         }
 
         var avatarMin = avatarCenter - new Vector2(radius, radius);

@@ -246,9 +246,9 @@ internal static class MinimizedPhoneRenderer
         var titleHeight = Typography.Measure(notification.Title, titleStyle).Y;
         Marquee.DrawCenteredAuto(dl, "minimized.card.title", notification.Title, centerX, titleTop, rect.Width,
             titleStyle, Palette.WithAlpha(theme.TextStrong, alpha));
-        Marquee.DrawCenteredAuto(dl, "minimized.card.body", notification.SingleLineBody, centerX,
-            titleTop + titleHeight + CardBodyGap * scale, rect.Width, bodyStyle,
-            Palette.WithAlpha(theme.TextMuted, alpha));
+        EmojiText.DrawLineCentered(dl, "minimized.card.body", notification.SingleLineBody,
+            new Vector2(centerX, titleTop + titleHeight + CardBodyGap * scale), rect.Width, theme.TextMuted, alpha,
+            bodyStyle);
     }
 
     public static void DrawCardStroke(ImDrawListPtr dl, in ChassisGeometry geometry, Vector4 accent, float alpha,

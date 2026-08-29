@@ -668,7 +668,7 @@ internal sealed partial class ChirperApp
         var actor = SocialActivity.ActorLabel(item);
         var body = SocialActivity.Body(item);
         var actorHeight = Typography.LineHeight(ActivityActorStyle);
-        var bodyHeight = body.Length > 0 ? Typography.MeasureWrappedBlock(body, ActivityBodyStyle, textWidth).Y : 0f;
+        var bodyHeight = body.Length > 0 ? EmojiText.BlockHeight(body, ActivityBodyStyle, textWidth) : 0f;
         var contentHeight = actorHeight + (bodyHeight > 0f ? 2f * scale + bodyHeight : 0f);
         var rowHeight = MathF.Max(iconRadius * 2f, contentHeight) + padY * 2f;
         var rowMax = new Vector2(origin.X + width, origin.Y + rowHeight);
@@ -703,7 +703,7 @@ internal sealed partial class ChirperApp
 
         if (bodyHeight > 0f)
         {
-            Typography.DrawWrappedLeft(new Vector2(textLeft, textTop + actorHeight + 2f * scale), body, ChirperInk.BodyInk,
+            EmojiText.DrawBlock(new Vector2(textLeft, textTop + actorHeight + 2f * scale), body, ChirperInk.BodyInk,
                 ActivityBodyStyle, textWidth);
         }
 
