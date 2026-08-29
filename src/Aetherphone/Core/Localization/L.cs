@@ -3449,6 +3449,10 @@ internal static class L
         public static readonly LocString NoMatches = new("linkpearl.noMatches", "No one matches that name.");
         public static readonly LocString SearchHint = new("linkpearl.searchHint", "Search messages and people");
         public static readonly LocString EmojiRecent = new("linkpearl.emojiRecent", "Recently used");
+        public static readonly LocString EmojiSection = new("linkpearl.emojiSection", "Emoji");
+        public static readonly LocString EmojiShortcodes = new("linkpearl.emojiShortcodes", "Draw shortcodes as emoji");
+        public static readonly LocString EmojiShortcodesHint = new("linkpearl.emojiShortcodesHint", "A code like :smile: is drawn as the picture on your screen. Everyone else still reads the code, because the game cannot carry emoji.");
+        public static readonly LocString EmojiPickerRow = new("linkpearl.emojiPickerRow", "Show the emoji button");
         public static readonly LocString NewMessages = new("linkpearl.newMessages", "New messages");
         public static readonly LocString ClearHistory = new("linkpearl.clearHistory", "Clear history");
         public static readonly LocString ClearHistoryConfirm = new("linkpearl.clearHistoryConfirm", "Clear the stored history for this conversation? This only affects your phone.");

@@ -70,7 +70,34 @@ internal sealed partial class LinkpearlApp
         card.End();
         SettingsSection.Hint(Loc.T(L.Linkpearl.ComposerHint), frameTheme);
         DrawSplitSettings(scale);
+        DrawEmojiSettings();
         DrawRecentSentSettings(scale);
+    }
+
+    private void DrawEmojiSettings()
+    {
+        SettingsSection.Header(Loc.T(L.Linkpearl.EmojiSection), frameTheme);
+        var card = GroupCard.Begin(frameTheme, 2);
+        var shortcodes = SettingsRow.Bool(card.NextRow(), Loc.T(L.Linkpearl.EmojiShortcodes),
+            configuration.LinkpearlEmojiShortcodes, frameTheme, "linkpearl.settings.emojiShortcodes");
+        if (shortcodes != configuration.LinkpearlEmojiShortcodes)
+        {
+            configuration.LinkpearlEmojiShortcodes = shortcodes;
+            configuration.Save();
+            ChatRuns.Reset();
+            RunText.Reset();
+        }
+
+        var picker = SettingsRow.Bool(card.NextRow(), Loc.T(L.Linkpearl.EmojiPickerRow),
+            configuration.LinkpearlEmojiPicker, frameTheme, "linkpearl.settings.emojiPicker");
+        if (picker != configuration.LinkpearlEmojiPicker)
+        {
+            configuration.LinkpearlEmojiPicker = picker;
+            configuration.Save();
+        }
+
+        card.End();
+        SettingsSection.Hint(Loc.T(L.Linkpearl.EmojiShortcodesHint), frameTheme);
     }
 
     private void DrawSplitSettings(float scale)
