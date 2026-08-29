@@ -18,6 +18,8 @@ internal static class SlotsRules
 
     public const int PaylineCount = 10;
 
+    public const int MinLineMatch = 3;
+
     public const long PayoutCapMultiple = 200;
 
     public const long JackpotChipsPerHit = 150_000_000;
@@ -67,5 +69,10 @@ internal static class SlotsRules
     public static bool IsStakeInRange(long stake)
     {
         return stake >= MinStake && stake <= MaxStake;
+    }
+
+    public static long JackpotSpinsPerHit(long stake)
+    {
+        return JackpotChipsPerHit / Math.Max(stake, 1);
     }
 }

@@ -12,6 +12,7 @@ internal static class CasinoRules
         L.Casino.RulesSlotsStep2,
         L.Casino.RulesSlotsStep3,
         L.Casino.RulesSlotsStep4,
+        L.Casino.RulesSlotsStep5,
     };
 
     private static readonly LocString[] ScratchSteps =

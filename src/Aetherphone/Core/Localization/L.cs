@@ -5314,6 +5314,9 @@ internal static class L
         public static readonly LocString SlotsScatterNote = new("casino.slots.scatterNote", "3, 4, or 5 discs anywhere pay {0}, {1}, or {2} and start {3}, {4}, or {5} free spins.");
         public static readonly LocString SlotsBonusNote = new("casino.slots.bonusNote", "Free spin wins pay double. More discs add {0} spins, up to {1} in one round.");
         public static readonly LocString SlotsCapRule = new("casino.slots.capRule", "One round never pays more than {0}x the stake.");
+        public static readonly LocString SlotsPaylinesNote = new("casino.slots.paylinesNote", "All {0} lines are always in play. A line pays when {1} or more matching symbols run along it from the leftmost reel with no gap, and it pays its best match once. Wins on different lines add up, and the machine traces each winning line in gold after the reels stop.");
+        public static readonly LocString SlotsJackpotName = new("casino.slots.jackpotName", "House jackpot");
+        public static readonly LocString SlotsJackpotNote = new("casino.slots.jackpotNote", "Every paid spin also draws for the floor-wide pot, and the reels do not need to match. Each chip you stake is one ticket, so at {0} a spin the pot hits about once in {1} spins. A hit pays the whole pot on top of your line wins.");
         public static readonly LocString CabinetNoChipsTitle = new("casino.cabinet.noChipsTitle", "You have no chips");
         public static readonly LocString CabinetNoChipsHint = new("casino.cabinet.noChipsHint", "Buy chips at the cashier and play them at any game on the floor.");
         public static readonly LocString SlotsLowStack = new("casino.slots.lowStack", "Not enough chips for that stake. Top up at the cashier.");
@@ -5652,9 +5655,10 @@ internal static class L
         public static readonly LocString PitchBlackjack = new("casino.pitch.blackjack", "Beat the dealer to twenty one at a seated table");
         public static readonly LocString PitchBarkeep = new("casino.pitch.barkeep", "Serve the bar right and the tips are yours");
         public static readonly LocString RulesSlotsStep1 = new("casino.rules.slots1", "Pick a stake, then spin the reels.");
-        public static readonly LocString RulesSlotsStep2 = new("casino.rules.slots2", "Three or more matching symbols along a payline pays out.");
-        public static readonly LocString RulesSlotsStep3 = new("casino.rules.slots3", "Three scatters anywhere in the window award free spins.");
-        public static readonly LocString RulesSlotsStep4 = new("casino.rules.slots4", "Five scatters on one spin take the whole house jackpot.");
+        public static readonly LocString RulesSlotsStep2 = new("casino.rules.slots2", "Ten fixed paylines are always in play: the three rows plus seven shapes that bend across them. The Payouts sheet on the machine maps every line.");
+        public static readonly LocString RulesSlotsStep3 = new("casino.rules.slots3", "A line pays when three or more matching symbols run along it from the leftmost reel with no gap. Each line pays its best match once, and wins on different lines add up.");
+        public static readonly LocString RulesSlotsStep4 = new("casino.rules.slots4", "Three or more discs anywhere in the window start free spins, and free spin wins pay double.");
+        public static readonly LocString RulesSlotsStep5 = new("casino.rules.slots5", "Every paid spin also draws for the house jackpot. Each chip you stake is one ticket, and a hit pays the whole pot on top of your line wins.");
         public static readonly LocString RulesScratchStep1 = new("casino.rules.scratch1", "Pick a card price. A dearer card carries dearer prizes.");
         public static readonly LocString RulesScratchStep2 = new("casino.rules.scratch2", "Rub the panels off, or reveal them all at once.");
         public static readonly LocString RulesScratchStep3 = new("casino.rules.scratch3", "Three of the same symbol pays that symbol's prize.");
