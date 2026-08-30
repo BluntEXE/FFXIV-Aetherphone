@@ -56,7 +56,7 @@ internal static class AvatarView
         }
 
         var half = radius * frame.Scale;
-        if (images.Sized(frame.AssetUrl, half * 2f) is not { } texture)
+        if (images.SizedAt(frame.AssetUrl, half * 2f, ImGui.GetTime()) is not { } texture)
         {
             return;
         }

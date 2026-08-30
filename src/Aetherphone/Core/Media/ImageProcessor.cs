@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Buffers.Binary;
 using Aetherphone.Core.Wallpapers;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Textures.TextureWraps;
@@ -40,17 +41,35 @@ internal static class ImageProcessor
     private const long MaxAnimationSourcePixels = 40_000_000L;
     private const int MaxAnimationSourceFrames = 300;
     internal static readonly DecoderOptions SingleFrame = new() { MaxFrames = 1 };
+    private static ReadOnlySpan<byte> PngSignature => new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
 
     private static void EnsureDecodable(Stream stream, long maxPixels)
     {
         var info = Image.Identify(stream);
         stream.Position = 0;
+        EnsureWithin(info.Width, info.Height, maxPixels);
+    }
 
-        if ((long)info.Width * info.Height > maxPixels)
+    private static void EnsureWithin(int width, int height, long maxPixels)
+    {
+        if (width <= 0 || height <= 0 || (long)width * height > maxPixels)
         {
             throw new InvalidImageContentException(
-                $"Image dimensions {info.Width}x{info.Height} exceed the {maxPixels} pixel limit.");
+                $"Image dimensions {width}x{height} exceed the {maxPixels} pixel limit.");
         }
+    }
+
+    private static (int Width, int Height) PngDimensions(ReadOnlySpan<byte> bytes)
+    {
+        const int widthOffset = 16;
+        const int heightOffset = 20;
+        if (bytes.Length < heightOffset + 4 || !bytes.Slice(12, 4).SequenceEqual("IHDR"u8))
+        {
+            throw new InvalidImageContentException("PNG data has no IHDR chunk.");
+        }
+
+        return (BinaryPrimitives.ReadInt32BigEndian(bytes[widthOffset..]),
+            BinaryPrimitives.ReadInt32BigEndian(bytes[heightOffset..]));
     }
 
     private static Image<Rgba32> LoadRgba32(Stream stream, long maxPixels, int maxDimension, out int length)
@@ -276,6 +295,66 @@ internal static class ImageProcessor
             && bytes[3] == 0x38 && (bytes[4] == 0x37 || bytes[4] == 0x39) && bytes[5] == 0x61;
     }
 
+    public static AnimationKind AnimationKindOf(ReadOnlySpan<byte> bytes)
+    {
+        if (IsGif(bytes))
+        {
+            return AnimationKind.Gif;
+        }
+
+        if (IsAnimatedWebp(bytes))
+        {
+            return AnimationKind.Webp;
+        }
+
+        if (IsAnimatedPng(bytes))
+        {
+            return AnimationKind.Png;
+        }
+
+        return AnimationKind.None;
+    }
+
+    private static bool IsAnimatedWebp(ReadOnlySpan<byte> bytes)
+    {
+        const int flagsOffset = 20;
+        const byte animationFlag = 0x02;
+        return bytes.Length > flagsOffset
+            && bytes[..4].SequenceEqual("RIFF"u8)
+            && bytes[8..16].SequenceEqual("WEBPVP8X"u8)
+            && (bytes[flagsOffset] & animationFlag) != 0;
+    }
+
+    private static bool IsAnimatedPng(ReadOnlySpan<byte> bytes)
+    {
+        const int chunkHeaderLength = 8;
+        const int chunkCrcLength = 4;
+        if (bytes.Length < PngSignature.Length || !bytes[..PngSignature.Length].SequenceEqual(PngSignature))
+        {
+            return false;
+        }
+
+        long offset = PngSignature.Length;
+        while (offset + chunkHeaderLength <= bytes.Length)
+        {
+            var dataLength = BinaryPrimitives.ReadUInt32BigEndian(bytes[(int)offset..]);
+            var type = bytes.Slice((int)offset + 4, 4);
+            if (type.SequenceEqual("acTL"u8))
+            {
+                return true;
+            }
+
+            if (type.SequenceEqual("IDAT"u8))
+            {
+                return false;
+            }
+
+            offset += chunkHeaderLength + dataLength + chunkCrcLength;
+        }
+
+        return false;
+    }
+
     public static (int Width, int Height) IdentifyDimensions(byte[] bytes)
     {
         using var stream = new MemoryStream(bytes);
@@ -283,10 +362,11 @@ internal static class ImageProcessor
         return (info.Width, info.Height);
     }
 
-    public static async Task<AnimatedImage> DecodeAnimationAsync(ITextureProvider textures, byte[] bytes, string tag,
-        CancellationToken token)
+    public static async Task<AnimatedImage> DecodeAnimationAsync(ITextureProvider textures, byte[] bytes,
+        AnimationKind kind, string tag, int maxDimension, CancellationToken token)
     {
-        var (frames, width, height, delays) = await Task.Run(() => DecodeAnimationFrames(bytes), token)
+        var (frames, width, height, delays) = await Task
+            .Run(() => DecodeAnimationFrames(bytes, kind, maxDimension), token)
             .ConfigureAwait(false);
         var wraps = new IDalamudTextureWrap[frames.Length];
         try
@@ -310,13 +390,13 @@ internal static class ImageProcessor
         return new AnimatedImage(wraps, delays);
     }
 
-    private static (byte[][] Frames, int Width, int Height, float[] Delays) DecodeAnimationFrames(byte[] bytes)
+    internal static (byte[][] Frames, int Width, int Height, float[] Delays) DecodeAnimationFrames(byte[] bytes,
+        AnimationKind kind, int maxDimension)
     {
+        var (sourceWidth, sourceHeight) = kind == AnimationKind.Png ? PngDimensions(bytes) : IdentifyDimensions(bytes);
+        EnsureWithin(sourceWidth, sourceHeight, MaxDecodePixels);
         using var stream = new MemoryStream(bytes);
-        EnsureDecodable(stream, MaxDecodePixels);
-        var info = Image.Identify(stream);
-        stream.Position = 0;
-        var pixelsPerFrame = Math.Max(1L, (long)info.Width * info.Height);
+        var pixelsPerFrame = Math.Max(1L, (long)sourceWidth * sourceHeight);
         var maxSourceFrames = (int)Math.Clamp(MaxAnimationSourcePixels / pixelsPerFrame, 1L,
             MaxAnimationSourceFrames);
         var options = new DecoderOptions { MaxFrames = (uint)maxSourceFrames };
@@ -324,10 +404,10 @@ internal static class ImageProcessor
         var rawDelays = new float[image.Frames.Count];
         for (var index = 0; index < rawDelays.Length; index++)
         {
-            rawDelays[index] = image.Frames[index].Metadata.GetGifMetadata().FrameDelay / 100f;
+            rawDelays[index] = FrameDelaySeconds(image.Frames[index], kind);
         }
 
-        ScaleWithin(image, MaxAnimationDimension);
+        ScaleWithin(image, AnimationDimension(maxDimension));
         var (keptIndices, delays) = GifFramePlan.Plan(rawDelays, image.Width, image.Height, MaxAnimationPixels);
         var frameLength = checked(image.Width * image.Height * 4);
         var frames = new byte[keptIndices.Length][];
@@ -339,6 +419,25 @@ internal static class ImageProcessor
         }
 
         return (frames, image.Width, image.Height, delays);
+    }
+
+    private static int AnimationDimension(int maxDimension)
+    {
+        return maxDimension <= 0 ? MaxAnimationDimension : Math.Min(maxDimension, MaxAnimationDimension);
+    }
+
+    private static float FrameDelaySeconds(ImageFrame<Rgba32> frame, AnimationKind kind)
+    {
+        switch (kind)
+        {
+            case AnimationKind.Webp:
+                return frame.Metadata.GetWebpMetadata().FrameDelay / 1000f;
+            case AnimationKind.Png:
+                var seconds = frame.Metadata.GetPngMetadata().FrameDelay.ToDouble();
+                return double.IsFinite(seconds) ? (float)seconds : 0f;
+            default:
+                return frame.Metadata.GetGifMetadata().FrameDelay / 100f;
+        }
     }
 
     public static Task<IDalamudTextureWrap> DecodeToTextureAsync(ITextureProvider textures, byte[] bytes,

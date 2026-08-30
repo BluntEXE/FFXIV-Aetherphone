@@ -51,20 +51,30 @@ internal sealed class TextureLedger
 
     public IDalamudTextureWrap? Get(LedgerKey key)
     {
+        return GetAt(key, 0d);
+    }
+
+    public IDalamudTextureWrap? GetAt(LedgerKey key, double timeSeconds)
+    {
         if (!entries.TryGetValue(key, out var entry))
         {
             return null;
         }
 
         Volatile.Write(ref entry.LastAccessTicks, Environment.TickCount64);
-        return entry.Wrap ?? entry.Animation!.Frames[0];
+        return entry.Wrap ?? entry.Animation!.FrameAt(timeSeconds);
     }
 
     public IDalamudTextureWrap? Nearest(string name, int level)
     {
+        return Nearest(name, level, 0d);
+    }
+
+    public IDalamudTextureWrap? Nearest(string name, int level, double timeSeconds)
+    {
         for (var above = level + 1; above <= TextureSizes.LevelCount; above++)
         {
-            if (Get(name, above) is { } larger)
+            if (GetAt(new LedgerKey(name, above), timeSeconds) is { } larger)
             {
                 return larger;
             }
@@ -72,13 +82,13 @@ internal sealed class TextureLedger
 
         for (var below = level - 1; below > TextureSizes.Native; below--)
         {
-            if (Get(name, below) is { } smaller)
+            if (GetAt(new LedgerKey(name, below), timeSeconds) is { } smaller)
             {
                 return smaller;
             }
         }
 
-        return Get(name);
+        return GetAt(new LedgerKey(name, TextureSizes.Native), timeSeconds);
     }
 
     public AnimatedImage? GetAnimated(string name)

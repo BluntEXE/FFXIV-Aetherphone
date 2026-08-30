@@ -210,7 +210,7 @@ shop, worn one at a time, and drawn over the avatar everywhere that face appears
 | | |
 |---|---|
 | Canvas | **512 x 512 px**, square. Anything from 128 to 1024 is accepted, square is enforced within a 2% tolerance |
-| Format | **PNG-32 or WebP, RGBA.** JPEG is rejected: no alpha means a solid square over somebody's face |
+| Format | **PNG-32 or WebP, RGBA.** Animated WebP and APNG are accepted and play in the client. JPEG and GIF are rejected: JPEG has no alpha, and GIF only has the 1-bit kind |
 | File size | 2 MB hard cap |
 | Centre | **Fully transparent.** The avatar is drawn underneath and shows through |
 | Sizes | **One file.** Do not export a size ladder. The client resamples the master down to whatever it draws at |
@@ -267,13 +267,18 @@ inside it, has failed no matter how good it looks alone.
 tricks, so a hard alpha cutout against a busy photo reads as a sticker. Feather the outer edge by a
 pixel or two.
 
+**Animated frames.** Export an animated WebP or an APNG and upload it like any other frame; the
+console marks it Animated and the client plays it wherever the face appears, every copy on screen in
+step with one shared clock. Two limits sit on top of the static ones: **512 x 512 at most** and **32
+frames at most**, with the 2 MB cap unchanged, so keep the loop short and let the resting pose carry
+the design. Every frame stays resident in video memory while the face is on screen (a 256 px loop of
+32 frames costs about 8 MB, and the client resamples the loop to the size it draws, same as a still),
+which is why the caps are tight. GIF is refused on purpose: its 1-bit alpha turns a feathered edge
+into a jagged cutout. A frame drawn below the 15 px radius floor is skipped, animated or not.
+
 ---
 
 # 4. Open decisions
-
-**Animated frames.** Frames are static images. Motion is a field on the frame and a branch in the
-draw away, and is deliberately not built until static frames have shipped and their texture cost is
-measured.
 
 **Off-centre art.** Scale handles size, not position. If a design genuinely cannot sit centred, that
 is two more numbers on the frame, and worth asking for rather than working around.

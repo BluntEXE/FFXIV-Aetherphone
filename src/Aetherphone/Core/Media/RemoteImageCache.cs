@@ -47,6 +47,11 @@ internal sealed class RemoteImageCache : IDisposable
 
     public IDalamudTextureWrap? Sized(string? url, float drawnPixels)
     {
+        return SizedAt(url, drawnPixels, 0d);
+    }
+
+    public IDalamudTextureWrap? SizedAt(string? url, float drawnPixels, double timeSeconds)
+    {
         if (!Fetchable(url))
         {
             return null;
@@ -54,13 +59,13 @@ internal sealed class RemoteImageCache : IDisposable
 
         var resolved = LegacyMediaHosts.Normalize(url!);
         var level = TextureSizes.LevelFor(drawnPixels);
-        if (ready.Get(resolved, level) is { } wrap)
+        if (ready.GetAt(new LedgerKey(resolved, level), timeSeconds) is { } wrap)
         {
             return wrap;
         }
 
         Request(resolved, level);
-        return ready.Nearest(resolved, level);
+        return ready.Nearest(resolved, level, timeSeconds);
     }
 
     public AnimatedImage? GetAnimated(string? url)
@@ -197,10 +202,11 @@ internal sealed class RemoteImageCache : IDisposable
                 return;
             }
 
-            if (ImageProcessor.IsGif(bytes))
+            var kind = ImageProcessor.AnimationKindOf(bytes);
+            if (kind != AnimationKind.None)
             {
-                var animation = await ImageProcessor.DecodeAnimationAsync(Plugin.TextureProvider, bytes,
-                    $"Aetherphone.Gif.{key.Name}", token).ConfigureAwait(false);
+                var animation = await ImageProcessor.DecodeAnimationAsync(Plugin.TextureProvider, bytes, kind,
+                    $"Aetherphone.Anim.{key.Name}", TextureSizes.SizeOf(key.Level), token).ConfigureAwait(false);
                 if (!ready.TryAddAnimated(key, animation))
                 {
                     animation.Dispose();
