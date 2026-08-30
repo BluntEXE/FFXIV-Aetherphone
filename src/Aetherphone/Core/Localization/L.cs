@@ -1651,52 +1651,56 @@ internal static class L
                 "The home screen icons now fade away while an app grows out of them, and the app's content only appears once its card is large enough to read"),
             new("changelog.r1014.13",
                 "Improved app opening: the wallpaper now zooms and blurs behind the growing app card instead of only dimming"),
-            new("changelog.r1014.0",
-                "Fixed Chirper no longer offering the Translate link on posts and replies written in another language"),
             new("changelog.r1014.1",
                 "Tapping the reaction pill under a Chirper post now joins its reaction, and a pill holding several reactions expands into one chip per reaction so you can pick the one to add"),
             new("changelog.r1014.12",
                 "Who reacted to a Chirper post now lives under View reactions in the post's More menu"),
+            new("changelog.r1014.4",
+                "The Gamba rules and Payouts sheets now explain the ten Slots paylines and how the house jackpot draw works"),
+            new("changelog.r1014.7",
+                "The Slots reel window now shakes, flashes gold and runs a chase of marquee bulbs when the jackpot lands"),
+            new("changelog.r1014.0",
+                "Fixed Chirper no longer offering the Translate link on posts and replies written in another language"),
             new("changelog.r1014.14",
                 "Fixed the Chirper Home, Explore, Activity and Profile tabs sharing one scroll position, each tab now keeps its own place"),
             new("changelog.r1014.2",
                 "Fixed the phone creeping away from its place after each turn to landscape and back, each orientation now remembers its own resting spot"),
             new("changelog.r1014.3",
                 "Fixed Linkpearl pop-out menus staying open and out of reach after that window lost focus"),
-            new("changelog.r1014.4",
-                "The Gamba rules and Payouts sheets now explain the ten Slots paylines and how the house jackpot draw works"),
             new("changelog.r1014.5",
                 "Fixed the Slots jackpot meter reading full long before the pot reached its 50,000 coin cap"),
             new("changelog.r1014.6",
                 "Fixed long Slots banners and the jackpot hint clipping at the cabinet edge, they now glide across instead"),
-            new("changelog.r1014.7",
-                "The Slots reel window now shakes, flashes gold and runs a chase of marquee bulbs when the jackpot lands"),
         };
 
         public static readonly LocString[] Release1013 =
         {
+            new("changelog.r1013.3",
+                "Added search to the home screen: pull down on the app grid to find apps, settings, messages, notes and shortcuts, or do quick math"),
+            new("changelog.r1013.6",
+                "Added MogCast, Music, News and Hunts to the Chinese game version"),
+            new("changelog.r1013.9",
+                "Added a Trademark document and refreshed the official Aetherphone documents in the GitHub repository"),
+            new("changelog.r1013.23",
+                "Added an encryption help panel that explains what each message state means and what to do about it"),
+            new("changelog.r1013.30",
+                "Added sounds across the phone and the mini-games, with Silent Mode on the main Settings page and volumes under Settings > Sounds"),
             new("changelog.r1013.0",
                 "Redesigned Chirper around Home, Explore, Activity and Profile tabs, with edge to edge posts, threaded replies and a new compose pill"),
             new("changelog.r1013.1",
                 "Chirper now shows profile pictures on posts, a banner on profiles, and which reaction each person left in the likers list"),
             new("changelog.r1013.2",
                 "Chirper tabs now refresh when you come back to them, and name effects play everywhere in the app"),
-            new("changelog.r1013.3",
-                "Added search to the home screen: pull down on the app grid to find apps, settings, messages, notes and shortcuts, or do quick math"),
             new("changelog.r1013.4",
                 "Apps now come back where you left them, keeping their tab, draft, screen and scroll"),
             new("changelog.r1013.5",
                 "Apps now draw placeholder rows while their first page loads, instead of a spinner"),
-            new("changelog.r1013.6",
-                "Added MogCast, Music, News and Hunts to the Chinese game version"),
             new("changelog.r1013.46",
                 "The Simplified Chinese translation has been polished across the phone, from app names to Eorzean units and the moderation wording, contributed by Nero0421"),
             new("changelog.r1013.7",
                 "Mods has been taken out of the phone, browsing and installing Heliosphere mods happens in the Heliosphere plugin"),
             new("changelog.r1013.8",
                 "Beat can now be played with the keyboard, on 1 to 4 or A, S, D and F"),
-            new("changelog.r1013.9",
-                "Added a Trademark document and refreshed the official Aetherphone documents in the GitHub repository"),
             new("changelog.r1013.10",
                 "Chat pop-outs now hold several conversations as tabs, merge when you drag one window onto another, and fold down to their title bar"),
             new("changelog.r1013.11",
@@ -1715,18 +1719,12 @@ internal static class L
                 "Chat settings now open as a list of screens instead of one long scroll"),
             new("changelog.r1013.18",
                 "The game's boxed numbers, arrows and quality marks now draw in Linkpearl instead of being stripped out"),
-            new("changelog.r1013.19",
-                "Fixed a link clicked in a chat pop-out asking on the phone screen instead of in that window"),
             new("changelog.r1013.20",
                 "You can now unlock a new PC from one that already opens your chats, with your key and full history following"),
             new("changelog.r1013.21",
                 "Messages you have already read are now kept on this PC, sealed the same way your key is"),
             new("changelog.r1013.22",
                 "Saving your recovery code is now two steps, with a notification while a code is waiting to be saved"),
-            new("changelog.r1013.23",
-                "Added an encryption help panel that explains what each message state means and what to do about it"),
-            new("changelog.r1013.24",
-                "Fixed the phone losing or replacing your encryption key, the cause behind conversations turning unreadable"),
             new("changelog.r1013.25",
                 "A chat this device cannot decrypt no longer sends in the clear"),
             new("changelog.r1013.26",
@@ -1739,8 +1737,6 @@ internal static class L
                 "A running Clock timer now shows in the Dynamic Island"),
             new("changelog.r1013.47",
                 "A shortcut can now use a picture from your PC as its icon, moved and scaled to fit the tile, contributed by Deldee"),
-            new("changelog.r1013.30",
-                "Added sounds across the phone and the mini-games, with Silent Mode on the main Settings page and volumes under Settings > Sounds"),
             new("changelog.r1013.31",
                 "Moved Show in Group Pose into General settings"),
             new("changelog.r1013.32",
@@ -1757,6 +1753,14 @@ internal static class L
                 "External links in Music now ask before they open your browser"),
             new("changelog.r1013.37",
                 "Improved rendering, memory use and text heavy screens across the phone, so long chats and feeds scroll more smoothly"),
+            new("changelog.r1013.42",
+                "Gil figures and viewer counts now follow your language's number formatting"),
+            new("changelog.r1013.43",
+                "Chats sealed to a key you no longer have now come back on their own, handed over by the people you were talking to"),
+            new("changelog.r1013.19",
+                "Fixed a link clicked in a chat pop-out asking on the phone screen instead of in that window"),
+            new("changelog.r1013.24",
+                "Fixed the phone losing or replacing your encryption key, the cause behind conversations turning unreadable"),
             new("changelog.r1013.38",
                 "Fixed a fresh install holding on the boot screen, and text resizing the first time an app drew a new icon"),
             new("changelog.r1013.39",
@@ -1765,10 +1769,6 @@ internal static class L
                 "Fixed the other side's chat bubbles being nearly invisible in light mode"),
             new("changelog.r1013.41",
                 "Fixed the glossy highlight on panels ending in a hard line short of their rounded corners"),
-            new("changelog.r1013.42",
-                "Gil figures and viewer counts now follow your language's number formatting"),
-            new("changelog.r1013.43",
-                "Chats sealed to a key you no longer have now come back on their own, handed over by the people you were talking to"),
             new("changelog.r1013.44",
                 "Fixed the older key notice staying up in a chat after those messages had already come back"),
             new("changelog.r1013.48",
@@ -1793,14 +1793,14 @@ internal static class L
         {
             new("changelog.r1011.0",
                 "Added Strats, an app with raid cheatsheets: pick a fight and your role, and every mechanic comes with a diagram that marks your spot"),
-            new("changelog.r1011.1",
-                "Games has a new home: shelves by genre, Latest additions and Jump back in rails, a Play with friends card, and a search across every title"),
             new("changelog.r1011.2",
                 "Added Uno to Games: an online room for up to six friends, joined with a six-character code"),
             new("changelog.r1011.3",
                 "Added online Chess to Games: host or join a room by code, with Fischer clocks for both players"),
             new("changelog.r1011.4",
                 "Added 8-Ball Pool to Games: the phone turns sideways for the table, and you shoot by dragging away from the cue ball"),
+            new("changelog.r1011.1",
+                "Games has a new home: shelves by genre, Latest additions and Jump back in rails, a Play with friends card, and a search across every title"),
             new("changelog.r1011.5",
                 "Linkpearl has been rebuilt around one chat list: search, filters, pinning and muting, and a new-chat sheet with Free Company, Linkshell, Party and Local presets"),
             new("changelog.r1011.6",
@@ -1813,6 +1813,20 @@ internal static class L
 
         public static readonly LocString[] Release1010 =
         {
+            new("changelog.r1010.6",
+                "Added Skyfall to Games: tap the sky to send an interceptor that bursts and sweeps every meteor inside, and keep six settlements standing wave after wave"),
+            new("changelog.r1010.7",
+                "Added Invaders to Games: a rank marches down on your cannon and four bunkers, speeding up as it thins, with a saucer worth 300 crossing the top now and then"),
+            new("changelog.r1010.8",
+                "Added CapMan to Games: eat every dot in the maze, dodge four ghosts with habits of their own, and turn on them for a few seconds with a power pellet"),
+            new("changelog.r1010.9",
+                "Added Hop to Games: hop a critter across traffic and drifting pads to fill five dens before the timer runs out, with faster lanes every level"),
+            new("changelog.r1010.10",
+                "Added Squadron to Games: shoot ships that peel off their formation in dive runs, and free a fighter caught by a tractor beam to fly as a dual fighter"),
+            new("changelog.r1010.15",
+                "Added Doom to Games: the real engine runs on the phone in fullscreen landscape, played on the keyboard with WASD, the arrows or a drag to turn, Space, E and 1 to 7"),
+            new("changelog.r1010.16",
+                "Added Word Run to Games: guess five-letter words one after another until one beats you, faster solves pay more, with word banks in five languages plus names from the game"),
             new("changelog.r1010.0",
                 "Posts and comments written in another language now carry a Translate link in Chirper, Aethergram and Velvet: one tap swaps in the translation, a footer names the language it came from, and Show original brings the text back"),
             new("changelog.r1010.1",
@@ -1829,20 +1843,6 @@ internal static class L
                 "Viewers in a MogCast watch party keep pace by speeding up or slowing down slightly instead of jumping on every host update, and only seek when they drift more than three seconds"),
             new("changelog.r1010.5",
                 "When a MogCast video will not play, a card says so with Retry and, for the host, Skip: a stalled stream resumes from where it stopped, and the host sees how many viewers cannot play the current video"),
-            new("changelog.r1010.6",
-                "Added Skyfall to Games: tap the sky to send an interceptor that bursts and sweeps every meteor inside, and keep six settlements standing wave after wave"),
-            new("changelog.r1010.7",
-                "Added Invaders to Games: a rank marches down on your cannon and four bunkers, speeding up as it thins, with a saucer worth 300 crossing the top now and then"),
-            new("changelog.r1010.8",
-                "Added CapMan to Games: eat every dot in the maze, dodge four ghosts with habits of their own, and turn on them for a few seconds with a power pellet"),
-            new("changelog.r1010.9",
-                "Added Hop to Games: hop a critter across traffic and drifting pads to fill five dens before the timer runs out, with faster lanes every level"),
-            new("changelog.r1010.10",
-                "Added Squadron to Games: shoot ships that peel off their formation in dive runs, and free a fighter caught by a tractor beam to fly as a dual fighter"),
-            new("changelog.r1010.15",
-                "Added Doom to Games: the real engine runs on the phone in fullscreen landscape, played on the keyboard with WASD, the arrows or a drag to turn, Space, E and 1 to 7"),
-            new("changelog.r1010.16",
-                "Added Word Run to Games: guess five-letter words one after another until one beats you, faster solves pay more, with word banks in five languages plus names from the game"),
             new("changelog.r1010.17",
                 "Tetris gains a Modern ruleset beside Classic, with SRS kicks, lock delay, T-spins, back-to-back and combo scoring, and its own best score"),
             new("changelog.r1010.11",
@@ -1869,6 +1869,8 @@ internal static class L
 
         public static readonly LocString[] Release1008 =
         {
+            new("changelog.r1008.11",
+                "Added seven phone cases: Junior Jinbei, Fox Kit, Namazu, Mad Hatter, Cheshire, Alice in Wonderland, and Suzaku, contributed by Silkie, starpanda, kukkiineko, and tatoz"),
             new("changelog.r1008.0",
                 "Music now lists live Twitch DJs from XIV Rolladeck on the Live tab, each with the venue they play from and a Teleport button that takes you there through Lifestream, contributed by eggoless"),
             new("changelog.r1008.1",
@@ -1891,8 +1893,6 @@ internal static class L
                 "Control Center no longer opens while Camera or MogCast hold the phone in landscape, contributed by Farroness"),
             new("changelog.r1008.10",
                 "The community rules for Chirper, Aethergram, and Velvet have been updated, and they ask to be accepted again on the next open"),
-            new("changelog.r1008.11",
-                "Added seven phone cases: Junior Jinbei, Fox Kit, Namazu, Mad Hatter, Cheshire, Alice in Wonderland, and Suzaku, contributed by Silkie, starpanda, kukkiineko, and tatoz"),
         };
 
         public static readonly LocString[] Release1007 =
@@ -1931,14 +1931,14 @@ internal static class L
 
         public static readonly LocString[] Release1003 =
         {
+            new("changelog.r1003.2",
+                "Added a terms of service and a privacy policy, both linked from the project page"),
             new("changelog.r1003.0",
                 "The phone now tells you when an avatar frame is given to you or taken away, instead of the ring around your avatar changing in silence"),
             new("changelog.r1003.1", "Two new frames in the Aether Coin shop"),
-            new("changelog.r1003.2",
-                "Added a terms of service and a privacy policy, both linked from the project page"),
+            new("changelog.r1003.3", "A few more changes specific to the Chinese game version"),
             new("changelog.r1003.4",
                 "Fixed the artist credit on three phone cases: Cosmic EX and Caduceus are Zivyl's work, and Runic is Remi's"),
-            new("changelog.r1003.3", "A few more changes specific to the Chinese game version"),
         };
 
         public static readonly LocString[] Release1002 =
@@ -1948,10 +1948,10 @@ internal static class L
 
         public static readonly LocString[] Release1001 =
         {
-            new("changelog.r1001.0",
-                "Fixed the phone failing to load for some people after updating: when AetherStream cannot attach to the game's display, the phone now starts normally instead of taking the whole plugin down with it"),
             new("changelog.r1001.1",
                 "A missing font file no longer leaves the phone without any text: the phone falls back to the game's own font until the file is back"),
+            new("changelog.r1001.0",
+                "Fixed the phone failing to load for some people after updating: when AetherStream cannot attach to the game's display, the phone now starts normally instead of taking the whole plugin down with it"),
         };
 
         public static readonly LocString[] Release1000 =
@@ -2036,6 +2036,8 @@ internal static class L
                 "Aether Coin, Shortcuts, and Housing now have their own welcome tours"),
             new("changelog.r1000.60",
                 "Removal notices now point at the Discord server for an appeal, instead of the Feedback app"),
+            new("changelog.r1000.82",
+                "Revamped the Chirper and Aethergram headers: the app name fits again, both apps share one For You and Following strip, new posts start from a floating button, and Activity sits on a bell beside a More menu"),
             new("changelog.r1000.40",
                 "Fixed apps opening wherever you last scrolled: every app now starts at the top, and a chat opens on its newest message"),
             new("changelog.r1000.41",
@@ -2064,8 +2066,6 @@ internal static class L
                 "Fixed a handful of strings falling back to English in the other eight languages, including the wallet badge toggle and the video file type in the file picker"),
             new("changelog.r1000.81",
                 "Fixed Market repeating the same retainer several times for one item, which pushed real listings from other worlds out of the list"),
-            new("changelog.r1000.82",
-                "Revamped the Chirper and Aethergram headers: the app name fits again, both apps share one For You and Following strip, new posts start from a floating button, and Activity sits on a bell beside a More menu"),
         };
 
         public static readonly LocString[] Release0999 =
@@ -2176,6 +2176,10 @@ internal static class L
                 "An empty inbox now offers New message instead of only describing itself"),
             new("changelog.r0998.35",
                 "About gained a Copy Support Info row that puts versions, OS, language, and sound state on the clipboard, carrying no account or character identifiers"),
+            new("changelog.r0998.45",
+                "Moved the Velvet photo gallery below the profile details, contributed by Farroness"),
+            new("changelog.r0998.53",
+                "Notifications no longer appear at the title screen, where there is no session to act on them"),
             new("changelog.r0998.36",
                 "Fixed encryption and imported WAV and MP3 playback on Linux and Wine, contributed by Ehno"),
             new("changelog.r0998.37",
@@ -2194,8 +2198,6 @@ internal static class L
                 "Fixed the photo viewer's buttons stacking up over the photo"),
             new("changelog.r0998.44",
                 "Fixed the Yellow Pages ad form cutting off its failure message instead of wrapping it, contributed by Raya"),
-            new("changelog.r0998.45",
-                "Moved the Velvet photo gallery below the profile details, contributed by Farroness"),
             new("changelog.r0998.46",
                 "Fixed the emote idle scroll firing while an event window was open, contributed by Chaosvanguard"),
             new("changelog.r0998.47",
@@ -2210,8 +2212,6 @@ internal static class L
                 "Fixed a blocking moderation notice vanishing for good once dismissed: it now leaves a notification behind"),
             new("changelog.r0998.52",
                 "Fixed two notification settings showing in English in every translated language"),
-            new("changelog.r0998.53",
-                "Notifications no longer appear at the title screen, where there is no session to act on them"),
         };
 
         public static readonly LocString[] Release0997 =
@@ -2259,8 +2259,11 @@ internal static class L
             new("changelog.r0995.9", "Comments, galleries, likers, story viewers, inboxes, and other long lists now load more as you scroll instead of stopping at the first batch"),
             new("changelog.r0995.10", "A Velvet post's audience can be changed after posting, from the menu on the post"),
             new("changelog.r0995.11", "The Support Aetherphone button in Settings moved under the account section"),
-            new("changelog.r0995.12", "Fixed an issue where old tags could still be seen on Velvet profiles"),
             new("changelog.r0995.13", "Tags that are no longer offered now appear as removable chips when you edit your Velvet profile, so you can clear them off"),
+            new("changelog.r0995.30", "The network now gives every account far more headroom, so sending several messages in a row no longer trips a rate limit"),
+            new("changelog.r0995.31", "A rare network pause now lasts seconds instead of minutes"),
+            new("changelog.r0995.32", "A small capsule under the clock counts down any network pause, so the phone never goes quiet without saying why"),
+            new("changelog.r0995.12", "Fixed an issue where old tags could still be seen on Velvet profiles"),
             new("changelog.r0995.14", "Fixed an issue where notifications could stop appearing, or could not be dismissed or turned off"),
             new("changelog.r0995.15", "Fixed tapping a notification doing nothing when its app was already open"),
             new("changelog.r0995.16", "Fixed conversations being marked as read while you were not looking at them"),
@@ -2277,9 +2280,6 @@ internal static class L
             new("changelog.r0995.27", "Fixed very large images being able to exhaust memory: images are now checked and capped before they are decoded, contributed by BluntEXE"),
             new("changelog.r0995.28", "Fixed long confirmation popup titles being cut off instead of wrapping"),
             new("changelog.r0995.29", "Fixed icons sitting slightly off-center in round buttons"),
-            new("changelog.r0995.30", "The network now gives every account far more headroom, so sending several messages in a row no longer trips a rate limit"),
-            new("changelog.r0995.31", "A rare network pause now lasts seconds instead of minutes"),
-            new("changelog.r0995.32", "A small capsule under the clock counts down any network pause, so the phone never goes quiet without saying why"),
         };
 
         public static readonly LocString[] Release0994 =
@@ -2291,20 +2291,20 @@ internal static class L
         public static readonly LocString[] Release0993 =
         {
             new("changelog.r0993.0", "Stopped the phone from making any network requests while you are signed out, including the background retries that used to run from the title screen"),
+            new("changelog.r0993.3", "Backend maintenance and optimizations"),
             new("changelog.r0993.1", "Fixed photos and voice notes that fail to load retrying nonstop; the phone now waits a couple of minutes before trying again"),
             new("changelog.r0993.2", "Fixed Velvet comments wrapping their text at the wrong width"),
-            new("changelog.r0993.3", "Backend maintenance and optimizations"),
         };
 
         public static readonly LocString[] Release0992 =
         {
-            new("changelog.r0992.0", "Fixed the view count on Yellow Pages ads, which always stayed at zero, so opening an ad now counts as a view"),
             new("changelog.r0992.1", "Added a menu to every post in Velvet, in the feed and on the post itself, so you can open it, report it, block whoever posted it, or delete your own"),
+            new("changelog.r0992.5", "Added a switch in Settings under Behavior that swaps it for a simple browser inside the phone, which turns itself on if picking a file could crash your game"),
             new("changelog.r0992.2", "Rebuilt the profile page in Chirper and Aethergram: the name and handle now sit beside the photo, the buttons share a single row, and the empty gaps are gone"),
             new("changelog.r0992.3", "Removed one more suggested tag from Velvet, so it no longer shows up when you edit your profile or tag a post"),
             new("changelog.r0992.4", "Brought back the Windows file browser when you pick a photo or a sound, so it remembers your folders and shows thumbnails again"),
-            new("changelog.r0992.5", "Added a switch in Settings under Behavior that swaps it for a simple browser inside the phone, which turns itself on if picking a file could crash your game"),
             new("changelog.r0992.6", "Split the Immersion settings in two, so the window, screenshot, and startup options now live on a new Behavior page"),
+            new("changelog.r0992.0", "Fixed the view count on Yellow Pages ads, which always stayed at zero, so opening an ad now counts as a view"),
         };
 
         public static readonly LocString[] Release0991 =
@@ -2498,7 +2498,6 @@ internal static class L
             new("changelog.r0980.33", "Settings now has a Delete account button in the Account section that removes your account and erases everything held for it on Aethernet"),
             new("changelog.r0980.15", "You can now block someone from the phone, and a block now holds everywhere: they leave your chats, they can no longer show up on your posts' likes and comments, and they cannot reach you"),
             new("changelog.r0980.16", "The Calendar app now loads events through Aetherphone's own service instead of a third-party key"),
-
             new("changelog.r0980.17", "The Chirper and Aethergram feeds now stay smooth however far you scroll, drawing only the posts on screen"),
             new("changelog.r0980.18", "Photo grids now load small thumbnails and keep full resolution for the viewer alone, so galleries open faster and use far less memory"),
             new("changelog.r0980.19", "The phone now keeps its graphics memory in check, so a long browsing session no longer builds up and slows the game down"),
@@ -2507,7 +2506,6 @@ internal static class L
             new("changelog.r0980.31", "Aethernet now stands up to abuse and sudden spikes in traffic: rate limits, a cap on live connections, and health checks keep it responsive even when everyone is online at once"),
             new("changelog.r0980.20", "The connection now holds steady even with thousands of players online at once, and calls and live updates recover on their own after a network hiccup"),
             new("changelog.r0980.32", "Everything you post and send is now backed up off-site automatically, so your data stays safe even if something goes wrong"),
-
             new("changelog.r0980.23", "Fixed a tap on a chat menu also pressing the message bubble behind it"),
             new("changelog.r0980.24", "Fixed the photo picker in chat showing old photos: it now refreshes every time you open it"),
             new("changelog.r0980.25", "Fixed Collections showing the wrong progress on its tiles"),
@@ -2536,7 +2534,6 @@ internal static class L
             new("changelog.r0970.29", "You can now hold tags for review before they appear: turn on Manually approve tags, and nothing reaches your Tagged tab until you approve it"),
             new("changelog.r0970.34", "The phone now tells you when a newer Aetherphone is out: an update button appears beneath it, and clicking it takes you straight to Dalamud's plugin installer"),
             new("changelog.r0970.2", "Tapping a profile photo in Chirper, Aethergram, Velvet, or Message now opens it enlarged"),
-
             new("changelog.r0970.3", "The story tray now scrolls away with the feed instead of staying pinned above the posts"),
             new("changelog.r0970.4", "Aethergram's bottom tabs now light up and name themselves as you point at them"),
             new("changelog.r0970.5", "Notification rows now highlight as you point at them in Chirper, Aethergram, and Velvet"),
@@ -2547,7 +2544,6 @@ internal static class L
             new("changelog.r0970.9", "Encrypted chats now set up on computers that run the game through Wine or Proton, where creating the security key used to fail"),
             new("changelog.r0970.10", "A PC that cannot support encrypted chats now says so in the chat encryption sheet, instead of showing Setting up encryption forever"),
             new("changelog.r0970.21", "Turkish uppercase labels are now spelled correctly throughout the phone: headings like UYARILAR no longer come out with a lowercase ı in the middle"),
-
             new("changelog.r0970.18", "Fixed Aetherphone closing the game on startup for players whose Windows country or regional format is set to Russia or Belarus"),
             new("changelog.r0970.19", "Fixed some labels, such as the Ringtone row in Settings and the Control Center tiles, staying in the previous language after you changed language"),
             new("changelog.r0970.30", "Fixed the reason a call was declined or unavailable, the Wallet section headers, and the Calculator error staying in English whatever language your phone was set to"),
@@ -2588,7 +2584,6 @@ internal static class L
             new("changelog.r0960.16", "KupoAI replies no longer carry stray bracketed citation numbers"),
             new("changelog.r0960.17", "The phone now opens by itself when you log in; you can turn this off in Settings"),
             new("changelog.r0960.18", "Dragging the minimized phone no longer drags the full phone with it: each one remembers its own place on screen"),
-            new("changelog.r0960.19", "Fixed comments overlapping each other in a Chirper post thread when they had likes"),
             new("changelog.r0960.20", "The Aetherphone website is now available in all eight languages and follows your browser's language automatically"),
             new("changelog.r0960.21", "Plugin developers can now propose their plugin as a phone app through the new App integration request form on GitHub"),
             new("changelog.r0960.22", "Aethergram and Velvet posts can now hold up to 8 photos instead of just one"),
@@ -2596,6 +2591,7 @@ internal static class L
             new("changelog.r0960.24", "Composing a multi-photo post now walks you through framing each photo in turn before you write the caption"),
             new("changelog.r0960.25", "Aethergram now has stories: share a photo that everyone can watch for 24 hours before it disappears on its own"),
             new("changelog.r0960.26", "The Aethergram feed now opens with a story tray, where a bright ring marks anyone whose story you have not watched yet"),
+            new("changelog.r0960.19", "Fixed comments overlapping each other in a Chirper post thread when they had likes"),
             new("changelog.r0960.27", "Fixed photo grids and chat image bubbles shaking every frame in the gallery, the post composers, the wallpaper picker, and message threads"),
             new("changelog.r0960.28", "Fixed the compose button also clicking the post sitting behind it in Chirper, Velvet, and Message"),
             new("changelog.r0960.29", "Fixed Chirper reacting to the post underneath when you clicked an open menu on top of it"),
@@ -2624,13 +2620,14 @@ internal static class L
 
         public static readonly LocString[] Release0931 =
         {
-            new("changelog.r0931.0", "Fixed encrypted chats being stuck on Setting up encryption: the key exchange now completes, and Message and Velvet conversations lock end-to-end as intended"),
             new("changelog.r0931.1", "Encryption setup now retries on its own after a connection hiccup instead of staying stuck until you relog"),
             new("changelog.r0931.2", "An open chat now notices when your contact becomes ready for encryption and locks the conversation without you having to reopen it"),
+            new("changelog.r0931.0", "Fixed encrypted chats being stuck on Setting up encryption: the key exchange now completes, and Message and Velvet conversations lock end-to-end as intended"),
         };
 
         public static readonly LocString[] Release0930 =
         {
+            new("changelog.r0930.19", "Added page-flip buttons at the left and right edges of the Home screen as an alternative to swiping"),
             new("changelog.r0930.0", "You can now reply to any message in Message: the quoted original shows inside your bubble, and clicking it jumps back to that message"),
             new("changelog.r0930.1", "React to messages with a quick emoji strip; reaction counts appear under the bubble, and clicking a count shows who reacted"),
             new("changelog.r0930.2", "You can now edit a text you already sent, and edited messages show a small marker next to the time"),
@@ -2650,7 +2647,6 @@ internal static class L
             new("changelog.r0930.16", "Now Playing opens as a full-screen sheet with album art, drag-to-seek, and a volume slider"),
             new("changelog.r0930.17", "You can now pause and resume playback, including radio stations, from Music, the mini player, or the Dynamic Island"),
             new("changelog.r0930.18", "Folders on the Home screen now show a badge with the total unread count of the apps inside"),
-            new("changelog.r0930.19", "Added page-flip buttons at the left and right edges of the Home screen as an alternative to swiping"),
             new("changelog.r0930.20", "Fresh installs now start with a curated two-page Home layout and a stocked dock"),
             new("changelog.r0930.21", "Repacked Control Center into a tidy grid with no empty cells; existing layouts move over automatically"),
             new("changelog.r0930.22", "The media control in Control Center is now a large square tile with artwork, title, and playback buttons"),
@@ -2664,13 +2660,13 @@ internal static class L
         public static readonly LocString[] Release0920 =
         {
             new("changelog.r0920.0", "Added KupoAI, a new app that answers your questions about Final Fantasy XIV straight from the wiki, complete with sources to read more"),
+            new("changelog.r0920.7", "Added a guided setup after the welcome screen that walks you through signing in, setting up your profile and photo, and choosing your analytics preference"),
             new("changelog.r0920.1", "Combined Friends, Phone, and your direct messages into a single app called ChocoChat, so your chats, contacts, and calls all live in one place"),
             new("changelog.r0920.2", "The Calls tab now keeps a full call history like a real phone, and badges any calls you missed"),
             new("changelog.r0920.3", "A brief connection drop no longer ends your call: it quietly reconnects on its own within a short grace period"),
             new("changelog.r0920.4", "You can now reopen an ongoing call from the Dynamic Island at the top of the screen"),
             new("changelog.r0920.5", "You can browse your chats and contacts during a call, and switch to another call without hanging up first"),
             new("changelog.r0920.6", "Merged the Chat, Contacts, and Find People apps into one in-game messaging app and renamed it Linkpearl, with a new pearl icon"),
-            new("changelog.r0920.7", "Added a guided setup after the welcome screen that walks you through signing in, setting up your profile and photo, and choosing your analytics preference"),
             new("changelog.r0920.8", "Reporting now happens through one consistent popup everywhere, where you pick a category and add details, instead of a different form in each app"),
             new("changelog.r0920.9", "The welcome tour now points right at the real buttons and widgets on screen as it guides you around the phone"),
             new("changelog.r0920.10", "Links in your messages are now underlined and open in your browser when you click them"),
@@ -2679,10 +2675,10 @@ internal static class L
 
         public static readonly LocString[] Release0910 =
         {
+            new("changelog.r0910.3", "Added an Encrypted Chats page in Settings to check your encryption status or reset your key"),
             new("changelog.r0910.0", "Your one-to-one and group chats in Messages, and your Velvet messages, are now end-to-end encrypted, so only you and the people you're talking to can read them. Not even the server can"),
             new("changelog.r0910.1", "Encryption is automatic: your key is created quietly the first time you sign in, with nothing to set up and no passphrase to remember"),
             new("changelog.r0910.2", "On a new computer a fresh key is created automatically, and older messages become readable again once your chat partners come online"),
-            new("changelog.r0910.3", "Added an Encrypted Chats page in Settings to check your encryption status or reset your key"),
             new("changelog.r0910.4", "Encrypted messages show a small lock, and a banner lets you know when a conversation is end-to-end encrypted"),
             new("changelog.r0910.5", "You can now report a message: right-click it and choose Report. The message and a few before it are shared with the moderators, decrypted, so they can review it"),
             new("changelog.r0910.6", "Right-clicking a message now opens a quick menu to report it or copy its text"),
@@ -2692,28 +2688,28 @@ internal static class L
         {
             new("changelog.r0900.0", "Added Friends, a new app to add people by their phone number and share your own number in-game"),
             new("changelog.r0900.1", "Added Messages, a new app for private one-to-one and group chats with your friends"),
-            new("changelog.r0900.2", "Calling is now limited to friends who have added each other, so only people you both trust can reach you"),
-            new("changelog.r0900.3", "You can now request a new phone number in Friends if someone you would rather not hear from has your old one"),
-            new("changelog.r0900.4", "Rebuilt the Home screen around a flexible grid of app icons, folders, and resizable widgets"),
             new("changelog.r0900.5", "Added a dock at the bottom of the Home screen for up to four favorite apps"),
             new("changelog.r0900.6", "Added Home screen widgets, including a Skywatcher forecast, Clock, Calendar, a Photos shuffle, and Resets"),
             new("changelog.r0900.7", "Added a gallery to browse widgets and preview their sizes before placing them"),
             new("changelog.r0900.8", "Added a Home edit mode to rearrange icons, resize widgets, disband folders, and drag items to new pages"),
-            new("changelog.r0900.9", "Apps now open and close by growing from and shrinking back to their icon"),
-            new("changelog.r0900.10", "Swipe up from the home bar to return to the Home screen from any app"),
             new("changelog.r0900.11", "Added a Home grid density option for five, six, or seven rows, plus a layout reset, in Settings"),
-            new("changelog.r0900.12", "Skywatcher now shows live animated weather in the app and on its widget"),
-            new("changelog.r0900.13", "Redesigned the Venues cards and added a detail page for each venue"),
             new("changelog.r0900.14", "Added an Activity tab to Chirper, Aethergram, and Velvet that gathers your likes, comments, and follows"),
             new("changelog.r0900.15", "Added a quick menu to posts for actions like reporting and deleting"),
+            new("changelog.r0900.18", "Added a mute bell to each linkshell in Chat so you can silence a busy channel straight from the list"),
+            new("changelog.r0900.23", "Added photo zoom with panning and double-tap across Photos, Aethergram, Velvet, and Chat"),
+            new("changelog.r0900.2", "Calling is now limited to friends who have added each other, so only people you both trust can reach you"),
+            new("changelog.r0900.3", "You can now request a new phone number in Friends if someone you would rather not hear from has your old one"),
+            new("changelog.r0900.4", "Rebuilt the Home screen around a flexible grid of app icons, folders, and resizable widgets"),
+            new("changelog.r0900.9", "Apps now open and close by growing from and shrinking back to their icon"),
+            new("changelog.r0900.10", "Swipe up from the home bar to return to the Home screen from any app"),
+            new("changelog.r0900.12", "Skywatcher now shows live animated weather in the app and on its widget"),
+            new("changelog.r0900.13", "Redesigned the Venues cards and added a detail page for each venue"),
             new("changelog.r0900.16", "Velvet now lets you pin conversations to the top of your chats"),
             new("changelog.r0900.17", "Renamed the old Messages app to Chat, since it covers your linkshell and in-game chat"),
-            new("changelog.r0900.18", "Added a mute bell to each linkshell in Chat so you can silence a busy channel straight from the list"),
             new("changelog.r0900.19", "Combined calls and now-playing music into one Dynamic Island that splits in two, just like on a real phone"),
             new("changelog.r0900.20", "Notification banners now spring in, pause while you hover them, and can be flicked upward to dismiss"),
             new("changelog.r0900.21", "Control Center is now customizable: rearrange, resize, add, and remove its controls like the Home screen"),
             new("changelog.r0900.22", "The minimized phone now morphs smoothly to and from full size, with expand and close buttons and an unread badge"),
-            new("changelog.r0900.23", "Added photo zoom with panning and double-tap across Photos, Aethergram, Velvet, and Chat"),
             new("changelog.r0900.24", "Redesigned the phone's side buttons and frame with a machined graphite metal finish"),
             new("changelog.r0900.25", "Reworked Settings with real icons, an account banner up top, and animated toggles"),
             new("changelog.r0900.26", "Redesigned the welcome tour with an animated illustration, and tours now glide smoothly between steps"),
@@ -2728,8 +2724,8 @@ internal static class L
         public static readonly LocString[] Release0870 =
         {
             new("changelog.r0870.0", "Added Polls, a new app for voting in single-choice polls"),
-            new("changelog.r0870.1", "Notifications now take you straight to the post or profile they're about in Chirper, Aethergram, and Velvet"),
             new("changelog.r0870.2", "Added tappable follower and following lists on profiles, and a liked-by list on posts"),
+            new("changelog.r0870.1", "Notifications now take you straight to the post or profile they're about in Chirper, Aethergram, and Velvet"),
             new("changelog.r0870.10", "Refined the comment section in Aethergram"),
             new("changelog.r0870.3", "Velvet now lets you cancel connection requests you've sent, review them in a compact Sent section, and disconnect from people you're connected with"),
             new("changelog.r0870.11", "Made the contact's profile picture bigger in Velvet chats"),
@@ -2763,30 +2759,30 @@ internal static class L
 
         public static readonly LocString[] Release0850 =
         {
-            new("changelog.r0850.0", "Your local time now shows on your profile in Chirper, Aethergram, and Velvet"),
-            new("changelog.r0850.1", "Moved the time zone setting to a new Profile section in Settings"),
             new("changelog.r0850.2", "Added Calendar with a month view of community events and your own reminders"),
             new("changelog.r0850.3", "Added Feedback so you can send thoughts and bug reports straight to the developers"),
-            new("changelog.r0850.4", "Chirper, Aethergram, and Velvet now alert you to new likes, comments, and follows while the phone is closed"),
             new("changelog.r0850.5", "Added per-app notification controls to mute or set a custom sound for each app"),
             new("changelog.r0850.6", "Added a Commands page in Settings that lists every slash command"),
             new("changelog.r0850.7", "Added an option to open the phone automatically when you log in, full size or minimized"),
             new("changelog.r0850.8", "Added /phone reset to bring the phone back to the center of your screen"),
+            new("changelog.r0850.15", "Added world clocks for cities around the globe alongside Eorzea and server time"),
+            new("changelog.r0850.16", "Added Notes to jot things down and keep reminders with optional due dates"),
+            new("changelog.r0850.17", "Added Calculator for quick everyday sums"),
+            new("changelog.r0850.19", "Added Chinese, Japanese, Spanish, and Russian translations"),
+            new("changelog.r0850.22", "Added Import from PC to use your own MP3 or WAV files as ringtones and notification sounds"),
+            new("changelog.r0850.23", "Added a volume control for ringtones and notification sounds"),
+            new("changelog.r0850.0", "Your local time now shows on your profile in Chirper, Aethergram, and Velvet"),
+            new("changelog.r0850.1", "Moved the time zone setting to a new Profile section in Settings"),
+            new("changelog.r0850.4", "Chirper, Aethergram, and Velvet now alert you to new likes, comments, and follows while the phone is closed"),
             new("changelog.r0850.9", "Refreshed every app icon with crisp new artwork"),
             new("changelog.r0850.10", "Rebuilt the apps on a shared design system for a more consistent look and feel"),
             new("changelog.r0850.11", "Polished animations and transitions throughout the interface"),
             new("changelog.r0850.12", "Tidied up the codebase for better performance and stability"),
             new("changelog.r0850.13", "Improved the home screen with app icons that magnify under your cursor and press in when tapped"),
             new("changelog.r0850.14", "Rebuilt Clock with World Clock, Alarms, Stopwatch, and Timer tabs"),
-            new("changelog.r0850.15", "Added world clocks for cities around the globe alongside Eorzea and server time"),
-            new("changelog.r0850.16", "Added Notes to jot things down and keep reminders with optional due dates"),
-            new("changelog.r0850.17", "Added Calculator for quick everyday sums"),
             new("changelog.r0850.18", "Alarms, timers, and reminders now notify you even when the phone is closed"),
-            new("changelog.r0850.19", "Added Chinese, Japanese, Spanish, and Russian translations"),
             new("changelog.r0850.20", "Improved the loading animation"),
             new("changelog.r0850.21", "Gave incoming calls and notifications their own separate sounds, chosen in Settings"),
-            new("changelog.r0850.22", "Added Import from PC to use your own MP3 or WAV files as ringtones and notification sounds"),
-            new("changelog.r0850.23", "Added a volume control for ringtones and notification sounds"),
             new("changelog.r0850.24", "The phone now remembers its position, keeping separate spots for the full phone and the minimized view"),
             new("changelog.r0850.25", "Velvet now alerts you to new connection requests and when yours are accepted"),
             new("changelog.r0850.26", "The server info bar entry now shows Aetherphone with your unread notification count and always stays in English"),
@@ -2796,12 +2792,12 @@ internal static class L
 
         public static readonly LocString[] Release0840 =
         {
-            new("changelog.r0840.0", "Refined accent colors across the social apps for a more cohesive look"),
-            new("changelog.r0840.1", "Replaced inline delete buttons with a centered confirmation dialog"),
             new("changelog.r0840.2", "Added the ability to delete your own comments on posts"),
             new("changelog.r0840.3", "Added tooltip labels to action icons so you know what each one does"),
-            new("changelog.r0840.4", "Redesigned the News app with dynamic image sizing, pixel-perfect titles, and maintenance status pills"),
             new("changelog.r0840.5", "Added spacing around chat bubbles in Messages and restored keyboard focus after sending"),
+            new("changelog.r0840.0", "Refined accent colors across the social apps for a more cohesive look"),
+            new("changelog.r0840.1", "Replaced inline delete buttons with a centered confirmation dialog"),
+            new("changelog.r0840.4", "Redesigned the News app with dynamic image sizing, pixel-perfect titles, and maintenance status pills"),
         };
 
         public static readonly LocString[] Release0830 =
@@ -2816,12 +2812,12 @@ internal static class L
         public static readonly LocString[] Release0820 =
         {
             new("changelog.r0820.0", "Added linkshell chat channels to Messages alongside direct messages"),
-            new("changelog.r0820.1", "Overhauled the notification center with stacking, swipe to dismiss, and deep links into the right app"),
             new("changelog.r0820.2", "Added a minimized phone window you can restore by tapping it or on an incoming call"),
-            new("changelog.r0820.3", "Chirper, Aethergram, and Velvet now each support their own profile picture"),
             new("changelog.r0820.4", "Added follow/unfollow, comment threads, and avatar cropping to Chirper"),
-            new("changelog.r0820.5", "Redesigned the Velvet profile and added time zone sharing and secure image DMs"),
             new("changelog.r0820.6", "Added a confirmation step before deleting a photo"),
+            new("changelog.r0820.1", "Overhauled the notification center with stacking, swipe to dismiss, and deep links into the right app"),
+            new("changelog.r0820.3", "Chirper, Aethergram, and Velvet now each support their own profile picture"),
+            new("changelog.r0820.5", "Redesigned the Velvet profile and added time zone sharing and secure image DMs"),
             new("changelog.r0820.7", "Smoothed out status bar and window transition animations"),
         };
 
@@ -2855,9 +2851,9 @@ internal static class L
             new("changelog.r0700.3", "Added Find People, Maps, Collections, and Inventory apps"),
             new("changelog.r0700.4", "Added Ocean Fishing voyage predictions"),
             new("changelog.r0700.5", "Added Dailies to track recurring content"),
+            new("changelog.r0700.8", "Added Tetris to Games, contributed by Yesanith"),
             new("changelog.r0700.6", "Rebuilt Activity into a fitness-style dashboard with job mastery rings"),
             new("changelog.r0700.7", "Reworked the Lodestone sign-in flow with an identity card and step guide"),
-            new("changelog.r0700.8", "Added Tetris to Games, contributed by Yesanith"),
             new("changelog.r0700.9", "Connected the Aethernet apps to the production backend"),
         };
 
@@ -2889,8 +2885,8 @@ internal static class L
 
         public static readonly LocString[] Release0300 =
         {
-            new("changelog.r0300.0", "Redesigned the Music home screen"),
             new("changelog.r0300.1", "Added song search and playback"),
+            new("changelog.r0300.0", "Redesigned the Music home screen"),
         };
 
         public static readonly LocString[] Release0200 =
@@ -2900,8 +2896,8 @@ internal static class L
             new("changelog.r0200.2", "Added Wallet to track your gil"),
             new("changelog.r0200.3", "Added Chirper and Aethernet account sign-in"),
             new("changelog.r0200.4", "Added a Text Size accessibility setting"),
-            new("changelog.r0200.5", "Moved notifications into an in-shell banner"),
             new("changelog.r0200.6", "Added weather glyphs and a live sky to Skywatcher"),
+            new("changelog.r0200.5", "Moved notifications into an in-shell banner"),
         };
 
         public static readonly LocString[] Release0130 =
@@ -2924,8 +2920,8 @@ internal static class L
 
         public static readonly LocString[] Release0100 =
         {
-            new("changelog.r0100.0", "Introduced Aetherphone, an in-game smartphone in a single window"),
             new("changelog.r0100.1", "Added the home screen, status bar, and swipe-driven app shell"),
+            new("changelog.r0100.0", "Introduced Aetherphone, an in-game smartphone in a single window"),
             new("changelog.r0100.2", "Shipped the first apps: Messages, Contacts, Character, Clock, Skywatcher, and Notifications"),
         };
     }
