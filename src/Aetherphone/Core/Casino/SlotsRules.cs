@@ -70,9 +70,4 @@ internal static class SlotsRules
     {
         return stake >= MinStake && stake <= MaxStake;
     }
-
-    public static long JackpotSpinsPerHit(long stake)
-    {
-        return JackpotChipsPerHit / Math.Max(stake, 1);
-    }
 }

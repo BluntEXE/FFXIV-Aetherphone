@@ -1650,7 +1650,7 @@ internal static class L
             new("changelog.r1014.3",
                 "Fixed Linkpearl pop-out menus staying open and out of reach after that window lost focus"),
             new("changelog.r1014.4",
-                "The Gamba rules and Payouts sheets now explain the ten Slots paylines and the house jackpot, with the odds at your current stake"),
+                "The Gamba rules and Payouts sheets now explain the ten Slots paylines and how the house jackpot draw works"),
             new("changelog.r1014.5",
                 "Fixed the Slots jackpot meter reading full long before the pot reached its 50,000 coin cap"),
             new("changelog.r1014.6",
@@ -5336,7 +5336,7 @@ internal static class L
         public static readonly LocString SlotsCapRule = new("casino.slots.capRule", "One round never pays more than {0}x the stake.");
         public static readonly LocString SlotsPaylinesNote = new("casino.slots.paylinesNote", "All {0} lines are always in play. A line pays when {1} or more matching symbols run along it from the leftmost reel with no gap, and it pays its best match once. Wins on different lines add up, and the machine traces each winning line in gold after the reels stop.");
         public static readonly LocString SlotsJackpotName = new("casino.slots.jackpotName", "House jackpot");
-        public static readonly LocString SlotsJackpotNote = new("casino.slots.jackpotNote", "Every paid spin also enters the draw for the shared pot, whatever the reels show. Your stake is your tickets: {0} chips a spin is {0} tickets out of {2}, about 1 in {1}, and raising the stake raises your odds to match. A hit pays the whole pot on top of any line wins.");
+        public static readonly LocString SlotsJackpotNote = new("casino.slots.jackpotNote", "Every paid spin also enters the draw for the shared pot, whatever the reels show. Each chip you stake is one ticket, so a bigger stake buys more chances. The draw is shared by everyone on the floor, and a hit pays the whole pot on top of any line wins.");
         public static readonly LocString CabinetNoChipsTitle = new("casino.cabinet.noChipsTitle", "You have no chips");
         public static readonly LocString CabinetNoChipsHint = new("casino.cabinet.noChipsHint", "Buy chips at the cashier and play them at any game on the floor.");
         public static readonly LocString SlotsLowStack = new("casino.slots.lowStack", "Not enough chips for that stake. Top up at the cashier.");

@@ -5,21 +5,6 @@ namespace Aetherphone.Tests;
 
 public sealed class SlotsRulesTests
 {
-    [Theory]
-    [InlineData(SlotsRules.MinStake, 3_000_000)]
-    [InlineData(SlotsRules.DefaultStake, 600_000)]
-    [InlineData(SlotsRules.MaxStake, 60_000)]
-    public void JackpotSpinsPerHitScalesInverselyWithStake(long stake, long expectedSpins)
-    {
-        Assert.Equal(expectedSpins, SlotsRules.JackpotSpinsPerHit(stake));
-    }
-
-    [Fact]
-    public void JackpotSpinsPerHitSurvivesZeroStake()
-    {
-        Assert.Equal(SlotsRules.JackpotChipsPerHit, SlotsRules.JackpotSpinsPerHit(0));
-    }
-
     [Fact]
     public void EveryPaylineCoversEveryReelInsideTheWindow()
     {
