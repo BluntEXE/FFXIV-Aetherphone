@@ -1020,9 +1020,7 @@ internal sealed partial class ChirperApp : IResumableApp
         var textHeight = bodyText.Length == 0
             ? 0f
             : bodyLayout?.Size.Y ?? Typography.MeasureWrapped(bodyText, contentWidth, bodyStyle.Scale);
-        var translateHeight = translation.Peek(translateKey).State != TranslationState.Idle
-            ? TranslateLink.Height(translation, translateKey, post.Lang, scale)
-            : 0f;
+        var translateHeight = TranslateLink.Height(translation, translateKey, post.Lang, scale);
         var dateHeight = isThreadHead && post.CreatedAtUnix > 0
             ? 10f * scale + Typography.LineHeight(DateStyle)
             : 0f;

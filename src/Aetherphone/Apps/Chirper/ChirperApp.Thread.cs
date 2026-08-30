@@ -219,11 +219,8 @@ internal sealed partial class ChirperApp
                 cursorY += bodyLayout.Size.Y;
             }
 
-            if (translation.Peek(translateKey).State != TranslationState.Idle)
-            {
-                cursorY += TranslateLink.Draw(translation, confirm, translateKey, post.Lang, post.Text,
-                    new Vector2(left, cursorY), contentWidth, ChirperInk.MutedInk, ChirperInk.AccentLink, scale);
-            }
+            cursorY += TranslateLink.Draw(translation, confirm, translateKey, post.Lang, post.Text,
+                new Vector2(left, cursorY), contentWidth, ChirperInk.MutedInk, ChirperInk.AccentLink, scale);
         }
 
         var photos = PostMedia.Photos(post.MediaUrls, post.MediaUrl);
@@ -510,9 +507,7 @@ internal sealed partial class ChirperApp
 
         var textHeight = commentText.Length == 0 ? 0f
             : commentLayout?.Size.Y ?? Typography.MeasureWrapped(commentText, bodyWidth, ReplyBodyStyle.Scale);
-        var translateHeight = translation.Peek(commentKey).State != TranslationState.Idle
-            ? TranslateLink.Height(translation, commentKey, comment.Lang, scale)
-            : 0f;
+        var translateHeight = TranslateLink.Height(translation, commentKey, comment.Lang, scale);
         var mediaHeight = comment.MediaUrl is not null && !CommentMediaHidden(comment.MediaUrl)
             ? CommentMedia.MeasureHeight(comment, bodyWidth, scale) + (commentText.Length > 0 ? 6f * scale : 0f)
             : 0f;
