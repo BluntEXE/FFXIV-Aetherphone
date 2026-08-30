@@ -3804,6 +3804,10 @@ internal static class L
         public static readonly LocString CaptionHint = new("aethergram.captionHint", "Write a caption…");
         public static readonly LocString TapToAdjust = new("aethergram.tapToAdjust", "Tap the photo to adjust the crop");
         public static readonly LocString Next = new("aethergram.next", "Next");
+        public static readonly LocString PeopleSection = new("aethergram.peopleSection", "People");
+        public static readonly LocString TagsSection = new("aethergram.tagsSection", "Tags");
+        public static readonly LocString NoResults = new("aethergram.noResults", "No results found");
+        public static readonly LocString SavedEmptyHint = new("aethergram.savedEmptyHint", "Save posts you want to see again");
         public static readonly LocString Use = new("aethergram.use", "Use");
         public static readonly LocString Share = new("aethergram.share", "Share");
         public static readonly LocString Sharing = new("aethergram.sharing", "Sharing…");
