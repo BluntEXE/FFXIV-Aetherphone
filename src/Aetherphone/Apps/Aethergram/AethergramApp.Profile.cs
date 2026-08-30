@@ -3,7 +3,9 @@ using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Onboarding;
+using Aetherphone.Core.Apps;
 using Aetherphone.Core.Social;
+using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -13,132 +15,118 @@ namespace Aetherphone.Apps.Aethergram;
 
 internal sealed partial class AethergramApp
 {
-    private void DrawProfileGrid() => DrawProfileGrid(store.ProfilePosts, L.Aethergram.Empty,
-        store.HasMoreProfilePosts, store.ProfileLoadingMore, store.LoadMoreProfilePosts);
 
-    private void DrawProfileGrid(PostDto[] posts, LocString emptyMessage, bool hasMore, bool loadingMore,
-        Action loadMore)
+    private void DrawProfile(Rect area, string userId)
     {
-        var scale = UiScale.Current;
-        if (posts.Length == 0)
+        if (store.ProfileUserId != userId)
         {
-            Typography.DrawCentered(
-                new Vector2(ImGui.GetCursorScreenPos().X + ImGui.GetContentRegionAvail().X * 0.5f,
-                    ImGui.GetCursorScreenPos().Y + 40f * scale), Loc.T(emptyMessage), AppPalettes.Aethergram.MutedInk);
+            store.OpenProfile(userId);
+        }
+
+        var user = store.ProfileUser;
+        var title = user is null
+            ? DisplayName
+            : SocialIdentity.Name(user.DisplayName, user.Handle);
+        var context = new PhoneContext(area, theme, navigation);
+        AppHeader.Draw(context, title, back);
+        var scale = UiScale.Current;
+        var top = area.Min.Y + AppHeader.Height * scale;
+        DrawProfileBody(new Rect(new Vector2(area.Min.X, top), area.Max), userId);
+    }
+
+    private void DrawProfileBody(Rect body, string userId)
+    {
+        if (store.ProfileUserId != userId)
+        {
+            store.OpenProfile(userId);
+        }
+
+        if (store.ProfileFailed)
+        {
+            Typography.DrawCentered(body.Center, Loc.T(L.Aethergram.ProfileError), AppPalettes.Aethergram.MutedInk);
             return;
         }
 
-        var gridCenterX = ImGui.GetCursorScreenPos().X + ScrollLayout.StableContentWidth() * 0.5f;
-        var gap = 3f * scale;
-        var cell = (ScrollLayout.StableContentWidth() - gap * (GridColumns - 1)) / GridColumns;
-        using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(gap, gap)))
+        var user = store.ProfileUser;
+        if (user is null)
         {
-            for (var index = 0; index < posts.Length; index++)
+            Typography.DrawCentered(body.Center, Loc.T(L.Common.Loading), AppPalettes.Aethergram.MutedInk);
+            return;
+        }
+
+        using (AppSurface.Begin(body))
+        {
+            profile.DrawProfileHeader(user, theme);
+            if (user.IsPrivate && !user.IsFollowing && !user.IsMe)
             {
-                ImGui.Dummy(new Vector2(cell, cell));
-                var min = ImGui.GetItemRectMin();
-                var max = ImGui.GetItemRectMax();
-                DrawGridThumbnail(posts[index], min, max);
-                if (UiInteract.Click(min, max, UiInteract.Hover(min, max)))
-                {
-                    OpenDetail(posts[index]);
-                }
-
-                if (index % GridColumns != GridColumns - 1)
-                {
-                    ImGui.SameLine();
-                }
-            }
-        }
-
-        ImGui.NewLine();
-        if (loadingMore)
-        {
-            InfiniteScroll.DrawLoadingRow(gridCenterX, AppPalettes.Aethergram.MutedInk);
-        }
-        else if (hasMore && InfiniteScroll.ReachedBottom())
-        {
-            loadMore();
-        }
-
-        ImGui.Dummy(new Vector2(0f, 24f * scale));
-    }
-
-    private void DrawGridThumbnail(PostDto post, Vector2 min, Vector2 max)
-    {
-        var scale = UiScale.Current;
-        var drawList = ImGui.GetWindowDrawList();
-        var rounding = 8f * scale;
-        var photos = PostMedia.Photos(post.MediaUrls, post.MediaUrl);
-        if (SensitiveReveals.ShouldVeil(post.Sensitive, post.Id, configuration.ShowSensitiveContent))
-        {
-            SensitiveVeil.Draw(drawList, min, max, rounding);
-        }
-        else
-        {
-            var texture = images.Get(photos.Length > 0 ? photos[0] : null);
-            if (texture is null)
-            {
-                Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(AppPalettes.Aethergram.FieldSurface));
+                DrawPrivateProfileNotice();
                 return;
             }
 
-            var (uv0, uv1) = ImageFit.CoverSquare(texture.Size);
-            drawList.AddImageRounded(texture.Handle, min, max, uv0, uv1, 0xFFFFFFFFu, rounding,
-                ImDrawFlags.RoundCornersAll);
-            if (photos.Length > 1)
+            var scale = UiScale.Current;
+            var tabRow = new Rect(
+                new Vector2(ImGui.GetCursorScreenPos().X + 14f * scale, ImGui.GetCursorScreenPos().Y + 4f * scale),
+                new Vector2(ImGui.GetCursorScreenPos().X + ImGui.GetContentRegionAvail().X - 14f * scale,
+                    ImGui.GetCursorScreenPos().Y + 32f * scale));
+            for (var index = 0; index < ProfileTabs.Length; index++)
             {
-                MultiPhotoBadge.Draw(drawList, new Vector2(max.X - 8f * scale, min.Y + 8f * scale), scale);
+                profileTabLabels[index] = Loc.T(ProfileTabs[index]);
+            }
+
+            profileTab = SegmentStrip.Draw("aethergram.profileTabs", tabRow, profileTabLabels, profileTab,
+                AppPalettes.Aethergram);
+            ImGui.SetCursorScreenPos(new Vector2(ImGui.GetCursorScreenPos().X, tabRow.Max.Y + 10f * scale));
+            if (profileTab == 0)
+            {
+                DrawPostGrid(store.ProfilePosts, L.Aethergram.Empty, store.HasMoreProfilePosts,
+                    store.ProfileLoadingMore, store.LoadMoreProfilePosts, SquareGrid);
+            }
+            else
+            {
+                store.EnsureTaggedPosts(userId);
+                DrawPostGrid(store.TaggedPosts, L.PhotoTag.NoTagged,
+                    store.HasMoreTagged, store.TaggedLoadingMore, store.LoadMoreTaggedPosts, SquareGrid);
             }
         }
-
-        if (ImGui.IsItemHovered())
-        {
-            Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.1f)));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
     }
 
-    private void DrawSearchTab(Rect area)
+    private void DrawPrivateProfileNotice()
     {
         var scale = UiScale.Current;
-        var searchHeight = 52f * scale;
-        profile.DrawSearchBar(new Rect(area.Min, new Vector2(area.Max.X, area.Min.Y + searchHeight)));
-        profile.DrawSearchResults(new Rect(new Vector2(area.Min.X, area.Min.Y + searchHeight), area.Max), theme,
-            false);
+        var drawList = ImGui.GetWindowDrawList();
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        var centerX = origin.X + width * 0.5f;
+        var lockCenter = new Vector2(centerX, origin.Y + 52f * scale);
+        drawList.AddCircle(lockCenter, 26f * scale,
+            ImGui.GetColorU32(Palette.WithAlpha(AppPalettes.Aethergram.MutedInk, 0.5f)), 48, 1.6f * scale);
+        AppSkin.Icon(drawList, lockCenter, IconGlyph.Of(FontAwesomeIcon.Lock), AppPalettes.Aethergram.TitleInk,
+            1.3f);
+        var titleTop = lockCenter.Y + 40f * scale;
+        var titleHeight = Typography.DrawWrappedCentered(new Vector2(centerX, titleTop),
+            Loc.T(L.Aethergram.PrivateTitle), AppPalettes.Aethergram.TitleInk, TextStyles.BodyEmphasized,
+            width - 48f * scale);
+        var subtitleTop = titleTop + titleHeight + 6f * scale;
+        var subtitleHeight = Typography.DrawWrappedCentered(new Vector2(centerX, subtitleTop),
+            Loc.T(L.Aethergram.PrivateSubtitle), AppPalettes.Aethergram.MutedInk, TextStyles.Subheadline,
+            width - 48f * scale);
+        ImGui.Dummy(new Vector2(width, subtitleTop + subtitleHeight + 24f * scale - origin.Y));
     }
 
-    private void DrawHomeTopBar(Rect area)
+    private void DrawProfileTab(Rect area)
     {
         var scale = UiScale.Current;
-        var actions = new HeaderActions(area, scale, store.IsSignedIn ? HomeActionSlots : 0);
-        var logoLeft = area.Min.X + 16f * scale;
-        if (HeaderTitle.Draw("aethergram.home.logo", DisplayName, logoLeft, actions,
-                AppPalettes.Aethergram.TitleInk, scale) && store.IsSignedIn)
+        DrawTabTitle(area, store.Me is { } title ? SocialIdentity.Name(title.DisplayName, title.Handle)
+            : Loc.T(L.Aethergram.Profile));
+        var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
+        if (store.Me is not { } me)
         {
-            RefreshActiveFeed();
-        }
-
-        if (!store.IsSignedIn)
-        {
+            store.EnsureMe();
+            Typography.DrawCentered(body.Center, Loc.T(L.Common.Loading), AethergramInk.MutedInk);
             return;
         }
 
-        var bellCenter = actions.Slot(1);
-        UiAnchors.Report("aethergram.activity", actions.Bounds(1));
-        if (ui.IconButton(bellCenter, actions.Radius, IconGlyph.Of(FontAwesomeIcon.Bell),
-                AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.2f, Loc.T(L.Social.ActivityTitle),
-                HoverLabelSide.Below))
-        {
-            OpenActivity();
-        }
-
-        ActivityBadge.Draw(bellCenter + new Vector2(10f * scale, -10f * scale), social.UnseenCount(Id), theme, scale);
-        if (ui.IconButton(actions.Slot(0), actions.Radius, IconGlyph.Of(FontAwesomeIcon.EllipsisH),
-                AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.2f, Loc.T(L.Aethergram.More),
-                HoverLabelSide.Below))
-        {
-            overflowMenu.Toggle(OverflowMenuId, actions.Bounds(0));
-        }
+        DrawProfileBody(body, me.Id);
     }
+
 }
