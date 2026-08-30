@@ -1639,6 +1639,26 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release1014 =
+        {
+            new("changelog.r1014.0",
+                "Fixed Chirper no longer offering the Translate link on posts and replies written in another language"),
+            new("changelog.r1014.1",
+                "Fixed the reaction pill under a Chirper post only opening the likers list: tapping one of its emoji now adds that reaction, and the count still opens who reacted"),
+            new("changelog.r1014.2",
+                "Fixed the phone creeping away from its place after each turn to landscape and back, each orientation now remembers its own resting spot"),
+            new("changelog.r1014.3",
+                "Fixed Linkpearl pop-out menus staying open and out of reach after that window lost focus"),
+            new("changelog.r1014.4",
+                "The Gamba rules and Payouts sheets now explain the ten Slots paylines and the house jackpot, with the odds at your current stake"),
+            new("changelog.r1014.5",
+                "Fixed the Slots jackpot meter reading full long before the pot reached its 50,000 coin cap"),
+            new("changelog.r1014.6",
+                "Fixed long Slots banners and the jackpot hint clipping at the cabinet edge, they now glide across instead"),
+            new("changelog.r1014.7",
+                "The Slots reel window now shakes, flashes gold and runs a chase of marquee bulbs when the jackpot lands"),
+        };
+
         public static readonly LocString[] Release1013 =
         {
             new("changelog.r1013.0",
