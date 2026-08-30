@@ -93,7 +93,7 @@ internal sealed class DynamicIsland
             shownKind = primary;
         }
 
-        var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
+        var delta = FrameClock.Delta;
         clock += delta;
         presence.Step(primary == ActivityKind.None ? 0f : 1f, PresenceSmoothTime, delta);
         split.Step(callActive && musicActive ? 1f : 0f, SplitSmoothTime, delta);

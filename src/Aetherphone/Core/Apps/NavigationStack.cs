@@ -22,7 +22,10 @@ internal sealed class NavigationStack : INavigator
     private readonly Stack<IPhoneApp> history = new();
     private readonly Dictionary<string, long> closedAtTicks = new(StringComparer.Ordinal);
     private bool resumingOpen;
+    private bool scrubbing;
     private Spring cover;
+    private Spring driftX;
+    private Spring driftY;
     private float coverTarget;
     private float coverSmoothTime;
     private IPhoneApp? current;
@@ -46,8 +49,12 @@ internal sealed class NavigationStack : INavigator
     public IPhoneApp? Current => current;
     public bool AtHome => current is null;
     public bool IsTransitioning => motion != ShellMotion.None;
+    public bool Scrubbing => scrubbing;
+    public bool CanGoHome => motion == ShellMotion.Present || scrubbing ||
+                             (current is not null && motion == ShellMotion.None);
     public ShellMotion Motion => motion;
     public float MotionProgress => cover.Value;
+    public Vector2 MotionDrift => new(driftX.Value, driftY.Value);
     public IPhoneApp MotionOver => motionOver!;
     public IPhoneApp? MotionUnder => motionUnder;
     public Rect? MotionOrigin => motionOrigin;
@@ -55,12 +62,15 @@ internal sealed class NavigationStack : INavigator
 
     public void Advance(float deltaSeconds)
     {
-        if (motion == ShellMotion.None)
+        if (motion == ShellMotion.None || scrubbing)
         {
             return;
         }
 
-        cover.Step(coverTarget, coverSmoothTime, MathF.Min(deltaSeconds, TransitionTiming.MotionFrameSeconds));
+        var step = MathF.Min(deltaSeconds, TransitionTiming.MotionFrameSeconds);
+        cover.Step(coverTarget, coverSmoothTime, step);
+        driftX.Step(0f, coverSmoothTime, step);
+        driftY.Step(0f, coverSmoothTime, step);
         if (MathF.Abs(cover.Value - coverTarget) <= TransitionTiming.MotionSettleEpsilon)
         {
             cover.SnapTo(coverTarget);
@@ -204,6 +214,14 @@ internal sealed class NavigationStack : INavigator
 
     public void GoHome()
     {
+        if (motion == ShellMotion.Present && motionUnder is null && ReferenceEquals(motionOver, current))
+        {
+            var reversing = motionOver!;
+            ReverseToDismiss();
+            ReturningHome?.Invoke(reversing.Id);
+            return;
+        }
+
         SettleAny();
 
         if (current is null)
@@ -216,6 +234,66 @@ internal sealed class NavigationStack : INavigator
         current = null;
         ReturningHome?.Invoke(leaving.Id);
         BeginDismiss(leaving, null);
+    }
+
+    public bool Scrub(float coverValue, Vector2 drift)
+    {
+        if (!scrubbing && !TryBeginScrub())
+        {
+            return false;
+        }
+
+        cover.SnapTo(Math.Clamp(coverValue, 0f, 1f));
+        driftX.SnapTo(drift.X);
+        driftY.SnapTo(drift.Y);
+        return true;
+    }
+
+    public void ReleaseScrub(bool toHome, float coverVelocity)
+    {
+        if (!scrubbing)
+        {
+            return;
+        }
+
+        scrubbing = false;
+        if (toHome)
+        {
+            UiFeedback.Play(UiSound.AppClose);
+            history.Clear();
+            coverTarget = 0f;
+            coverSmoothTime = TransitionTiming.ZoomDismissSmoothTime;
+            var kick = TransitionTiming.LaunchVelocity(coverSmoothTime);
+            cover.Velocity = Math.Clamp(coverVelocity, -kick * TransitionTiming.ScrubKickCapFactor, -kick);
+            return;
+        }
+
+        ReverseToPresent();
+        var returnKick = TransitionTiming.LaunchVelocity(coverSmoothTime);
+        cover.Velocity = Math.Clamp(coverVelocity, returnKick * TransitionTiming.ScrubReturnKickFraction,
+            returnKick * TransitionTiming.ScrubKickCapFactor);
+    }
+
+    private bool TryBeginScrub()
+    {
+        if (motion != ShellMotion.None || current is null)
+        {
+            return false;
+        }
+
+        var leaving = current;
+        current = null;
+        ReturningHome?.Invoke(leaving.Id);
+        motion = ShellMotion.Dismiss;
+        motionOver = leaving;
+        motionUnder = null;
+        motionOrigin = null;
+        motionOriginKind = LaunchOrigin.Icon;
+        coverTarget = 0f;
+        coverSmoothTime = TransitionTiming.ZoomDismissSmoothTime;
+        cover.SnapTo(1f);
+        scrubbing = true;
+        return true;
     }
 
     private void BeginPresent(IPhoneApp over, IPhoneApp? under)
@@ -300,10 +378,13 @@ internal sealed class NavigationStack : INavigator
         }
 
         motion = ShellMotion.None;
+        scrubbing = false;
         motionOver = null;
         motionUnder = null;
         motionOrigin = null;
         motionOriginKind = LaunchOrigin.Icon;
+        driftX.SnapTo(0f);
+        driftY.SnapTo(0f);
     }
 
     private void NotifyClosed(IPhoneApp? app)

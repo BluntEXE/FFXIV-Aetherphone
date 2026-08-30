@@ -4,8 +4,11 @@ internal static class TransitionTiming
 {
     public const float PresentSmoothTime = 0.15f;
     public const float DismissSmoothTime = 0.13f;
-    public const float ZoomPresentSmoothTime = 0.135f;
-    public const float ZoomDismissSmoothTime = 0.115f;
+    public const float ZoomPresentSmoothTime = 0.145f;
+    public const float ZoomDismissSmoothTime = 0.135f;
+    public const float InteractiveProgress = 0.8f;
+    public const float ScrubReturnKickFraction = 0.35f;
+    public const float ScrubKickCapFactor = 3f;
     public const float HomeZoomDepth = 0.32f;
     public const float HomeRecedeDim = 0.55f;
     public const float PushSmoothTime = 0.13f;

@@ -5,6 +5,7 @@ internal readonly struct LayerTransform
     private const uint ColorMask = 0x00FFFFFF;
     private const int AlphaShift = 24;
     private const float UnboundedExtent = 1e6f;
+    private const float MinimumScale = 1e-4f;
 
     private static readonly Rect Unbounded =
         new(new Vector2(-UnboundedExtent, -UnboundedExtent), new Vector2(UnboundedExtent, UnboundedExtent));
@@ -70,6 +71,13 @@ internal readonly struct LayerTransform
     }
 
     public Rect Map(Rect rect) => new(Map(rect.Min), Map(rect.Max));
+
+    public Vector2 Unmap(Vector2 point)
+    {
+        var local = point - Target;
+        var unrotated = new Vector2(local.X * cosine + local.Y * sine, local.Y * cosine - local.X * sine);
+        return Anchor + unrotated / MathF.Max(Scale, MinimumScale);
+    }
 
     public Vector4 MapClip(Vector4 clip)
     {

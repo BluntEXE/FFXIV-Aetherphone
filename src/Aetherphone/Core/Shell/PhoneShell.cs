@@ -25,7 +25,6 @@ internal sealed class PhoneShell : IDisposable
     private const ImGuiWindowFlags ChromeFlags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse |
                                                  ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoInputs;
 
-    private const float IndicatorSwipeDistance = 26f;
     private const float ShakeDuration = 0.4f;
     private const float ShakeFrequency = 48f;
     private const float ShakeAmplitude = 3f;
@@ -61,8 +60,7 @@ internal sealed class PhoneShell : IDisposable
     private readonly ConfirmService confirm;
     private NotificationShake shake = new(ShakeDuration, ShakeFrequency, ShakeAmplitude);
     private bool closeRequested;
-    private bool indicatorPressActive;
-    private Vector2 indicatorPressPos;
+    private readonly HomeIndicatorGesture indicatorGesture = new();
     private CallState lastCallState;
     private DateTime lastVisibleDrawUtc = DateTime.MinValue;
 
@@ -261,7 +259,7 @@ internal sealed class PhoneShell : IDisposable
 
     public void Draw(Rect device)
     {
-        var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
+        var delta = FrameClock.Delta;
         if (minimize.Phase != MinimizePhase.None)
         {
             if (loading.IsActive)
@@ -436,12 +434,12 @@ internal sealed class PhoneShell : IDisposable
         var hitMin = new Vector2(min.X - 24f * scale, min.Y - 16f * scale);
         var hitMax = new Vector2(max.X + 24f * scale, max.Y + 16f * scale);
         var hovered = UiInteract.Hover(hitMin, hitMax);
-        var usable = !navigation.AtHome && !navigation.IsTransitioning;
-        var actionable = usable && (hovered || indicatorPressActive);
+        var usable = navigation.CanGoHome;
+        var actionable = usable && (hovered || indicatorGesture.Pressed);
         HomeIndicator.Draw(ImGui.GetWindowDrawList(), bounds, theme, actionable);
         if (!usable)
         {
-            indicatorPressActive = false;
+            indicatorGesture.Cancel();
             return;
         }
 
@@ -453,31 +451,43 @@ internal sealed class PhoneShell : IDisposable
         var mouse = ImGui.GetMousePos();
         if (hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
-            indicatorPressActive = true;
-            indicatorPressPos = mouse;
+            indicatorGesture.Press(mouse);
         }
 
-        if (!indicatorPressActive)
+        if (!indicatorGesture.Pressed)
         {
             return;
         }
 
         if (ImGui.IsMouseDown(ImGuiMouseButton.Left))
         {
-            if (indicatorPressPos.Y - mouse.Y > IndicatorSwipeDistance * scale)
-            {
-                indicatorPressActive = false;
-                navigation.GoHome();
-            }
-
+            TrackIndicatorDrag(mouse, screen, scale);
             return;
         }
 
-        indicatorPressActive = false;
-        if (hovered && ImGui.IsMouseReleased(ImGuiMouseButton.Left))
+        var release = indicatorGesture.Release(screen.Height, scale);
+        if (release.WasScrubbing)
+        {
+            navigation.ReleaseScrub(release.ToHome, release.CoverVelocity);
+            return;
+        }
+
+        if (hovered)
         {
             navigation.GoHome();
         }
+    }
+
+    private void TrackIndicatorDrag(Vector2 mouse, Rect screen, float scale)
+    {
+        var frame = indicatorGesture.Track(mouse, FrameClock.Delta, screen.Height, scale);
+        if (!frame.Scrubbing || navigation.Scrub(frame.Cover, frame.Drift))
+        {
+            return;
+        }
+
+        indicatorGesture.Cancel();
+        navigation.GoHome();
     }
 
     public void Dispose()

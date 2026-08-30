@@ -46,7 +46,7 @@ internal sealed class HomeScreen
     public void Draw(Rect screen, Rect content, PhoneTheme theme, INavigator navigation, in HomeMotion motion)
     {
         layout.EnsureCurrent();
-        var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
+        var delta = FrameClock.Delta;
         interaction.Advance(delta);
         var editReserve = interaction.Editing && motion.Interactive ? HomeMetrics.EditToolbarBandUnits : 0f;
         var metrics = HomeMetrics.Compute(content, HomeLayoutService.Columns, layout.Rows, UiScale.Current,
@@ -64,10 +64,17 @@ internal sealed class HomeScreen
 
         interaction.AdvanceTap(delta);
         interaction.UpdateMagnify(content, motion, delta);
-        var labelAlpha = chromeAlpha * (folder.Active ? 0.35f : 1f);
-        renderer.DrawPages(metrics, theme, delta, labelAlpha, configuration.ShowAppNames, motion);
-        renderer.DrawDock(metrics, theme, delta, chromeAlpha, motion);
-        chrome.DrawPageControls(metrics, theme, chromeAlpha, motion.Interactive);
+        if (chromeAlpha > 0.01f)
+        {
+            var labelAlpha = folder.Active ? 0.35f : 1f;
+            var tileDrawList = ImGui.GetWindowDrawList();
+            var tileVertexStart = tileDrawList.VtxBuffer.Size;
+            renderer.DrawPages(metrics, theme, delta, labelAlpha, configuration.ShowAppNames, motion);
+            renderer.DrawDock(metrics, theme, delta, 1f, motion);
+            chrome.DrawPageControls(metrics, theme, 1f, motion.Interactive);
+            LayerCompositor.Fade(tileDrawList, tileVertexStart, chromeAlpha);
+        }
+
         if (interaction.Editing && motion.Interactive)
         {
             chrome.DrawEditChrome(content, metrics, theme);

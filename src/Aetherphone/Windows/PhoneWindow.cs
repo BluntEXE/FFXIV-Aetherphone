@@ -138,7 +138,8 @@ internal sealed class PhoneWindow : Window
 
     public override void PreDraw()
     {
-        shell.PrepareFrame(MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds));
+        FrameClock.Advance(ImGui.GetFrameCount(), ImGui.GetIO().DeltaTime);
+        shell.PrepareFrame(FrameClock.Delta);
         var portraitWidth = Components.PhoneBounds.ClampWidth(configuration.PhoneWidth);
         var landscapeWidth = Components.PhoneBounds.LandscapeWidth(configuration);
         var turn = shell.Turn;

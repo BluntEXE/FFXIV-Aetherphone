@@ -15,10 +15,11 @@ internal sealed class ShellTransitionRenderer
     private const float IconRadiusFactor = 0.26f;
     private const float IconRadiusCapUnits = 24f;
     private const float ShadowRise = 2.4f;
-    private const float SurfaceFadeEnd = 0.3f;
-    private const float VeilSettleEnd = 0.45f;
-    private const float VeilFadeStart = 0.22f;
-    private const float VeilFadeEnd = 0.62f;
+    private const float SurfaceFadeStart = 0.12f;
+    private const float SurfaceFadeEnd = 0.5f;
+    private const float VeilSettleEnd = 0.5f;
+    private const float VeilFadeStart = 0.45f;
+    private const float VeilFadeEnd = 0.78f;
     private const float GlyphFadeStart = 0.06f;
     private const float GlyphFadeEnd = 0.4f;
     private const float EdgeFadeStart = 0.85f;
@@ -77,9 +78,17 @@ internal sealed class ShellTransitionRenderer
             underLayer.Transform(LayerTransform.Identity(underClip));
         }
 
-        using var overLayer = ScreenLayer.Begin(over.Id, screen, true);
+        var overTransform = LayerTransform.Translate(overOffset, screen);
+        using var overLayer = OpenScreen(over.Id, screen, in overTransform);
         painter.PaintApp(screen, screenRadius, theme, over);
-        overLayer.Transform(LayerTransform.Translate(overOffset, screen));
+        overLayer.Transform(in overTransform);
+    }
+
+    private ScreenLayer OpenScreen(string id, Rect screen, in LayerTransform transform)
+    {
+        var interactive = navigation.Motion == ShellMotion.Present &&
+                          navigation.MotionProgress >= TransitionTiming.InteractiveProgress;
+        return interactive ? ScreenLayer.BeginWarped(id, screen, in transform) : ScreenLayer.Begin(id, screen, true);
     }
 
     private void DrawZoom(Rect screen, float screenRadius, PhoneTheme theme, IPhoneApp over)
@@ -89,24 +98,23 @@ internal sealed class ShellTransitionRenderer
         PrepareRevealOnce(over);
         var kind = navigation.MotionOriginKind;
         var rest = navigation.MotionOrigin ?? RestRect(over, content, out kind);
-        var recede = Easing.SmoothStep(raw);
-        var zoom = 1f + TransitionTiming.HomeZoomDepth * recede;
+        var zoom = 1f + TransitionTiming.HomeZoomDepth * raw;
         var homeTransform = LayerTransform.ScaleAbout(rest.Center, zoom, screen);
         using (var homeLayer = ScreenLayer.Begin(ShellScreenPainter.HomeLayerId, screen, true))
         {
             painter.PaintHome(screen, screenRadius, theme,
-                HomeMotion.Recede(recede, kind == LaunchOrigin.Icon ? over.Id : null));
-            homeLayer.Veil(ImGui.GetColorU32(new Vector4(0f, 0f, 0f, TransitionTiming.HomeRecedeDim * recede)));
+                HomeMotion.Recede(raw, kind == LaunchOrigin.Icon ? over.Id : null));
+            homeLayer.Veil(ImGui.GetColorU32(new Vector4(0f, 0f, 0f, TransitionTiming.HomeRecedeDim * raw)));
             homeLayer.Transform(in homeTransform);
         }
 
         var warped = homeTransform.Map(rest);
-        var card = CardRect(warped, screen, raw);
+        var card = CardRect(warped, screen, raw).Translate(navigation.MotionDrift * raw);
         var scale = UiScale.Current;
         var iconRadius = MathF.Min(MathF.Min(rest.Width, rest.Height) * IconRadiusFactor, IconRadiusCapUnits * scale);
         var rounding = iconRadius + (screenRadius - iconRadius) * raw;
         var surfaceFade = kind == LaunchOrigin.Surface
-            ? Easing.SmootherStep(Easing.Segment(raw, 0f, SurfaceFadeEnd))
+            ? Easing.SmootherStep(Easing.Segment(raw, SurfaceFadeStart, SurfaceFadeEnd))
             : 1f;
         var elevation = Easing.Clamp01(raw * ShadowRise) * surfaceFade;
         using (ScreenLayer.BeginPassive(ShadowLayerId, screen))
@@ -120,10 +128,11 @@ internal sealed class ShellTransitionRenderer
             Elevation.Squircle(shadowDrawList, card.Min, card.Max, rounding, scale, elevation);
         }
 
-        using (var appLayer = ScreenLayer.Begin(over.Id, screen, true))
+        var appTransform = LayerTransform.Fit(screen, card, card, surfaceFade);
+        using (var appLayer = OpenScreen(over.Id, screen, in appTransform))
         {
             painter.PaintApp(screen, screenRadius, theme, over);
-            appLayer.Transform(LayerTransform.Fit(screen, card, card, surfaceFade));
+            appLayer.Transform(in appTransform);
         }
 
         using (ScreenLayer.BeginPassive(CardLayerId, screen))

@@ -23,16 +23,21 @@ internal ref struct ScreenLayer
         open = true;
     }
 
-    public static ScreenLayer Begin(string id, Rect rect, bool shield) => Open(id, rect, StageFlags, shield);
+    public static ScreenLayer Begin(string id, Rect rect, bool shield) =>
+        Open(id, rect, StageFlags, InputShield.Engage(shield));
 
-    public static ScreenLayer BeginPassive(string id, Rect rect) => Open(id, rect, PassiveFlags, false);
+    public static ScreenLayer BeginWarped(string id, Rect rect, in LayerTransform warp) =>
+        Open(id, rect, StageFlags, InputShield.Warp(in warp));
 
-    private static ScreenLayer Open(string id, Rect rect, ImGuiWindowFlags flags, bool shield)
+    public static ScreenLayer BeginPassive(string id, Rect rect) =>
+        Open(id, rect, PassiveFlags, InputShield.Engage(false));
+
+    private static ScreenLayer Open(string id, Rect rect, ImGuiWindowFlags flags, InputShield shield)
     {
         ImGui.SetCursorScreenPos(rect.Min);
         ImGui.PushID(id);
         ImGui.BeginChild("stage", rect.Size, false, flags);
-        return new ScreenLayer(rect, ImGuiP.GetCurrentWindowRead(), InputShield.Engage(shield));
+        return new ScreenLayer(rect, ImGuiP.GetCurrentWindowRead(), shield);
     }
 
     public readonly void Veil(uint color)
@@ -97,6 +102,22 @@ internal static class LayerCompositor
         for (var index = 0; index < children.Length; index++)
         {
             Transform(children[index], in transform);
+        }
+    }
+
+    public static void Fade(ImDrawListPtr drawList, int fromVertex, float alpha)
+    {
+        if (drawList.IsNull || alpha >= 1f)
+        {
+            return;
+        }
+
+        var fade = LayerTransform.Fade(alpha);
+        var vertices = drawList.VtxBuffer.AsSpan();
+        for (var index = Math.Max(0, fromVertex); index < vertices.Length; index++)
+        {
+            ref var vertex = ref vertices[index];
+            vertex.Col = fade.MapColor(vertex.Col);
         }
     }
 
