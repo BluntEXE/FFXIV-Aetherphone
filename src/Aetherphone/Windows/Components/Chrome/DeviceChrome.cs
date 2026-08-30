@@ -317,8 +317,10 @@ internal static class DeviceChrome
         library.CurrentTargetAspect = screen.Height > 0f ? screen.Width / screen.Height : 0.5f;
         var light = library.Resolve(theme.LightWallpaperId);
         var dark = library.Resolve(theme.DarkWallpaperId);
+        library.BlurredHandlePath(light.FilePath);
+        library.BlurredHandlePath(dark.FilePath);
         WallpaperRenderer.Draw(ImGui.GetWindowDrawList(), shape, quad, radius, light, dark,
-            library.CurrentTargetAspect, library.ThemeDarkness, theme.ScreenBase);
+            library.CurrentTargetAspect, library.ThemeDarkness, theme.ScreenBase, motion.Recession);
     }
 
     public static void DrawHomeScrim(Rect screen, float radius, PhoneTheme theme)

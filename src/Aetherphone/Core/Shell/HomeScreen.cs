@@ -52,7 +52,7 @@ internal sealed class HomeScreen
         var metrics = HomeMetrics.Compute(content, HomeLayoutService.Columns, layout.Rows, UiScale.Current,
             motion, editReserve);
         pager.Step(delta, interaction.DisplayPageCount());
-        var chromeAlpha = Math.Clamp(1f - motion.Progress * 1.6f, 0f, 1f);
+        var chromeAlpha = 1f - motion.Recession;
         if (motion.Interactive)
         {
             interaction.HandleInput(content, metrics, navigation, delta);

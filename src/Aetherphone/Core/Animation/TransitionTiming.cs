@@ -10,7 +10,7 @@ internal static class TransitionTiming
     public const float ScrubReturnKickFraction = 0.35f;
     public const float ScrubKickCapFactor = 3f;
     public const float HomeZoomDepth = 0.32f;
-    public const float HomeRecedeDim = 0.55f;
+    public const float HomeRecedeDim = 0.45f;
     public const float PushSmoothTime = 0.13f;
     public const float ShellDimMax = 0.45f;
     public const float UnderParallax = 0.26f;

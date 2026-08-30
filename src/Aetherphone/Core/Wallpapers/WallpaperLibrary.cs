@@ -3,6 +3,7 @@ using Aetherphone.Core.Animation;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Textures;
 using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Plugin.Services;
 using SixLabors.ImageSharp;
@@ -20,6 +21,8 @@ internal sealed class WallpaperLibrary : IDisposable
     private const int BrightnessSampleSize = 24;
     private const float BrightPixelThreshold = 0.65f;
     private const float DefaultBrightness = 0.35f;
+    private const int BlurBakeWidth = 96;
+    private const float BlurSigma = 2.2f;
     private static readonly string[] BuiltInPatterns = { "*.png", "*.jpg", "*.jpeg", "*.bmp" };
 
     private static readonly WallpaperEntry Fallback = new()
@@ -32,6 +35,8 @@ internal sealed class WallpaperLibrary : IDisposable
     private readonly Configuration configuration;
     private readonly IReadOnlyList<WallpaperEntry> builtIns;
     private readonly ConcurrentDictionary<string, IDalamudTextureWrap> ready = new();
+    private readonly ConcurrentDictionary<string, IDalamudTextureWrap> blurred = new();
+    private readonly ConcurrentDictionary<string, byte> blurring = new();
     private readonly ConcurrentDictionary<string, float> brightness = new();
     private readonly ConcurrentDictionary<string, byte> loading = new();
     private readonly ConcurrentDictionary<string, byte> failed = new();
@@ -129,6 +134,30 @@ internal sealed class WallpaperLibrary : IDisposable
 
     public Vector2 SizeOfPath(string path) => ready.TryGetValue(path, out var wrap) ? wrap.Size : Vector2.Zero;
 
+    public ImTextureID? BlurredHandlePath(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            return null;
+        }
+
+        if (blurred.TryGetValue(path, out var wrap))
+        {
+            return wrap.Handle;
+        }
+
+        if (failed.ContainsKey(path) || !blurring.TryAdd(path, 0))
+        {
+            return null;
+        }
+
+        _ = LoadBlurredAsync(path);
+        return null;
+    }
+
+    public Vector2 BlurredSizeOfPath(string path) =>
+        blurred.TryGetValue(path, out var wrap) ? wrap.Size : Vector2.Zero;
+
     public float HomeBrightness(string lightId, string darkId)
     {
         var darkness = ThemeDarkness;
@@ -206,6 +235,11 @@ internal sealed class WallpaperLibrary : IDisposable
             wrap.Dispose();
         }
 
+        if (blurred.TryRemove(path, out var blurredWrap))
+        {
+            blurredWrap.Dispose();
+        }
+
         brightness.TryRemove(path, out _);
         failed.TryRemove(path, out _);
         Entries = Rebuild();
@@ -220,6 +254,12 @@ internal sealed class WallpaperLibrary : IDisposable
         }
 
         ready.Clear();
+        foreach (var wrap in blurred.Values)
+        {
+            wrap.Dispose();
+        }
+
+        blurred.Clear();
         cancellation.Dispose();
     }
 
@@ -338,6 +378,44 @@ internal sealed class WallpaperLibrary : IDisposable
         {
             loading.TryRemove(path, out _);
         }
+    }
+
+    private async Task LoadBlurredAsync(string path)
+    {
+        try
+        {
+            var token = cancellation.Token;
+            var bytes = await File.ReadAllBytesAsync(path, token).ConfigureAwait(false);
+            var (pixels, width, height) = await Task.Run(() => BakeBlurred(bytes), token).ConfigureAwait(false);
+            var wrap = await textures.CreateFromRawAsync(RawImageSpecification.Rgba32(width, height), pixels,
+                $"Aetherphone.Wallpaper.Blur.{path}", token).ConfigureAwait(false);
+            if (!blurred.TryAdd(path, wrap))
+            {
+                wrap.Dispose();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning(exception, $"[Wallpaper] failed to bake the blurred copy of {path}");
+        }
+        finally
+        {
+            blurring.TryRemove(path, out _);
+        }
+    }
+
+    private static (byte[] Pixels, int Width, int Height) BakeBlurred(byte[] bytes)
+    {
+        using var image = Image.Load<Rgba32>(ImageProcessor.SingleFrame, bytes);
+        var width = Math.Max(1, Math.Min(BlurBakeWidth, image.Width));
+        var height = Math.Max(1, (int)MathF.Round(image.Height * (width / (float)image.Width)));
+        image.Mutate(context => context.Resize(width, height).GaussianBlur(BlurSigma));
+        var pixels = new byte[width * height * 4];
+        image.CopyPixelDataTo(pixels);
+        return (pixels, width, height);
     }
 
     private void RecordBrightness(string path, byte[] bytes)

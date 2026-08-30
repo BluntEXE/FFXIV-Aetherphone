@@ -2,6 +2,8 @@ namespace Aetherphone.Core.Shell.Home;
 
 internal readonly struct HomeMotion
 {
+    private const float RecessionRate = 1.6f;
+
     public readonly float Zoom;
     public readonly Vector2 Pivot;
     public readonly float Progress;
@@ -22,6 +24,8 @@ internal readonly struct HomeMotion
     public static HomeMotion Still => new(1f, default, 0f, false);
 
     public static HomeMotion Recede(float progress, string? revealAppId) => new(1f, default, progress, false, revealAppId);
+
+    public float Recession => Math.Clamp(Progress * RecessionRate, 0f, 1f);
 
     public Vector2 Warp(Vector2 point) => Pivot + (point - Pivot) * Zoom;
 
