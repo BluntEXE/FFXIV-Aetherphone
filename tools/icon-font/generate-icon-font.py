@@ -29,7 +29,7 @@ TARBALL = (
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 OUT_FONT = os.path.join(ROOT, "src", "Aetherphone", "Fonts", "TablerIcons.ttf")
-OUT_CS = os.path.join(ROOT, "src", "Aetherphone", "Windows", "Components", "PhoneIcons.cs")
+OUT_CS = os.path.join(ROOT, "src", "Aetherphone", "Windows", "Components", "Primitives", "PhoneIcons.cs")
 
 OUTLINE = [
     ("AdjustmentsHorizontal", "adjustments-horizontal"),
@@ -57,6 +57,22 @@ OUTLINE = [
     ("Share", "share-3"),
     ("User", "user"),
     ("X", "x"),
+    ("Send", "send"),
+    ("Bookmark", "bookmark"),
+    ("Menu", "menu-2"),
+    ("UserSquareRounded", "user-square-rounded"),
+    ("ChevronDown", "chevron-down"),
+    ("Lock", "lock"),
+    ("Edit", "edit"),
+    ("UserPlus", "user-plus"),
+    ("Settings", "settings"),
+    ("Copy", "copy"),
+    ("SquareRoundedPlus", "square-rounded-plus"),
+    ("Trash", "trash"),
+    ("Flag", "flag"),
+    ("Ban", "ban"),
+    ("Language", "language"),
+    ("World", "world"),
 ]
 
 FILLED = [
@@ -65,6 +81,9 @@ FILLED = [
     ("HomeFilled", "home"),
     ("PinFilled", "pin"),
     ("UserFilled", "user"),
+    ("BookmarkFilled", "bookmark"),
+    ("MessageCircleFilled", "message-circle"),
+    ("SendFilled", "send"),
 ]
 
 
