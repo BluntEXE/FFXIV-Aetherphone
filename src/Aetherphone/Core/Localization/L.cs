@@ -1657,6 +1657,8 @@ internal static class L
                 "Tapping the reaction pill under a Chirper post now joins its reaction, and a pill holding several reactions expands into one chip per reaction so you can pick the one to add"),
             new("changelog.r1014.12",
                 "Who reacted to a Chirper post now lives under View reactions in the post's More menu"),
+            new("changelog.r1014.14",
+                "Fixed the Chirper Home, Explore, Activity and Profile tabs sharing one scroll position, each tab now keeps its own place"),
             new("changelog.r1014.2",
                 "Fixed the phone creeping away from its place after each turn to landscape and back, each orientation now remembers its own resting spot"),
             new("changelog.r1014.3",

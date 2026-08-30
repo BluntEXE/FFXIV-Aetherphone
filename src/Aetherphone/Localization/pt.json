@@ -4959,6 +4959,7 @@
   "changelog.r1014.10": "Arraste o indicador inicial para cima para encolher um app com o cursor e solte para fechá-lo ou deixá-lo cair de volta no lugar",
   "changelog.r1014.11": "Os ícones da tela inicial agora somem enquanto um app cresce a partir deles, e o conteúdo do app só aparece quando o cartão está grande o bastante para ser lido",
   "changelog.r1014.13": "Abertura de apps melhorada: o papel de parede agora dá zoom e desfoca atrás do cartão do app enquanto ele cresce, em vez de apenas escurecer",
+  "changelog.r1014.14": "Corrigido: as abas Início, Explorar, Atividade e Perfil do Chirper compartilhavam uma mesma posição de rolagem, agora cada aba mantém a sua",
   "changelog.r1014.12": "Quem reagiu a uma publicação do Chirper agora fica em Ver reações, no menu Mais da publicação",
   "changelog.r1013.0": "Chirper redesenhado: abas Início, Explorar, Atividade e Perfil, publicações de ponta a ponta, respostas em thread e uma nova pílula de escrita",
   "changelog.r1013.1": "O Chirper agora mostra fotos de perfil nas publicações, um banner nos perfis e qual reação cada pessoa deixou na lista",

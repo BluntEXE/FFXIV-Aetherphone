@@ -474,20 +474,23 @@ internal sealed partial class ChirperApp : IResumableApp
         TourHolds.Release(Id);
         var barRect = new Rect(new Vector2(area.Min.X, area.Max.Y - TabBarHeight * scale), area.Max);
         var content = new Rect(area.Min, new Vector2(area.Max.X, barRect.Min.Y));
-        switch (homeTab)
+        using (ImRaii.PushId((int)homeTab))
         {
-            case HomeTab.Explore:
-                DrawDiscover(content, true);
-                break;
-            case HomeTab.Alerts:
-                DrawActivity(content, true);
-                break;
-            case HomeTab.Profile:
-                DrawOwnProfileTab(content);
-                break;
-            default:
-                DrawFeedTab(content);
-                break;
+            switch (homeTab)
+            {
+                case HomeTab.Explore:
+                    DrawDiscover(content, true);
+                    break;
+                case HomeTab.Alerts:
+                    DrawActivity(content, true);
+                    break;
+                case HomeTab.Profile:
+                    DrawOwnProfileTab(content);
+                    break;
+                default:
+                    DrawFeedTab(content);
+                    break;
+            }
         }
 
         DrawTabBar(barRect);

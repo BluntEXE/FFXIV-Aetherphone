@@ -4959,6 +4959,7 @@
   "changelog.r1014.10": "Zieh den Home-Balken nach oben, um eine App mit dem Cursor zu verkleinern, und lass los, um sie zu schließen oder wieder an ihren Platz fallen zu lassen",
   "changelog.r1014.11": "Die Symbole des Startbildschirms blenden jetzt aus, während eine App aus ihnen herauswächst, und der Inhalt der App erscheint erst, wenn ihre Karte groß genug zum Lesen ist",
   "changelog.r1014.13": "Verbessertes Öffnen von Apps: das Hintergrundbild zoomt und verschwimmt jetzt hinter der wachsenden App-Karte, statt nur abzudunkeln",
+  "changelog.r1014.14": "Behoben: Die Chirper-Tabs Start, Entdecken, Aktivität und Profil teilten sich eine Scrollposition, jetzt merkt sich jeder Tab seine eigene Stelle",
   "changelog.r1014.12": "Wer auf einen Chirper-Beitrag reagiert hat, findest du jetzt unter Reaktionen anzeigen im Mehr-Menü des Beitrags",
   "changelog.r1013.0": "Chirper neu gestaltet: die Tabs Start, Entdecken, Aktivität und Profil, randlose Beiträge, Antwortstränge und eine neue Verfassen-Pille",
   "changelog.r1013.1": "Chirper zeigt jetzt Profilbilder an Beiträgen, ein Banner auf Profilen und in der Liste der Reaktionen, wer womit reagiert hat",
