@@ -1652,7 +1652,9 @@ internal static class L
             new("changelog.r1014.0",
                 "Fixed Chirper no longer offering the Translate link on posts and replies written in another language"),
             new("changelog.r1014.1",
-                "Fixed the reaction pill under a Chirper post only opening the likers list: tapping one of its emoji now adds that reaction, and the count still opens who reacted"),
+                "Tapping the reaction pill under a Chirper post now joins its reaction, and a pill holding several reactions expands into one chip per reaction so you can pick the one to add"),
+            new("changelog.r1014.12",
+                "Who reacted to a Chirper post now lives under View reactions in the post's More menu"),
             new("changelog.r1014.2",
                 "Fixed the phone creeping away from its place after each turn to landscape and back, each orientation now remembers its own resting spot"),
             new("changelog.r1014.3",
@@ -3709,6 +3711,8 @@ internal static class L
         public static readonly LocString ReactEyes = new("chirper.reactEyes", "Eyes");
         public static readonly LocString ReactHundred = new("chirper.reactHundred", "100");
         public static readonly LocString ReactQuestion = new("chirper.reactQuestion", "Question");
+        public static readonly LocString ViewReactions = new("chirper.viewReactions", "View reactions");
+        public static readonly LocString PickReaction = new("chirper.pickReaction", "Pick a reaction");
         public static readonly LocPlural Posts = new("chirper.posts", "{0} post", "{0} posts");
         public static readonly LocPlural Likes = new("chirper.likes", "{0} like", "{0} likes");
         public static readonly LocString DeleteConfirmMessage = new("chirper.deleteConfirmMessage", "Delete this post? This can't be undone.");

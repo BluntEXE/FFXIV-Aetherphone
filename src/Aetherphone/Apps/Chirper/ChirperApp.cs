@@ -48,6 +48,7 @@ internal sealed partial class ChirperApp : IResumableApp
         Sensitive,
         Delete,
         Rules,
+        Reactions,
         DeleteReply,
         RemoveReply,
     }
@@ -69,7 +70,7 @@ internal sealed partial class ChirperApp : IResumableApp
 
     private const int MaxPostLength = 300;
     private const int MaxCommentLength = 500;
-    private const int PostSheetMaxItems = 4;
+    private const int PostSheetMaxItems = 5;
     private const float TopBarButtonRadius = 18f;
     private const float FeedTabRowHeight = 44f;
     private const float FeedTabUnderline = 4f;
@@ -106,6 +107,7 @@ internal sealed partial class ChirperApp : IResumableApp
     private const float SummaryEmojiSize = 13f;
     private const float SummaryEmojiStep = 10f;
     private const int SummaryEmojiCount = 3;
+    private const float ReactionsExpandSmoothTime = 0.12f;
     private const float MoreButtonRadius = 14f;
     private const float FeedBottomSpacer = 110f;
     private const float ControlRowHeight = 36f;
@@ -204,6 +206,10 @@ internal sealed partial class ChirperApp : IResumableApp
     private HomeTab homeTab;
     private Spring tabSegment;
     private Spring replySendReveal;
+    private Spring reactionsExpand;
+    private Rect reactionsExpandedRect;
+    private string? reactionsExpandedPostId;
+    private bool reactionsExpanded;
     private bool replyFocusPending;
     private Rect screenRect;
     private string draft = string.Empty;
@@ -317,6 +323,7 @@ internal sealed partial class ChirperApp : IResumableApp
         draft = string.Empty;
         profile.SearchDraft = string.Empty;
         actions.Reset();
+        ResetReactionsExpansion();
         sheet.Close();
         filterSheet.Close();
         homeTab = HomeTab.Feed;
@@ -378,6 +385,7 @@ internal sealed partial class ChirperApp : IResumableApp
         sheet.Gate();
         filterSheet.Gate();
         actions.Tick(MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds));
+        TickReactionsExpansion();
         if (actions.Current != ChirperActionReveal.Panel.None)
         {
             UiInteract.BlockThisFrame();
@@ -780,6 +788,11 @@ internal sealed partial class ChirperApp : IResumableApp
         sheetPost = post;
         sheetKind = SheetKind.Post;
         sheetCount = 0;
+        if (post.TotalReactions > 0)
+        {
+            AddSheetItem(PostSheetAction.Reactions, Loc.T(L.Chirper.ViewReactions), false);
+        }
+
         var mine = store.Me is { } me && me.Id == post.AuthorId;
         if (mine)
         {
@@ -839,6 +852,9 @@ internal sealed partial class ChirperApp : IResumableApp
 
         switch (sheetActions[picked])
         {
+            case PostSheetAction.Reactions:
+                OpenUserList(post.Id, UserListKind.Likers);
+                break;
             case PostSheetAction.Follow:
                 store.SetFollow(post.AuthorId, !post.IsFollowing);
                 break;
@@ -1034,9 +1050,8 @@ internal sealed partial class ChirperApp : IResumableApp
         var contentBody = quoteTop + quoteHeight;
         var hasReactions = post.TotalReactions > 0;
         var reactionsTop = contentBody + (hasReactions ? (isThreadHead ? 12f : 9f) * scale : 0f);
-        var reactionsHeight = !hasReactions ? 0f
-            : isThreadHead ? ReactionChipRowsHeight(post, contentWidth)
-            : SummaryPillHeight * scale;
+        var expandProgress = isThreadHead ? 1f : ReactionsExpandProgress(post);
+        var reactionsHeight = hasReactions ? ReactionsBlockHeight(post, contentWidth, expandProgress) : 0f;
         var actionsTop = MathF.Max(reactionsTop + reactionsHeight, avatarCenter.Y + avatarRadius) + 6f * scale;
         var actionsHeight = ActionRowHeight * scale;
         var cellBottom = actionsTop + actionsHeight + CellPadBottom * scale;
@@ -1149,11 +1164,15 @@ internal sealed partial class ChirperApp : IResumableApp
         {
             if (isThreadHead)
             {
-                DrawReactionChips(post, contentLeft, contentWidth, reactionsTop);
+                var picked = DrawReactionChips(post, contentLeft, contentWidth, reactionsTop, 1f, true);
+                if (picked >= 0)
+                {
+                    store.ToggleReaction(post, picked);
+                }
             }
             else
             {
-                DrawReactionSummary(post, contentLeft, reactionsTop);
+                DrawFeedReactions(post, contentLeft, contentWidth, reactionsTop, reactionsHeight, expandProgress);
             }
         }
 
@@ -1479,35 +1498,103 @@ internal sealed partial class ChirperApp : IResumableApp
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        var emojiZoneRight = min.X + padLeft + emojiSpan + 5f * scale;
-        var pointedKind = hovered ? SummaryKindAt(ImGui.GetMousePos().X, min.X + padLeft, step, emojiZoneRight, order, shown) : -1;
-        var emojiZone = new Rect(min, new Vector2(emojiZoneRight, max.Y));
-        var countZone = new Rect(new Vector2(emojiZoneRight, min.Y), max);
-        HoverTooltip.Show(emojiZone, pointedKind >= 0 ? ChirperReactions.Label(pointedKind) : string.Empty, HoverLabelSide.Above);
-        HoverTooltip.Show(countZone, Loc.T(L.Social.LikedByTitle), HoverLabelSide.Above);
+        var single = active == 1;
+        HoverTooltip.Show(new Rect(min, max),
+            single ? ChirperReactions.Label(order[0]) : Loc.T(L.Chirper.PickReaction), HoverLabelSide.Above);
         if (!UiInteract.Click(min, max, hovered))
         {
             return;
         }
 
-        if (pointedKind >= 0)
+        if (single)
         {
-            store.ToggleReaction(post, pointedKind);
+            store.ToggleReaction(post, order[0]);
             return;
         }
 
-        OpenUserList(post.Id, UserListKind.Likers);
+        ExpandReactions(post);
     }
 
-    private static int SummaryKindAt(float mouseX, float emojiLeft, float step, float emojiZoneRight, Span<int> order, int shown)
+    private void DrawFeedReactions(PostDto post, float left, float width, float top, float blockHeight,
+        float expandProgress)
     {
-        if (mouseX >= emojiZoneRight)
+        if (expandProgress <= 0f)
         {
-            return -1;
+            DrawReactionSummary(post, left, top);
+            return;
         }
 
-        var slot = (int)MathF.Floor((mouseX - emojiLeft) / step);
-        return order[Math.Clamp(slot, 0, shown - 1)];
+        var drawList = ImGui.GetWindowDrawList();
+        var blockMin = new Vector2(left, top);
+        reactionsExpandedRect = new Rect(blockMin, new Vector2(left + width, top + ReactionChipRowsHeight(post, width)));
+        drawList.PushClipRect(blockMin, new Vector2(left + width, top + blockHeight), true);
+        var picked = DrawReactionChips(post, left, width, top, expandProgress, reactionsExpanded);
+        drawList.PopClipRect();
+        if (picked < 0)
+        {
+            return;
+        }
+
+        store.ToggleReaction(post, picked);
+        CollapseReactions();
+    }
+
+    private static float ReactionsBlockHeight(PostDto post, float width, float expandProgress)
+    {
+        var pillHeight = SummaryPillHeight * UiScale.Current;
+        if (expandProgress <= 0f)
+        {
+            return pillHeight;
+        }
+
+        return pillHeight + (ReactionChipRowsHeight(post, width) - pillHeight) * expandProgress;
+    }
+
+    private float ReactionsExpandProgress(PostDto post) =>
+        reactionsExpandedPostId == post.Id ? Math.Clamp(reactionsExpand.Value, 0f, 1f) : 0f;
+
+    private void ExpandReactions(PostDto post)
+    {
+        if (reactionsExpandedPostId != post.Id)
+        {
+            reactionsExpand.SnapTo(0f);
+        }
+
+        reactionsExpandedPostId = post.Id;
+        reactionsExpanded = true;
+    }
+
+    private void CollapseReactions()
+    {
+        reactionsExpanded = false;
+    }
+
+    private void ResetReactionsExpansion()
+    {
+        reactionsExpandedPostId = null;
+        reactionsExpanded = false;
+        reactionsExpand.SnapTo(0f);
+    }
+
+    private void TickReactionsExpansion()
+    {
+        if (reactionsExpandedPostId is null)
+        {
+            return;
+        }
+
+        if (reactionsExpanded && UiInteract.ClickedOutside(reactionsExpandedRect.Min, reactionsExpandedRect.Max, false))
+        {
+            CollapseReactions();
+        }
+
+        var target = reactionsExpanded ? 1f : 0f;
+        reactionsExpand.Step(target, ReactionsExpandSmoothTime,
+            MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds));
+        if (!reactionsExpanded && reactionsExpand.IsResting(0f, 0.002f, 0.01f))
+        {
+            ResetReactionsExpansion();
+        }
     }
 
     private static float ReactionChipWidth(PostDto post, int kind)
@@ -1557,13 +1644,14 @@ internal sealed partial class ChirperApp : IResumableApp
         return rows * ReactionChipHeight * scale + (rows - 1) * ReactionChipGap * scale;
     }
 
-    private void DrawReactionChips(PostDto post, float left, float width, float top)
+    private static int DrawReactionChips(PostDto post, float left, float width, float top, float alpha,
+        bool interactive)
     {
         Span<int> order = stackalloc int[ChirperReactions.Count];
         var active = CollectReactions(post, order);
         if (active == 0)
         {
-            return;
+            return -1;
         }
 
         var scale = UiScale.Current;
@@ -1571,6 +1659,7 @@ internal sealed partial class ChirperApp : IResumableApp
         var rowStride = (ReactionChipHeight + ReactionChipGap) * scale;
         var cursorX = 0f;
         var row = 0;
+        var picked = -1;
         for (var index = 0; index < active; index++)
         {
             var kind = order[index];
@@ -1582,12 +1671,19 @@ internal sealed partial class ChirperApp : IResumableApp
             }
 
             var centerY = top + row * rowStride + ReactionChipHeight * scale * 0.5f;
-            DrawReactionChip(post, left + cursorX, centerY, kind, chipWidth);
+            if (DrawReactionChip(post, left + cursorX, centerY, kind, chipWidth, alpha, interactive))
+            {
+                picked = kind;
+            }
+
             cursorX += chipWidth + gap;
         }
+
+        return picked;
     }
 
-    private void DrawReactionChip(PostDto post, float x, float centerY, int kind, float chipWidth)
+    private static bool DrawReactionChip(PostDto post, float x, float centerY, int kind, float chipWidth, float alpha,
+        bool interactive)
     {
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
@@ -1597,32 +1693,36 @@ internal sealed partial class ChirperApp : IResumableApp
         var chipHeight = ReactionChipHeight * scale;
         var min = new Vector2(x, centerY - chipHeight * 0.5f);
         var max = new Vector2(x + chipWidth, centerY + chipHeight * 0.5f);
-        var hovered = UiInteract.Hover(min, max);
+        var hovered = interactive && UiInteract.Hover(min, max);
         var grow = hovered ? 0.03f : 0f;
         var drawMin = min - new Vector2(chipWidth, chipHeight) * grow;
         var drawMax = max + new Vector2(chipWidth, chipHeight) * grow;
-        var fill = mine ? ChirperInk.MineFill : ChirperInk.ChipFill;
-        var stroke = mine ? ChirperInk.MineStroke : ChirperInk.ChipStroke;
-        var ink = mine ? ChirperInk.MineInk : ChirperInk.BodyInk;
+        var fill = Faded(mine ? ChirperInk.MineFill : ChirperInk.ChipFill, alpha);
+        var stroke = Faded(mine ? ChirperInk.MineStroke : ChirperInk.ChipStroke, alpha);
+        var ink = Faded(mine ? ChirperInk.MineInk : ChirperInk.BodyInk, alpha);
         Squircle.Fill(drawList, drawMin, drawMax, (drawMax.Y - drawMin.Y) * 0.5f, ImGui.GetColorU32(fill));
         Squircle.Stroke(drawList, drawMin, drawMax, (drawMax.Y - drawMin.Y) * 0.5f, ImGui.GetColorU32(stroke), 1f);
         var emojiSize = ReactionChipEmoji * scale;
         var emojiMin = new Vector2(min.X + 11f * scale, centerY - emojiSize * 0.5f);
         EmojiImages.TryDraw(drawList, ChirperReactions.EmojiFile(kind), emojiMin,
-            emojiMin + new Vector2(emojiSize, emojiSize), 0xFFFFFFFFu);
+            emojiMin + new Vector2(emojiSize, emojiSize), ImGui.GetColorU32(new Vector4(1f, 1f, 1f, alpha)));
         Typography.Draw(drawList, new Vector2(emojiMin.X + emojiSize + 5f * scale, centerY - countSize.Y * 0.5f),
             countText, ink, ChipCountStyle);
+        if (!interactive)
+        {
+            return false;
+        }
+
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
         HoverTooltip.Show(new Rect(min, max), ChirperReactions.Label(kind), HoverLabelSide.Above);
-        if (UiInteract.Click(min, max, hovered))
-        {
-            store.ToggleReaction(post, kind);
-        }
+        return UiInteract.Click(min, max, hovered);
     }
+
+    private static Vector4 Faded(Vector4 color, float alpha) => Palette.WithAlpha(color, color.W * alpha);
 
     private void DrawReactionPicker(PostDto post, float left, float right, float bottom)
     {
