@@ -269,11 +269,11 @@ pixel or two.
 
 **Animated frames.** Export an animated WebP or an APNG and upload it like any other frame; the
 console marks it Animated and the client plays it wherever the face appears, every copy on screen in
-step with one shared clock. Two limits sit on top of the static ones: **512 x 512 at most** and **32
+step with one shared clock. Two limits sit on top of the static ones: **512 x 512 at most** and **128
 frames at most**, with the 2 MB cap unchanged, so keep the loop short and let the resting pose carry
 the design. Every frame stays resident in video memory while the face is on screen (a 256 px loop of
-32 frames costs about 8 MB, and the client resamples the loop to the size it draws, same as a still),
-which is why the caps are tight. GIF is refused on purpose: its 1-bit alpha turns a feathered edge
+128 frames costs about 32 MB, and the client resamples the loop to the size it draws, same as a
+still), which is why the caps are tight, and the 2 MB file cap is what keeps a long 512 px loop out. GIF is refused on purpose: its 1-bit alpha turns a feathered edge
 into a jagged cutout. A frame drawn below the 15 px radius floor is skipped, animated or not.
 
 ---
