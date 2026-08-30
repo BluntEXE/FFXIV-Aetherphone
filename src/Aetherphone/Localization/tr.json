@@ -4958,6 +4958,7 @@
   "changelog.r1014.9": "Uygulamalar artık daha açılırken dokunmalara yanıt veriyor ve açılışın ortasında ana ekran göstergesinde kaydırmak, animasyonun bitmesini beklemeden onları hemen geri gönderiyor",
   "changelog.r1014.10": "Bir uygulamayı imleçle küçültmek için ana ekran göstergesini yukarı sürükleyin, sonra kapatmak ya da yerine bırakmak için elinizi çekin",
   "changelog.r1014.11": "Ana ekran simgeleri artık bir uygulama içlerinden büyürken soluyor ve uygulamanın içeriği ancak kartı okunacak kadar büyüdüğünde görünüyor",
+  "changelog.r1014.13": "Uygulama açılışı iyileştirildi: duvar kağıdı artık büyüyen uygulama kartının arkasında yalnızca kararmak yerine yakınlaşıp bulanıklaşıyor",
   "changelog.r1014.12": "Bir Chirper gönderisine kimlerin tepki verdiği artık gönderinin Daha fazla menüsündeki Tepkileri gör seçeneğinde",
   "changelog.r1013.0": "Chirper yeniden tasarlandı: Ana sayfa, Keşfet, Etkinlik ve Profil sekmeleri, kenardan kenara gönderiler, yanıt zincirleri ve yeni bir yazma düğmesi",
   "changelog.r1013.1": "Chirper artık gönderilerde profil fotoğraflarını, profillerde bir afişi ve tepki listesinde herkesin hangi tepkiyi bıraktığını gösteriyor",

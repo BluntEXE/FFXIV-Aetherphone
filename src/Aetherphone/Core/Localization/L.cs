@@ -1649,6 +1649,8 @@ internal static class L
                 "Drag the home indicator upward to shrink an app with the cursor, then let go to close it or drop it back into place"),
             new("changelog.r1014.11",
                 "The home screen icons now fade away while an app grows out of them, and the app's content only appears once its card is large enough to read"),
+            new("changelog.r1014.13",
+                "Improved app opening: the wallpaper now zooms and blurs behind the growing app card instead of only dimming"),
             new("changelog.r1014.0",
                 "Fixed Chirper no longer offering the Translate link on posts and replies written in another language"),
             new("changelog.r1014.1",

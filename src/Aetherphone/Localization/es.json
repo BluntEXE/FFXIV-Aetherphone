@@ -4958,6 +4958,7 @@
   "changelog.r1014.9": "Las apps ya responden a los toques mientras todavía se están abriendo, y un deslizamiento sobre el indicador de inicio a mitad de apertura las devuelve de inmediato en lugar de esperar a que termine la animación",
   "changelog.r1014.10": "Arrastra el indicador de inicio hacia arriba para encoger una app con el cursor y suéltalo para cerrarla o dejarla caer de vuelta en su sitio",
   "changelog.r1014.11": "Los iconos de la pantalla de inicio ahora se desvanecen mientras una app crece desde ellos, y el contenido de la app solo aparece cuando su tarjeta es lo bastante grande para leerse",
+  "changelog.r1014.13": "Apertura de apps mejorada: el fondo de pantalla ahora se acerca y se desenfoca detrás de la tarjeta de la app mientras crece, en lugar de solo oscurecerse",
   "changelog.r1014.12": "Quién reaccionó a una publicación de Chirper ahora está en Ver reacciones, dentro del menú Más de la publicación",
   "changelog.r1013.0": "Chirper rediseñado: pestañas de Inicio, Explorar, Actividad y Perfil, publicaciones de borde a borde, hilos de respuestas y una nueva píldora para escribir",
   "changelog.r1013.1": "Chirper ahora muestra fotos de perfil en las publicaciones, un banner en los perfiles y qué reacción dejó cada persona en la lista",

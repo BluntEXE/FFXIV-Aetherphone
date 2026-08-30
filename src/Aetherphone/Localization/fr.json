@@ -4958,6 +4958,7 @@
   "changelog.r1014.9": "Les apps répondent désormais aux touches pendant qu'elles s'ouvrent encore, et un balayage sur l'indicateur d'accueil en pleine ouverture les renvoie aussitôt au lieu d'attendre la fin de l'animation",
   "changelog.r1014.10": "Faites glisser l'indicateur d'accueil vers le haut pour rétrécir une app avec le curseur, puis relâchez pour la fermer ou la laisser retomber à sa place",
   "changelog.r1014.11": "Les icônes de l'écran d'accueil s'estompent désormais pendant qu'une app grandit depuis l'une d'elles, et le contenu de l'app n'apparaît qu'une fois sa carte assez grande pour être lue",
+  "changelog.r1014.13": "Ouverture des apps améliorée : le fond d'écran zoome et se floute désormais derrière la carte de l'app qui grandit, au lieu de seulement s'assombrir",
   "changelog.r1014.12": "Qui a réagi à une publication Chirper se trouve désormais sous Voir les réactions, dans le menu Plus de la publication",
   "changelog.r1013.0": "Chirper redessiné : onglets Accueil, Explorer, Activité et Profil, publications bord à bord, fils de réponses et une nouvelle pastille de rédaction",
   "changelog.r1013.1": "Chirper affiche maintenant les photos de profil sur les publications, une bannière sur les profils et la réaction laissée par chaque personne dans la liste",

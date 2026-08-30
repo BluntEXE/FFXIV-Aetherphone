@@ -4958,6 +4958,7 @@
   "changelog.r1014.9": "Apps now answer taps while they are still opening, and a swipe on the home indicator mid-open sends them straight back instead of waiting for the animation to finish",
   "changelog.r1014.10": "Drag the home indicator upward to shrink an app with the cursor, then let go to close it or drop it back into place",
   "changelog.r1014.11": "The home screen icons now fade away while an app grows out of them, and the app's content only appears once its card is large enough to read",
+  "changelog.r1014.13": "Improved app opening: the wallpaper now zooms and blurs behind the growing app card instead of only dimming",
   "changelog.r1014.12": "Who reacted to a Chirper post now lives under View reactions in the post's More menu",
   "changelog.r1013.0": "Redesigned Chirper around Home, Explore, Activity and Profile tabs, with edge to edge posts, threaded replies and a new compose pill",
   "changelog.r1013.1": "Chirper now shows profile pictures on posts, a banner on profiles, and which reaction each person left in the likers list",
