@@ -1641,6 +1641,8 @@ internal static class L
     {
         public static readonly LocString[] Release1014 =
         {
+            new("changelog.r1014.8",
+                "Added three new phone cases: Emet-Selch, Bubbles and Warrior, contributed by mapleterra and kingzafar"),
             new("changelog.r1014.0",
                 "Fixed Chirper no longer offering the Translate link on posts and replies written in another language"),
             new("changelog.r1014.1",
@@ -1657,8 +1659,6 @@ internal static class L
                 "Fixed long Slots banners and the jackpot hint clipping at the cabinet edge, they now glide across instead"),
             new("changelog.r1014.7",
                 "The Slots reel window now shakes, flashes gold and runs a chase of marquee bulbs when the jackpot lands"),
-            new("changelog.r1014.8",
-                "Added three new phone cases: Emet-Selch, Bubbles and Warrior, contributed by mapleterra and kingzafar"),
         };
 
         public static readonly LocString[] Release1013 =
