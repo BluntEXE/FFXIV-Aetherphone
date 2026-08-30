@@ -1643,6 +1643,12 @@ internal static class L
         {
             new("changelog.r1014.8",
                 "Added three new phone cases: Emet-Selch, Bubbles and Warrior, contributed by mapleterra and kingzafar"),
+            new("changelog.r1014.9",
+                "Apps now answer taps while they are still opening, and a swipe on the home indicator mid-open sends them straight back instead of waiting for the animation to finish"),
+            new("changelog.r1014.10",
+                "Drag the home indicator upward to shrink an app with the cursor, then let go to close it or drop it back into place"),
+            new("changelog.r1014.11",
+                "The home screen icons now fade away while an app grows out of them, and the app's content only appears once its card is large enough to read"),
             new("changelog.r1014.0",
                 "Fixed Chirper no longer offering the Translate link on posts and replies written in another language"),
             new("changelog.r1014.1",
