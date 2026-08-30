@@ -356,29 +356,33 @@ internal sealed class DynamicIsland
             Palette.WithAlpha(MusicAccent, 0.9f * alpha), 0.8f);
         var active = alpha > ControlThreshold;
         var controlY = top + 66f * scale;
-        var consumed = false;
-        if (playback.HasQueue)
+        var previousCenter = new Vector2(centerX - 46f * scale, controlY);
+        var nextCenter = new Vector2(centerX + 46f * scale, controlY);
+        var playCenter = new Vector2(centerX, controlY);
+        var sideRadius = 16f * scale;
+        var playRadius = 18f * scale;
+        var hasQueue = playback.HasQueue;
+        var consumed = active && (TransportButton.Hovered(playCenter, playRadius) ||
+                                  hasQueue && (TransportButton.Hovered(previousCenter, sideRadius) ||
+                                               TransportButton.Hovered(nextCenter, sideRadius)));
+        if (hasQueue)
         {
-            if (TransportButton.Draw(new Vector2(centerX - 46f * scale, controlY), 16f * scale,
-                    TransportAction.Previous, MusicAccent, Ink, alpha, active))
+            if (TransportButton.Draw(previousCenter, sideRadius, TransportAction.Previous, MusicAccent, Ink, alpha,
+                    active))
             {
                 playback.Previous();
-                consumed = true;
             }
 
-            if (TransportButton.Draw(new Vector2(centerX + 46f * scale, controlY), 16f * scale, TransportAction.Next,
-                    MusicAccent, Ink, alpha, active))
+            if (TransportButton.Draw(nextCenter, sideRadius, TransportAction.Next, MusicAccent, Ink, alpha, active))
             {
                 playback.Next();
-                consumed = true;
             }
         }
 
-        if (TransportButton.Draw(new Vector2(centerX, controlY), 18f * scale,
+        if (TransportButton.Draw(playCenter, playRadius,
                 playback.IsPlaying ? TransportAction.Pause : TransportAction.Play, MusicAccent, Ink, alpha, active))
         {
             playback.TogglePlayPause();
-            consumed = true;
         }
 
         if (active)

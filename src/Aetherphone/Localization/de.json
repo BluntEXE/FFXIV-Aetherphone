@@ -4946,6 +4946,7 @@
   "changelog.r1010.15": "Doom ist neu in Spiele: Die echte Engine läuft auf dem Telefon im Vollbild-Querformat, gespielt auf der Tastatur mit WASD, den Pfeiltasten oder einem Zug zum Drehen, Leertaste, E und 1 bis 7",
   "changelog.r1010.16": "Word Run ist neu in Spiele: Errate Wörter mit fünf Buchstaben eines nach dem anderen, bis dich eins schlägt, schnelle Lösungen bringen mehr, mit Wortlisten in fünf Sprachen plus Namen aus dem Spiel",
   "changelog.r1010.17": "Tetris bekommt neben Klassisch ein Regelwerk Modern mit SRS-Kicks, Lock Delay, T-Spins, Back-to-Back- und Combo-Wertung und eigener Bestleistung",
+  "changelog.r1015.0": "Behoben, dass Zurück, Weiter oder Pause auf der Musikkarte der Dynamic Island die Musik-App öffneten, statt die Wiedergabe zu steuern",
   "changelog.r1014.0": "Behoben, dass Chirper bei Beiträgen und Antworten in einer anderen Sprache keinen Übersetzen-Link mehr anbot",
   "changelog.r1014.1": "Ein Tipp auf die Reaktionspille unter einem Chirper-Beitrag schließt sich jetzt der Reaktion an, und eine Pille mit mehreren Reaktionen klappt zu je einem Chip pro Reaktion auf, damit du die gewünschte auswählen kannst",
   "changelog.r1014.2": "Behoben, dass das Telefon nach jedem Drehen ins Querformat und zurück ein Stück von seinem Platz wanderte, jede Ausrichtung merkt sich jetzt ihre eigene Ruheposition",

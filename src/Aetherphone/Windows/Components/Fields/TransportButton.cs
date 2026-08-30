@@ -20,7 +20,7 @@ internal static class TransportButton
         var drawList = drawListOverride ?? ImGui.GetWindowDrawList();
         var min = center - new Vector2(radius, radius);
         var max = center + new Vector2(radius, radius);
-        var hovered = active && UiInteract.Hover(min, max);
+        var hovered = active && Hovered(center, radius);
         var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
         var press = PressFx.Scale(PressId(action), pressed, 0.90f);
         if (hovered)
@@ -53,6 +53,9 @@ internal static class TransportButton
 
         return UiInteract.Click(min, max, hovered);
     }
+
+    public static bool Hovered(Vector2 center, float radius) =>
+        UiInteract.Hover(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
 
     private static string PressId(TransportAction action) => action switch
     {

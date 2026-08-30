@@ -4946,6 +4946,7 @@
   "changelog.r1010.15": "Doom llega a Juegos: el motor original corre en el teléfono a pantalla completa en horizontal, con teclado: WASD, las flechas o un arrastre para girar, Espacio, E y 1 a 7",
   "changelog.r1010.16": "Word Run llega a Juegos: adivina palabras de cinco letras una tras otra hasta que una te venza, resolver rápido paga más, con bancos de palabras en cinco idiomas más nombres del juego",
   "changelog.r1010.17": "Tetris gana un reglamento Moderno junto a Clásico, con kicks SRS, retardo de bloqueo, T-spins, puntuación por back-to-back y combos, y su propio récord",
+  "changelog.r1015.0": "Corregido que al pulsar Anterior, Siguiente o Pausa en la tarjeta de música de la Dynamic Island se abriera la app Música en lugar de controlar la reproducción",
   "changelog.r1014.0": "Corregido que Chirper ya no ofreciera el enlace Traducir en publicaciones y respuestas escritas en otro idioma",
   "changelog.r1014.1": "Tocar la píldora de reacciones bajo una publicación de Chirper ahora se suma a su reacción, y una píldora con varias reacciones se despliega en un chip por reacción para que elijas cuál añadir",
   "changelog.r1014.2": "Corregido que el teléfono se alejara un poco de su sitio con cada giro a horizontal y vuelta, ahora cada orientación recuerda su propia posición de reposo",

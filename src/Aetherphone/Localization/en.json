@@ -4946,6 +4946,7 @@
   "changelog.r1010.15": "Added Doom to Games: the real engine runs on the phone in fullscreen landscape, played on the keyboard with WASD, the arrows or a drag to turn, Space, E and 1 to 7",
   "changelog.r1010.16": "Added Word Run to Games: guess five-letter words one after another until one beats you, faster solves pay more, with word banks in five languages plus names from the game",
   "changelog.r1010.17": "Tetris gains a Modern ruleset beside Classic, with SRS kicks, lock delay, T-spins, back-to-back and combo scoring, and its own best score",
+  "changelog.r1015.0": "Fixed an issue where pressing Previous, Next or Pause on the Dynamic Island's music card opened the Music app instead of controlling playback",
   "changelog.r1014.0": "Fixed Chirper no longer offering the Translate link on posts and replies written in another language",
   "changelog.r1014.1": "Tapping the reaction pill under a Chirper post now joins its reaction, and a pill holding several reactions expands into one chip per reaction so you can pick the one to add",
   "changelog.r1014.2": "Fixed the phone creeping away from its place after each turn to landscape and back, each orientation now remembers its own resting spot",

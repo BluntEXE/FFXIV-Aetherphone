@@ -1639,6 +1639,12 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release1015 =
+        {
+            new("changelog.r1015.0",
+                "Fixed an issue where pressing Previous, Next or Pause on the Dynamic Island's music card opened the Music app instead of controlling playback"),
+        };
+
         public static readonly LocString[] Release1014 =
         {
             new("changelog.r1014.8",

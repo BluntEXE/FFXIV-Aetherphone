@@ -4946,6 +4946,7 @@
   "changelog.r1010.15": "Oyunlar'a Doom eklendi: gerçek motor telefonda yatay tam ekran çalışıyor, klavyeyle oynanıyor: WASD, dönmek için ok tuşları ya da sürükleme, Boşluk, E ve 1'den 7'ye",
   "changelog.r1010.16": "Oyunlar'a Word Run eklendi: beş harfli kelimeleri seni yenen çıkana kadar art arda tahmin et, hızlı çözümler daha çok puan getiriyor, beş dilde kelime listesi ve oyundan adlar var",
   "changelog.r1010.17": "Tetris'e Klasik'in yanına Modern kural seti geldi: SRS kick'ler, kilit gecikmesi, T-spin'ler, back-to-back ve kombo puanı ve kendi rekoru",
+  "changelog.r1015.0": "Dynamic Island müzik kartında Önceki, Sonraki veya Duraklat düğmelerine basıldığında oynatmayı kontrol etmek yerine Müzik uygulamasının açılması düzeltildi",
   "changelog.r1014.0": "Chirper'ın başka bir dilde yazılmış gönderi ve yanıtlarda artık Çevir bağlantısını sunmaması düzeltildi",
   "changelog.r1014.1": "Chirper gönderisinin altındaki tepki balonuna dokunmak artık o tepkiye katılıyor, birden fazla tepki içeren balon ise hangisini ekleyeceğini seçebilmen için her tepki için ayrı bir çipe açılıyor",
   "changelog.r1014.2": "Telefonun yataya çevrilip geri döndürüldüğünde her seferinde yerinden biraz kayması düzeltildi, artık her yön kendi durma noktasını hatırlıyor",
