@@ -109,7 +109,7 @@ internal sealed class ShellTransitionRenderer
         }
 
         var warped = homeTransform.Map(rest);
-        var card = CardRect(warped, screen, raw).Translate(navigation.MotionDrift * raw);
+        var card = KeepInside(CardRect(warped, screen, raw).Translate(navigation.MotionDrift * raw), screen);
         var scale = UiScale.Current;
         var iconRadius = MathF.Min(MathF.Min(rest.Width, rest.Height) * IconRadiusFactor, IconRadiusCapUnits * scale);
         var rounding = iconRadius + (screenRadius - iconRadius) * raw;
@@ -186,6 +186,30 @@ internal sealed class ShellTransitionRenderer
         }
 
         return new Rect(min, max);
+    }
+
+    private static Rect KeepInside(Rect card, Rect screen)
+    {
+        var shift = Vector2.Zero;
+        if (card.Min.X < screen.Min.X)
+        {
+            shift.X = screen.Min.X - card.Min.X;
+        }
+        else if (card.Max.X > screen.Max.X)
+        {
+            shift.X = screen.Max.X - card.Max.X;
+        }
+
+        if (card.Min.Y < screen.Min.Y)
+        {
+            shift.Y = screen.Min.Y - card.Min.Y;
+        }
+        else if (card.Max.Y > screen.Max.Y)
+        {
+            shift.Y = screen.Max.Y - card.Max.Y;
+        }
+
+        return shift == Vector2.Zero ? card : card.Translate(shift);
     }
 
     private void DrawIconVeil(ImDrawListPtr drawList, IPhoneApp over, Rect card, float rounding, float raw)
