@@ -2230,6 +2230,8 @@
   "aethergram.removeCommentConfirmMessage": "Bu yorum gönderinden kaldırılsın mı? Bu işlem geri alınamaz.",
   "aethergram.removeComment": "Yorumu kaldır",
   "aethergram.like": "Beğen",
+  "aethergram.addCommentFor": "{0} için yorum ekle…",
+  "aethergram.startConversation": "Sohbeti başlat.",
   "aethergram.comment": "Yorum yap",
   "aethergram.more": "Daha fazla",
   "aethergram.home": "Ana sayfa",

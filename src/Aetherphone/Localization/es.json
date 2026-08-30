@@ -2230,6 +2230,8 @@
   "aethergram.removeCommentConfirmMessage": "¿Quitar este comentario de tu publicación? No se puede deshacer.",
   "aethergram.removeComment": "Quitar comentario",
   "aethergram.like": "Me gusta",
+  "aethergram.addCommentFor": "Añade un comentario para {0}…",
+  "aethergram.startConversation": "Inicia la conversación.",
   "aethergram.comment": "Comentar",
   "aethergram.more": "Más",
   "aethergram.home": "Inicio",
