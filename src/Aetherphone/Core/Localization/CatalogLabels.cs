@@ -77,6 +77,9 @@ internal static class CatalogLabels
             "Cheshire" => Loc.T(L.Catalogs.CaseCheshire),
             "AliceInWonderland" => Loc.T(L.Catalogs.CaseAliceInWonderland),
             "Suzaku" => Loc.T(L.Catalogs.CaseSuzaku),
+            "Warrior" => Loc.T(L.Catalogs.CaseWarrior),
+            "EmetSelch" => Loc.T(L.Catalogs.CaseEmetSelch),
+            "Bubbles" => Loc.T(L.Catalogs.CaseBubbles),
             _ => identifier,
         };
 

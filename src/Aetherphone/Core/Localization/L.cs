@@ -1657,6 +1657,8 @@ internal static class L
                 "Fixed long Slots banners and the jackpot hint clipping at the cabinet edge, they now glide across instead"),
             new("changelog.r1014.7",
                 "The Slots reel window now shakes, flashes gold and runs a chase of marquee bulbs when the jackpot lands"),
+            new("changelog.r1014.8",
+                "Added three phone cases: Warrior, Emet-Selch and Bubbles, contributed by kingzafar and mapleterra"),
         };
 
         public static readonly LocString[] Release1013 =
@@ -5790,6 +5792,9 @@ internal static class L
         public static readonly LocString CaseCheshire = new("catalog.case.cheshire", "Cheshire");
         public static readonly LocString CaseAliceInWonderland = new("catalog.case.aliceinwonderland", "Alice in Wonderland");
         public static readonly LocString CaseSuzaku = new("catalog.case.suzaku", "Suzaku");
+        public static readonly LocString CaseWarrior = new("catalog.case.warrior", "Warrior");
+        public static readonly LocString CaseEmetSelch = new("catalog.case.emetselch", "Emet-Selch");
+        public static readonly LocString CaseBubbles = new("catalog.case.bubbles", "Bubbles");
         public static readonly LocString RingtoneSilent = new("catalog.ringtone.silent", "Silent");
         public static readonly LocString RadioLofi = new("catalog.radio.lofi", "Lofi");
         public static readonly LocString RadioChillout = new("catalog.radio.chillout", "Chillout");
