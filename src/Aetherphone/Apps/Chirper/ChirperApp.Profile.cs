@@ -349,29 +349,9 @@ internal sealed partial class ChirperApp
     }
 
     private static float DrawStat(ImDrawListPtr drawList, float left, float top, float lineHeight, string value,
-        string label, bool tappable, float limit, out bool clicked)
-    {
-        var scale = UiScale.Current;
-        var valueSize = Typography.Measure(value, StatValueStyle);
-        var labelFitted = Typography.FitText(label, MathF.Max(1f, limit - left - valueSize.X - 5f * scale),
-            StatLabelStyle);
-        var labelSize = Typography.Measure(labelFitted, StatLabelStyle);
-        var min = new Vector2(left, top);
-        var max = new Vector2(left + valueSize.X + 5f * scale + labelSize.X, top + lineHeight);
-        var hovered = tappable && UiInteract.Hover(min, max);
-        Typography.Draw(drawList, min, value, ChirperInk.TitleInk, StatValueStyle);
-        Typography.Draw(drawList, new Vector2(min.X + valueSize.X + 5f * scale, top + (lineHeight - labelSize.Y) * 0.5f),
-            labelFitted, ChirperInk.MutedInk, StatLabelStyle);
-        if (hovered)
-        {
-            drawList.AddLine(new Vector2(min.X, max.Y), new Vector2(max.X, max.Y),
-                ImGui.GetColorU32(ChirperInk.MutedInk), 1f);
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        clicked = tappable && UiInteract.Click(min, max, hovered);
-        return max.X;
-    }
+        string label, bool tappable, float limit, out bool clicked) =>
+        SocialChrome.DrawStat(drawList, left, top, lineHeight, value, label, tappable, limit, ChirperInk.Shared,
+            StatValueStyle, StatLabelStyle, out clicked);
 
     private void DrawProfileActions(ImDrawListPtr drawList, UserDto user, float left, float right, float top)
     {
@@ -431,36 +411,11 @@ internal sealed partial class ChirperApp
         }
     }
 
-    private static bool DrawGradientPill(ImDrawListPtr drawList, Rect rect, string label, float rounding)
-    {
-        var hovered = UiInteract.Hover(rect.Min, rect.Max);
-        ChirperPill.PaintAccent(drawList, rect.Min, rect.Max, rounding, hovered);
-        var fitted = Typography.FitText(label, MathF.Max(1f, rect.Width - rect.Height), FollowPillStyle);
-        Typography.DrawCentered(drawList, rect.Center, fitted, ChirperInk.White, FollowPillStyle);
-        if (hovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
+    private static bool DrawGradientPill(ImDrawListPtr drawList, Rect rect, string label, float rounding) =>
+        SocialPill.Accent(drawList, rect, label, ChirperInk.Shared, FollowPillStyle, rounding);
 
-        return UiInteract.Click(rect.Min, rect.Max, hovered);
-    }
-
-    private static bool DrawOutlinePill(ImDrawListPtr drawList, Rect rect, string label, float rounding)
-    {
-        var scale = UiScale.Current;
-        var hovered = UiInteract.Hover(rect.Min, rect.Max);
-        Squircle.Fill(drawList, rect.Min, rect.Max, rounding,
-            ImGui.GetColorU32(hovered ? ChirperInk.AccentWash : OutlinePillFill));
-        Squircle.Stroke(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(ChirperInk.AccentLink), 1.5f * scale);
-        var fitted = Typography.FitText(label, MathF.Max(1f, rect.Width - rect.Height * 0.6f), FollowPillStyle);
-        Typography.DrawCentered(drawList, rect.Center, fitted, ChirperInk.AccentLink, FollowPillStyle);
-        if (hovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        return UiInteract.Click(rect.Min, rect.Max, hovered);
-    }
+    private static bool DrawOutlinePill(ImDrawListPtr drawList, Rect rect, string label, float rounding) =>
+        SocialPill.Outline(drawList, rect, label, ChirperInk.Shared, FollowPillStyle, rounding, OutlinePillFill);
 
     private void DrawProfileTabs(bool showLikes)
     {
@@ -901,55 +856,15 @@ internal sealed partial class ChirperApp
     }
 
     private static bool DrawTopBarButton(ImDrawListPtr drawList, Vector2 center, float radius, string tooltip,
-        bool filter, bool highlighted)
-    {
-        var scale = UiScale.Current;
-        var extent = new Vector2(radius, radius);
-        var hovered = UiInteract.Hover(center - extent, center + extent);
-        if (hovered || highlighted)
-        {
-            drawList.AddCircleFilled(center, radius,
-                ImGui.GetColorU32(highlighted ? ChirperInk.MineFill : ChirperInk.FieldFill), 32);
-            if (hovered)
-            {
-                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-            }
-        }
-
-        var ink = highlighted ? ChirperInk.MineInk : GlassPillInk;
-        if (filter)
-        {
-            PhoneIcon.Draw(drawList, center, PhoneIcons.AdjustmentsHorizontal, ink, 18f * scale);
-        }
-        else
-        {
-            PhoneIcon.Draw(drawList, center, PhoneIcons.Refresh, ink, 18f * scale);
-        }
-
-        HoverTooltip.Show(new Rect(center - extent, center + extent), tooltip, HoverLabelSide.Below);
-        return UiInteract.Click(center - extent, center + extent, hovered);
-    }
+        bool filter, bool highlighted) =>
+        SocialChrome.DrawHeaderIcon(drawList, center, radius,
+            filter ? PhoneIcons.AdjustmentsHorizontal : PhoneIcons.Refresh, 18f, tooltip, ChirperInk.Shared,
+            GlassPillInk, highlighted);
 
     private static void DrawBellBadge(Vector2 bellCenter, int count)
     {
-        if (count <= 0)
-        {
-            return;
-        }
-
         var scale = UiScale.Current;
-        var drawList = ImGui.GetWindowDrawList();
-        var label = count > 99 ? "99+" : count.ToString(Loc.Culture);
-        var size = Typography.Measure(label, BadgeStyle);
-        var height = 16f * scale;
-        var width = MathF.Max(height, size.X + 9f * scale);
-        var center = bellCenter + new Vector2(10f * scale, -10f * scale);
-        var min = new Vector2(center.X - width * 0.5f, center.Y - height * 0.5f);
-        var max = new Vector2(center.X + width * 0.5f, center.Y + height * 0.5f);
-        var border = new Vector2(2f * scale, 2f * scale);
-        Squircle.Fill(drawList, min - border, max + border, (height + 4f * scale) * 0.5f,
-            ImGui.GetColorU32(ChirperInk.BackdropTop));
-        Squircle.Fill(drawList, min, max, height * 0.5f, ImGui.GetColorU32(ChirperInk.Accent));
-        Typography.DrawCentered(drawList, center, label, ChirperInk.White, BadgeStyle);
+        SocialChrome.DrawCountBadge(ImGui.GetWindowDrawList(), bellCenter + new Vector2(10f * scale, -10f * scale),
+            count, ChirperInk.Shared);
     }
 }

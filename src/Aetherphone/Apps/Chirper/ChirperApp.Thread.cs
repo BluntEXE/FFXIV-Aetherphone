@@ -301,7 +301,7 @@ internal sealed partial class ChirperApp
         LocPlural entry, bool tappable, out bool clicked)
     {
         var scale = UiScale.Current;
-        var number = CompactCount(count);
+        var number = CountText.Compact(count);
         var formatted = Loc.Plural(entry, count);
         var word = formatted.StartsWith(number, StringComparison.Ordinal)
             ? formatted[number.Length..].Trim()
@@ -342,7 +342,7 @@ internal sealed partial class ChirperApp
         if (DrawSpreadTarget(drawList, rowLeft + slot, slot, centerY, height, ActionGlyph.Rechirp, string.Empty, repostInk,
                 ChirperInk.RechirpGreen, Loc.T(post.MyReposted ? L.Chirper.Unrepost : L.Chirper.Repost)))
         {
-            actions.Open(post.Id, ChirperActionReveal.Panel.Repost);
+            actions.Open(post.Id, ChirperPanel.Repost);
         }
 
         var reactMin = new Vector2(rowLeft + slot * 2f, top);
@@ -369,7 +369,7 @@ internal sealed partial class ChirperApp
         HoverTooltip.Show(new Rect(reactMin, reactMax), Loc.T(L.Chirper.React), HoverLabelSide.Above);
         if (UiInteract.Click(reactMin, reactMax, reactHovered))
         {
-            actions.Open(post.Id, ChirperActionReveal.Panel.Picker);
+            actions.Open(post.Id, ChirperPanel.Picker);
         }
 
         if (DrawSpreadTarget(drawList, rowLeft + slot * 3f, slot, centerY, height, ActionGlyph.Share, string.Empty,
@@ -380,11 +380,11 @@ internal sealed partial class ChirperApp
 
         DrawHairline(drawList, rowLeft, rowLeft + rowWidth, top + height);
         var popoverBottom = top - 4f * scale;
-        if (actions.IsShowing(post.Id, ChirperActionReveal.Panel.Picker))
+        if (actions.IsShowing(post.Id, ChirperPanel.Picker))
         {
             DrawReactionPicker(post, rowLeft + CellPadX * scale, rowLeft + rowWidth - CellPadX * scale, popoverBottom);
         }
-        else if (actions.IsShowing(post.Id, ChirperActionReveal.Panel.Repost))
+        else if (actions.IsShowing(post.Id, ChirperPanel.Repost))
         {
             DrawRepostMenu(post, rowLeft + slot, popoverBottom);
         }

@@ -13,7 +13,7 @@ namespace Aetherphone.Apps.Chirper;
 
 internal sealed partial class ChirperApp
 {
-    private const float BackChipRadius = 17f;
+    private const float BackChipRadius = SocialChrome.BackChipRadius;
     private const float UserRowHeight = 62f;
     private const float FollowPillHeight = 31f;
     private const float ActivityIconRadius = 19f;
@@ -33,6 +33,8 @@ internal sealed partial class ChirperApp
     private static readonly TextStyle UserNameStyle = new(0.97f, FontWeight.SemiBold);
     private static readonly TextStyle UserSubStyle = new(0.87f, FontWeight.Regular);
     private static readonly TextStyle SmallPillStyle = new(0.83f, FontWeight.Bold);
+    private static readonly SocialUserRowStyle UserRowStyle = new(UserRowHeight, FeedAvatarRadius, CellPadX, AvatarGap,
+        FollowPillHeight, UserNameStyle, UserSubStyle, RowHover);
     private static readonly TextStyle SectionLabelStyle = new(0.87f, FontWeight.Bold);
     private static readonly TextStyle TagNameStyle = new(1f, FontWeight.SemiBold);
     private static readonly TextStyle TagCountStyle = new(0.87f, FontWeight.Regular);
@@ -45,8 +47,6 @@ internal sealed partial class ChirperApp
     private static readonly TextStyle EditHintStyle = new(0.8f, FontWeight.SemiBold);
     private static readonly TextStyle EditFootStyle = new(0.83f, FontWeight.Regular);
     private static readonly TextStyle SaveWordStyle = new(1.03f, FontWeight.Bold);
-    private static readonly Vector4 BackChipFill = new(1f, 1f, 1f, 0.07f);
-    private static readonly Vector4 BackChipHover = new(1f, 1f, 1f, 0.13f);
     private static readonly Vector4 SolidPillFill = new(0.949f, 0.961f, 0.980f, 1f);
     private static readonly Vector4 SolidPillInk = new(0.043f, 0.078f, 0.125f, 1f);
     private static readonly Vector4 GlassPillInk = new(0.875f, 0.902f, 0.941f, 1f);
@@ -72,57 +72,9 @@ internal sealed partial class ChirperApp
     private volatile int editOutcome;
 
     private float DrawScreenHeader(Rect area, string title, float trailingReserve = 0f, string subtitle = "",
-        bool showBack = true, TextStyle? titleStyle = null)
-    {
-        var scale = UiScale.Current;
-        var drawList = ImGui.GetWindowDrawList();
-        var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
-        var titleLeft = area.Min.X + CellPadX * scale;
-        if (showBack)
-        {
-            var chipRadius = BackChipRadius * scale;
-            var chipCenter = new Vector2(area.Min.X + 12f * scale + chipRadius, rowCenterY);
-            var hitHalf = 22f * scale;
-            var hitMin = chipCenter - new Vector2(hitHalf, hitHalf);
-            var hitMax = chipCenter + new Vector2(hitHalf, hitHalf);
-            var hovered = UiInteract.Hover(hitMin, hitMax);
-            drawList.AddCircleFilled(chipCenter, chipRadius, ImGui.GetColorU32(hovered ? BackChipHover : BackChipFill), 32);
-            PhoneIcon.Draw(drawList, chipCenter, PhoneIcons.ChevronLeft,
-                ChirperInk.TitleInk, 17f * scale);
-            if (hovered)
-            {
-                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-            }
-
-            if (UiInteract.Click(hitMin, hitMax, hovered))
-            {
-                back();
-            }
-
-            titleLeft = chipCenter.X + chipRadius + 10f * scale;
-        }
-
-        var titleRight = area.Max.X - CellPadX * scale - trailingReserve;
-        var style = titleStyle ?? ScreenTitleStyle;
-        var titleHeight = Typography.LineHeight(style);
-        var fitted = Typography.FitText(title, MathF.Max(1f, titleRight - titleLeft), style);
-        if (subtitle.Length == 0)
-        {
-            Typography.Draw(drawList, new Vector2(titleLeft, rowCenterY - titleHeight * 0.5f), fitted,
-                ChirperInk.TitleInk, style);
-        }
-        else
-        {
-            var subtitleHeight = Typography.LineHeight(ScreenSubtitleStyle);
-            var blockTop = rowCenterY - (titleHeight + subtitleHeight) * 0.5f;
-            Typography.Draw(drawList, new Vector2(titleLeft, blockTop), fitted, ChirperInk.TitleInk, style);
-            Typography.Draw(drawList, new Vector2(titleLeft, blockTop + titleHeight),
-                Typography.FitText(subtitle, MathF.Max(1f, titleRight - titleLeft), ScreenSubtitleStyle),
-                ChirperInk.MutedInk, ScreenSubtitleStyle);
-        }
-
-        return titleLeft;
-    }
+        bool showBack = true, TextStyle? titleStyle = null) =>
+        SocialChrome.DrawScreenHeader(area, title, ChirperInk.Shared, back, titleStyle ?? ScreenTitleStyle,
+            trailingReserve / UiScale.Current, subtitle, showBack);
 
     private void DrawDiscover(Rect area, bool root = false)
     {
@@ -134,17 +86,7 @@ internal sealed partial class ChirperApp
         {
             var chipRadius = BackChipRadius * scale;
             var chipCenter = new Vector2(area.Min.X + 14f * scale + chipRadius, rowCenterY);
-            var hitHalf = 22f * scale;
-            var hovered = UiInteract.Hover(chipCenter - new Vector2(hitHalf, hitHalf), chipCenter + new Vector2(hitHalf, hitHalf));
-            drawList.AddCircleFilled(chipCenter, chipRadius, ImGui.GetColorU32(hovered ? BackChipHover : BackChipFill), 32);
-            PhoneIcon.Draw(drawList, chipCenter, PhoneIcons.ChevronLeft,
-                ChirperInk.TitleInk, 17f * scale);
-            if (hovered)
-            {
-                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-            }
-
-            if (UiInteract.Click(chipCenter - new Vector2(hitHalf, hitHalf), chipCenter + new Vector2(hitHalf, hitHalf), hovered))
+            if (SocialChrome.DrawBackChip(drawList, chipCenter, chipRadius, ChirperInk.Shared))
             {
                 back();
             }
@@ -291,28 +233,13 @@ internal sealed partial class ChirperApp
         ImGui.Dummy(new Vector2(width, height));
     }
 
-    private static void DrawSectionLabel(string label)
-    {
-        var scale = UiScale.Current;
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var height = Typography.LineHeight(SectionLabelStyle) + 12f * scale;
-        Typography.Draw(ImGui.GetWindowDrawList(), new Vector2(origin.X + CellPadX * scale, origin.Y + 8f * scale),
-            Loc.Culture.TextInfo.ToUpper(label), ChirperInk.FaintInk, SectionLabelStyle);
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, height));
-    }
+    private static void DrawSectionLabel(string label) =>
+        SocialChrome.DrawSectionLabel(label, ChirperInk.Shared, SectionLabelStyle);
 
     private void DrawUserRow(UserDto user)
     {
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var height = UserRowHeight * scale;
-        var padX = CellPadX * scale;
-        var rowMax = new Vector2(origin.X + width, origin.Y + height);
-        var pillHeight = FollowPillHeight * scale;
         var state = SocialFeedStore.FollowStateOf(user);
         var pillLabel = user.IsMe ? string.Empty : state switch
         {
@@ -320,70 +247,35 @@ internal sealed partial class ChirperApp
             FollowState.Requested => Loc.T(L.Social.Requested),
             _ => Loc.T(L.Chirper.Follow),
         };
-        var pillWidth = pillLabel.Length > 0 ? Typography.Measure(pillLabel, SmallPillStyle).X + 30f * scale : 0f;
-        var pillMin = new Vector2(rowMax.X - padX - pillWidth, origin.Y + (height - pillHeight) * 0.5f);
-        var pillMax = new Vector2(rowMax.X - padX, pillMin.Y + pillHeight);
-        var tapMax = new Vector2(pillLabel.Length > 0 ? pillMin.X - 6f * scale : rowMax.X, rowMax.Y);
-        var rowHovered = UiInteract.Hover(origin, tapMax);
-        if (rowHovered)
-        {
-            drawList.AddRectFilled(origin, rowMax, ImGui.GetColorU32(RowHover));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        var radius = FeedAvatarRadius * scale;
-        var avatarCenter = new Vector2(origin.X + padX + radius, origin.Y + height * 0.5f);
-        var displayName = SocialIdentity.Name(user.DisplayName, user.Handle);
-        DrawAvatar(drawList, avatarCenter, radius, user.IsMe ? user.Name : displayName,
-            user.IsMe ? user.World : string.Empty, user.AvatarUrl, 0.95f, 32, Frames.Of(user.FrameId));
-        DrawReactionBadge(drawList, avatarCenter, radius, store.ReactionKindOf(user.Id));
-        var textLeft = avatarCenter.X + radius + AvatarGap * scale;
-        var textRight = pillLabel.Length > 0 ? pillMin.X - 10f * scale : rowMax.X - padX;
-        var textWidth = MathF.Max(1f, textRight - textLeft);
-        var nameHeight = Typography.LineHeight(UserNameStyle);
-        var subHeight = Typography.LineHeight(UserSubStyle);
-        var textTop = origin.Y + (height - nameHeight - subHeight - 2f * scale) * 0.5f;
-        UserName.DrawAuto(drawList, "chirper.row.name." + user.Id, displayName, user.Badges, user.ProfileBadges,
-            textLeft, textTop, textWidth, UserNameStyle, ChirperInk.TitleInk, theme);
+        var pillWidth = pillLabel.Length > 0 ? Typography.Measure(pillLabel, SmallPillStyle).X / scale + 30f : 0f;
         var regionCode = user.IsMe
             ? SocialRegion.EffectiveCode(configuration, gameData)
             : SocialRegion.Resolve(user.Region, user.World, gameData);
         var sub = user.Bio.Length > 0 && user.Handle.Length > 0
             ? $"@{user.Handle} · {user.Bio}"
             : SocialIdentity.ProfileMeta(user.Handle, regionCode);
-        Typography.Draw(drawList, new Vector2(textLeft, textTop + nameHeight + 2f * scale),
-            Typography.FitText(sub, textWidth, UserSubStyle), ChirperInk.MutedInk, UserSubStyle);
+        var row = SocialUserRow.Draw("chirper.row.name.", user, sub, pillWidth, UserRowStyle, ChirperInk.Shared, theme,
+            images, lodestone);
+        DrawReactionBadge(drawList, row.AvatarCenter, row.AvatarRadius, store.ReactionKindOf(user.Id));
         if (pillLabel.Length > 0)
         {
-            var pillHovered = UiInteract.Hover(pillMin, pillMax);
             var solid = state == FollowState.None;
-            var fill = solid ? (pillHovered ? ChirperInk.White : SolidPillFill) : pillHovered ? ChirperInk.ChipHover : GlassPillFill;
-            Squircle.Fill(drawList, pillMin, pillMax, pillHeight * 0.5f, ImGui.GetColorU32(fill));
-            if (!solid)
-            {
-                Squircle.Stroke(drawList, pillMin, pillMax, pillHeight * 0.5f, ImGui.GetColorU32(GlassPillStroke), 1f);
-            }
-
-            Typography.DrawCentered(drawList, (pillMin + pillMax) * 0.5f, pillLabel, solid ? SolidPillInk : GlassPillInk,
-                SmallPillStyle);
-            if (pillHovered)
-            {
-                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-            }
-
-            if (UiInteract.Click(pillMin, pillMax, pillHovered))
+            var rounding = row.Trailing.Height * 0.5f;
+            var clicked = solid
+                ? SocialPill.Flat(drawList, row.Trailing, pillLabel, SolidPillFill, ChirperInk.White, default,
+                    SolidPillInk, SmallPillStyle, rounding)
+                : SocialPill.Flat(drawList, row.Trailing, pillLabel, GlassPillFill, ChirperInk.ChipHover,
+                    GlassPillStroke, GlassPillInk, SmallPillStyle, rounding);
+            if (clicked)
             {
                 store.ToggleFollow(user);
             }
         }
 
-        if (UiInteract.Click(origin, tapMax, rowHovered))
+        if (row.Tapped)
         {
             OpenProfile(user.Id);
         }
-
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, height));
     }
 
     private void DrawUserList(Rect area, string sourceId, UserListKind kind)
@@ -565,8 +457,8 @@ internal sealed partial class ChirperApp
             root ? WordmarkStyle : ScreenTitleStyle);
         var rowTop = area.Min.Y + AppHeader.Height * scale;
         var row = new Rect(new Vector2(area.Min.X, rowTop), new Vector2(area.Max.X, rowTop + FeedTabRowHeight * scale));
-        var picked = DrawUnderlineTabs(row, Loc.T(L.Chirper.ActivityAll), Loc.T(L.Chirper.ActivityMentions),
-            mentionsOnly, ref activitySegment);
+        var picked = UnderlineTabs.Draw(row, Loc.T(L.Chirper.ActivityAll), Loc.T(L.Chirper.ActivityMentions),
+            mentionsOnly, ref activitySegment, ChirperInk.Shared, FeedTabsStyle);
         if (picked >= 0)
         {
             mentionsOnly = picked == 1;
@@ -602,41 +494,6 @@ internal sealed partial class ChirperApp
                 activityFeed.LoadOlder();
             }
         }
-    }
-
-    private static int DrawUnderlineTabs(Rect row, string leftLabel, string rightLabel, bool rightActive,
-        ref Spring slide)
-    {
-        var scale = UiScale.Current;
-        var drawList = ImGui.GetWindowDrawList();
-        var half = row.Width * 0.5f;
-        var leftRect = new Rect(row.Min, new Vector2(row.Min.X + half, row.Max.Y));
-        var rightRect = new Rect(new Vector2(row.Min.X + half, row.Min.Y), row.Max);
-        var leftHovered = UiInteract.Hover(leftRect.Min, leftRect.Max);
-        var rightHovered = UiInteract.Hover(rightRect.Min, rightRect.Max);
-        if (leftHovered || rightHovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        DrawFeedTabLabel(drawList, leftRect, leftLabel, !rightActive, leftHovered);
-        DrawFeedTabLabel(drawList, rightRect, rightLabel, rightActive, rightHovered);
-        var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
-        slide.Step(rightActive ? 1f : 0f, SegmentSmoothTime, delta);
-        var inset = CellPadX * scale;
-        var underlineWidth = half - inset;
-        var underlineLeft = row.Min.X + inset + slide.Value * (half - inset);
-        var underlineTop = row.Max.Y - FeedTabUnderline * scale;
-        Squircle.Fill(drawList, new Vector2(underlineLeft, underlineTop),
-            new Vector2(underlineLeft + underlineWidth, row.Max.Y), FeedTabUnderline * scale * 0.5f,
-            ImGui.GetColorU32(ChirperInk.Accent));
-        DrawHairline(drawList, row.Min.X, row.Max.X, row.Max.Y);
-        if (UiInteract.Click(leftRect.Min, leftRect.Max, leftHovered))
-        {
-            return 0;
-        }
-
-        return UiInteract.Click(rightRect.Min, rightRect.Max, rightHovered) ? 1 : -1;
     }
 
     private bool ShowsActivity(NotificationDto item)

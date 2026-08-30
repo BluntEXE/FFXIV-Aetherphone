@@ -79,8 +79,6 @@ internal sealed partial class ChirperApp : IResumableApp
     private const float TabBarHoverRadius = 20f;
     private const float TabBarAvatarRadius = 13f;
     private const float TabBarAvatarRingGap = 2.5f;
-    private const float FeedTabHoverPadX = 14f;
-    private const float FeedTabHoverPadY = 6f;
     private const int TabCount = 4;
     private const int TabRevalidateCooldownSeconds = 15;
     private const float FeedTopPadding = 2f;
@@ -143,6 +141,9 @@ internal sealed partial class ChirperApp : IResumableApp
     private static readonly TextStyle CapsuleStyle = new(0.87f, FontWeight.SemiBold);
     private static readonly TextStyle FeedTabStyle = new(1.07f, FontWeight.SemiBold);
     private static readonly TextStyle FeedTabIdleStyle = new(1.07f, FontWeight.Medium);
+    private static readonly UnderlineTabStyle FeedTabsStyle = new(FeedTabStyle, FeedTabIdleStyle,
+        ChirperInk.AccentLink, ChirperInk.SegmentIdleInk, ChirperInk.Accent, FeedTabUnderline, CellPadX,
+        SegmentSmoothTime);
     private static readonly TextStyle WordmarkStyle = new(1.4f, FontWeight.Bold);
     private static readonly TextStyle BadgeStyle = new(0.67f, FontWeight.Bold);
     private static readonly TextStyle PopoverRowStyle = new(0.97f, FontWeight.SemiBold);
@@ -224,7 +225,7 @@ internal sealed partial class ChirperApp : IResumableApp
     private string composeStatus = string.Empty;
     private bool composeSensitive;
     private volatile int composeOutcome;
-    private readonly ChirperActionReveal actions = new();
+    private readonly ActionReveal<ChirperPanel> actions = new();
     private string commentDraft = string.Empty;
     private PostDto? quoteTarget;
     private string? quoteTargetId;
@@ -386,7 +387,7 @@ internal sealed partial class ChirperApp : IResumableApp
         filterSheet.Gate();
         actions.Tick(MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds));
         TickReactionsExpansion();
-        if (actions.Current != ChirperActionReveal.Panel.None)
+        if (actions.IsOpen)
         {
             UiInteract.BlockThisFrame();
         }
@@ -539,8 +540,8 @@ internal sealed partial class ChirperApp : IResumableApp
     private void DrawFeedTabs(Rect row)
     {
         UiAnchors.Report("chirper.tabs", row);
-        var picked = DrawUnderlineTabs(row, Loc.T(L.Chirper.ForYou), Loc.T(L.Chirper.Following),
-            activeScope == SocialFeedScope.Following, ref tabSegment);
+        var picked = UnderlineTabs.Draw(row, Loc.T(L.Chirper.ForYou), Loc.T(L.Chirper.Following),
+            activeScope == SocialFeedScope.Following, ref tabSegment, ChirperInk.Shared, FeedTabsStyle);
         if (picked < 0)
         {
             return;
@@ -556,23 +557,6 @@ internal sealed partial class ChirperApp : IResumableApp
         actions.Reset();
         feedScrollTopPending = true;
         profile.EnsureLoaded(activeScope);
-    }
-
-    private static void DrawFeedTabLabel(ImDrawListPtr drawList, Rect rect, string label, bool active, bool hovered)
-    {
-        var scale = UiScale.Current;
-        var style = active ? FeedTabStyle : FeedTabIdleStyle;
-        var ink = active ? ChirperInk.AccentLink : hovered ? ChirperInk.TitleInk : ChirperInk.SegmentIdleInk;
-        var fitted = Typography.FitText(label, MathF.Max(1f, rect.Width - 16f * scale), style);
-        var center = rect.Center - new Vector2(0f, 2f * scale);
-        if (hovered)
-        {
-            var size = Typography.Measure(fitted, style);
-            var half = new Vector2(size.X * 0.5f + FeedTabHoverPadX * scale, size.Y * 0.5f + FeedTabHoverPadY * scale);
-            Squircle.Fill(drawList, center - half, center + half, half.Y, ImGui.GetColorU32(ChirperInk.FieldFill));
-        }
-
-        Typography.DrawCentered(drawList, center, fitted, ink, style);
     }
 
     private void DrawTabBar(Rect bar)
@@ -1264,13 +1248,13 @@ internal sealed partial class ChirperApp : IResumableApp
         if (DrawActionTarget(cursorX, centerY, repostWidth, ActionGlyph.Rechirp, repostCount, repostInk,
                 ChirperInk.RechirpGreen, Loc.T(post.MyReposted ? L.Chirper.Unrepost : L.Chirper.Repost)))
         {
-            actions.Open(post.Id, ChirperActionReveal.Panel.Repost);
+            actions.Open(post.Id, ChirperPanel.Repost);
         }
 
         cursorX += repostWidth + gap;
         if (DrawReactTarget(post, cursorX, centerY, plainWidth))
         {
-            actions.Open(post.Id, ChirperActionReveal.Panel.Picker);
+            actions.Open(post.Id, ChirperPanel.Picker);
         }
 
         cursorX += plainWidth + gap;
@@ -1281,11 +1265,11 @@ internal sealed partial class ChirperApp : IResumableApp
         }
 
         var popoverBottom = centerY - ActionRowHeight * scale * 0.5f - 4f * scale;
-        if (actions.IsShowing(post.Id, ChirperActionReveal.Panel.Picker))
+        if (actions.IsShowing(post.Id, ChirperPanel.Picker))
         {
             DrawReactionPicker(post, rowLeft, cellRight - 12f * scale, popoverBottom);
         }
-        else if (actions.IsShowing(post.Id, ChirperActionReveal.Panel.Repost))
+        else if (actions.IsShowing(post.Id, ChirperPanel.Repost))
         {
             DrawRepostMenu(post, rowLeft, popoverBottom);
         }
@@ -1436,25 +1420,6 @@ internal sealed partial class ChirperApp : IResumableApp
         return candidate < existing;
     }
 
-    private static string CompactCount(int value)
-    {
-        if (value < 1000)
-        {
-            return value.ToString(Loc.Culture);
-        }
-
-        if (value < 10000)
-        {
-            return (value / 1000f).ToString("0.#", Loc.Culture) + "K";
-        }
-
-        if (value < 1000000)
-        {
-            return (value / 1000).ToString(Loc.Culture) + "K";
-        }
-
-        return (value / 1000000f).ToString("0.#", Loc.Culture) + "M";
-    }
 
     private void DrawReactionSummary(PostDto post, float left, float top)
     {
@@ -1470,7 +1435,7 @@ internal sealed partial class ChirperApp : IResumableApp
         var shown = Math.Min(SummaryEmojiCount, active);
         var emojiSize = SummaryEmojiSize * scale;
         var step = SummaryEmojiStep * scale;
-        var countText = CompactCount(post.TotalReactions);
+        var countText = CountText.Compact(post.TotalReactions);
         var countSize = Typography.Measure(countText, CountStyle);
         var padLeft = 6f * scale;
         var padRight = 10f * scale;
@@ -1752,7 +1717,7 @@ internal sealed partial class ChirperApp : IResumableApp
         var max = pivot + (new Vector2(right, bottom) - pivot) * grow + new Vector2(0f, rise);
         var rounding = rows == 1 ? (max.Y - min.Y) * 0.5f : 16f * scale;
         drawList.PushClipRect(screenRect.Min, screenRect.Max, false);
-        DrawGlassPanel(drawList, min, max, rounding, progress, scale);
+        PopoverSurface.DrawGlass(drawList, min, max, rounding, ChirperInk.Shared, scale, progress);
         var interactive = !actions.Closing && actions.Progress > 0.6f;
         var tint = ImGui.GetColorU32(new Vector4(1f, 1f, 1f, progress));
         for (var kind = 0; kind < count; kind++)
@@ -1794,7 +1759,7 @@ internal sealed partial class ChirperApp : IResumableApp
         }
 
         drawList.PopClipRect();
-        DismissOnOutsideClick(min, max);
+        actions.DismissOnOutsideClick(min, max);
     }
 
     private void DrawRepostMenu(PostDto post, float left, float bottom)
@@ -1820,7 +1785,7 @@ internal sealed partial class ChirperApp : IResumableApp
         var min = pivot + (new Vector2(left, top) - pivot) * grow + new Vector2(0f, rise);
         var max = pivot + (new Vector2(right, bottom) - pivot) * grow + new Vector2(0f, rise);
         drawList.PushClipRect(screenRect.Min, screenRect.Max, false);
-        DrawGlassPanel(drawList, min, max, 16f * scale, progress, scale);
+        PopoverSurface.DrawGlass(drawList, min, max, 16f * scale, ChirperInk.Shared, scale, progress);
         var interactive = !actions.Closing && actions.Progress > 0.6f;
         var padGrown = pad * grow;
         var rowGrown = rowHeight * grow;
@@ -1849,7 +1814,7 @@ internal sealed partial class ChirperApp : IResumableApp
         }
 
         drawList.PopClipRect();
-        DismissOnOutsideClick(min, max);
+        actions.DismissOnOutsideClick(min, max);
     }
 
     private static bool DrawPopoverRow(ImDrawListPtr drawList, Vector2 min, Vector2 max, bool rechirpGlyph,
@@ -1880,29 +1845,6 @@ internal sealed partial class ChirperApp : IResumableApp
         var size = Typography.Measure(fitted, PopoverRowStyle);
         Typography.Draw(drawList, new Vector2(textLeft, centerY - size.Y * 0.5f), fitted, faded, PopoverRowStyle);
         return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
-    }
-
-    private static void DrawGlassPanel(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding, float alpha,
-        float scale)
-    {
-        Elevation.Floating(drawList, min, max, rounding, scale, alpha);
-        Squircle.Fill(drawList, min, max, rounding,
-            ImGui.GetColorU32(Palette.WithAlpha(ChirperInk.GlassPanel, ChirperInk.GlassPanel.W * alpha)));
-        Squircle.Stroke(drawList, min, max, rounding,
-            ImGui.GetColorU32(Palette.WithAlpha(ChirperInk.GlassStroke, ChirperInk.GlassStroke.W * alpha)), 1f);
-    }
-
-    private void DismissOnOutsideClick(Vector2 min, Vector2 max)
-    {
-        if (actions.Closing || ImGui.GetFrameCount() == actions.OpenedFrame)
-        {
-            return;
-        }
-
-        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !UiInteract.HoverWindowOnly(min, max, false))
-        {
-            actions.Dismiss();
-        }
     }
 
     private void DrawUnavailableCell()

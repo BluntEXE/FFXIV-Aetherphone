@@ -16,6 +16,16 @@ internal static class PopoverSurface
         Material.EdgeSquircle(drawList, min, max, rounding, scale, alpha);
     }
 
+    public static void DrawGlass(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding, SocialInk ink,
+        float scale, float alpha = 1f)
+    {
+        Elevation.Floating(drawList, min, max, rounding, scale, alpha);
+        Squircle.Fill(drawList, min, max, rounding,
+            ImGui.GetColorU32(Palette.WithAlpha(ink.GlassPanel, ink.GlassPanel.W * alpha)));
+        Squircle.Stroke(drawList, min, max, rounding,
+            ImGui.GetColorU32(Palette.WithAlpha(ink.GlassStroke, ink.GlassStroke.W * alpha)), 1f);
+    }
+
     public static Vector4 Fill(PhoneTheme theme, float alpha) =>
         Palette.WithAlpha(theme.GroupedCard, MathF.Min(MaxOpacity, theme.GroupedCard.W + OpacityBoost) * alpha);
 }
