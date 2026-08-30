@@ -4952,7 +4952,7 @@
   "changelog.r1014.5": "修复了老虎机奖池计量条在奖池远未达到 50,000 硬币上限时就显示已满的问题",
   "changelog.r1014.6": "修复了老虎机的长横幅和奖池提示在机柜边缘被截断的问题，现在它们会滚动显示",
   "changelog.r1014.7": "中出奖池时，老虎机的滚轮窗口现在会晃动、闪出金光，并沿边缘跑动一圈跑马灯",
-  "changelog.r1014.8": "新增三款手机壳：Warrior、Emet-Selch 和 Bubbles，由 kingzafar 和 mapleterra 贡献",
+  "changelog.r1014.8": "新增三款手机壳：Emet-Selch、Bubbles 和 Warrior，由 mapleterra 和 kingzafar 贡献",
   "changelog.r1013.0": "重新设计了 Chirper：首页、探索、动态和个人资料四个标签，通栏帖子、成串的回复，以及全新的撰写按钮",
   "changelog.r1013.1": "Chirper 现在会在帖子上显示头像、在个人资料页显示横幅，点赞列表里也能看到每个人留下的是哪种表情",
   "changelog.r1013.2": "Chirper 的标签页现在会在你返回时刷新，名字特效也会在应用的各处生效",

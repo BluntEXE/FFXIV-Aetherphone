@@ -1658,7 +1658,7 @@ internal static class L
             new("changelog.r1014.7",
                 "The Slots reel window now shakes, flashes gold and runs a chase of marquee bulbs when the jackpot lands"),
             new("changelog.r1014.8",
-                "Added three phone cases: Warrior, Emet-Selch and Bubbles, contributed by kingzafar and mapleterra"),
+                "Added three new phone cases: Emet-Selch, Bubbles and Warrior, contributed by mapleterra and kingzafar"),
         };
 
         public static readonly LocString[] Release1013 =
