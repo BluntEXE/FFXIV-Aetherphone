@@ -8,13 +8,7 @@ internal sealed class HuntZoneDefinition
     public string Id { get; set; } = string.Empty;
 
     [JsonPropertyName("name")]
-    public Dictionary<string, string> Name { get; set; } = new();
-
-    [JsonPropertyName("expansionId")]
-    public string ExpansionId { get; set; } = string.Empty;
-
-    [JsonPropertyName("territoryId")]
-    public string TerritoryId { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
 
     [JsonPropertyName("map")]
     public HuntZoneMap Map { get; set; } = new();
@@ -25,23 +19,8 @@ internal sealed class HuntZoneDefinition
 
 internal sealed class HuntZoneMap
 {
-    [JsonPropertyName("pixelSize")]
-    public int PixelSize { get; set; }
-
-    [JsonPropertyName("offset")]
-    public HuntZoneMapOffset Offset { get; set; } = new();
-
     [JsonPropertyName("sizeFactor")]
     public int SizeFactor { get; set; } = 100;
-}
-
-internal sealed class HuntZoneMapOffset
-{
-    [JsonPropertyName("x")]
-    public int X { get; set; }
-
-    [JsonPropertyName("y")]
-    public int Y { get; set; }
 }
 
 internal sealed class HuntPoiEntry
@@ -57,9 +36,6 @@ internal sealed class HuntPoiEntry
 
     [JsonPropertyName("location")]
     public string Location { get; set; } = string.Empty;
-
-    [JsonPropertyName("journeyPoiId")]
-    public int? JourneyPoiId { get; set; }
 
     private (float X, float Y)? parsed;
 

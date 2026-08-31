@@ -46,8 +46,10 @@ internal sealed partial class HuntsApp
     private string detailMapZoneId = string.Empty;
     private readonly List<HuntPoiEntry> detailMapPoints = new();
     private readonly List<HuntPoiEntry> detailMapAetherytePoints = new();
+    private readonly Dictionary<(uint TerritoryId, string ZoneId, string Language), string> zoneLabelCache = new();
     private readonly PhotoZoomView detailMapZoom = new();
     private bool detailMapHovered;
+    private bool detailMapPendingFocus;
 
     private (int WindowNum, int PhaseNum)? detailMapActivePhase;
     private string? detailMapConfirmedZoneId;
@@ -84,7 +86,7 @@ internal sealed partial class HuntsApp
             detailMapActivePhase = hunts.PhaseFor(mobId, worldId, zoneInstance);
             detailMapConfirmedZoneId = hunts.ZoneIdFor(mobId, worldId, zoneInstance);
             ResolveDetailMap(mobCatalog.Find(mobId), detailMapActivePhase, detailMapConfirmedZoneId);
-            detailMapZoom.Reset();
+            detailMapPendingFocus = true;
             detailMapHovered = false;
         }
 
@@ -459,8 +461,9 @@ internal sealed partial class HuntsApp
         }
 
         var zone = zoneCatalog.FindZone(detailMapZoneId);
-        var texture = HuntZoneMapTextures.Resolve(detailMapZoneId);
-        if (zone is null || texture is null || zone.Map.PixelSize <= 0)
+        var territoryId = zoneCatalog.ResolveTerritoryId(detailMapZoneId);
+        var texture = zoneMapTextures.Resolve(territoryId);
+        if (zone is null || texture is null)
         {
             detailMapHovered = false;
             return false;
@@ -472,7 +475,7 @@ internal sealed partial class HuntsApp
         var mapLeft = origin.X + (width - size) * 0.5f;
 
         var drawList = ImGui.GetWindowDrawList();
-        var zoneLabel = ResolveZoneLabel(zone);
+        var zoneLabel = ResolveZoneLabel(zone.Id, territoryId);
         var labelSize = Typography.Measure(zoneLabel, TextStyles.Footnote);
         var labelGap = 6f * scale;
         Typography.Draw(drawList, new Vector2(mapLeft + (size - labelSize.X) * 0.5f, origin.Y), zoneLabel,
@@ -489,7 +492,7 @@ internal sealed partial class HuntsApp
         {
             if (mapChild)
             {
-                DrawDetailZoneMapContent(stage, zone, texture, scale, confirmedPoiId, view);
+                DrawDetailZoneMapContent(stage, texture, scale, confirmedPoiId, view, territoryId);
             }
         }
 
@@ -498,13 +501,34 @@ internal sealed partial class HuntsApp
         return true;
     }
 
-    private string ResolveZoneLabel(HuntZoneDefinition zone) =>
-        zone.Name.GetValueOrDefault(configuration.Language) ?? zone.Name.GetValueOrDefault("en") ??
-        Prettify(zone.Id);
-
-    private void DrawDetailZoneMapContent(Rect stage, HuntZoneDefinition zone, IDalamudTextureWrap texture,
-        float scale, int? confirmedPoiId, HuntsView view)
+    private string ResolveZoneLabel(string zoneId, uint territoryId)
     {
+        var key = (territoryId, zoneId, HuntUiLanguage.Key());
+        if (zoneLabelCache.TryGetValue(key, out var cached))
+        {
+            return cached;
+        }
+
+        var label = ResolveLiveZoneName(territoryId) is { Length: > 0 } name ? name : Prettify(zoneId);
+        zoneLabelCache[key] = label;
+        return label;
+    }
+
+    private static string? ResolveLiveZoneName(uint territoryId) =>
+        territoryId != 0 && Plugin.DataManager.GetExcelSheet<TerritoryType>(HuntUiLanguage.SheetLanguage())
+            .TryGetRow(territoryId, out var territory) && territory.PlaceName.RowId != 0
+            ? territory.PlaceName.Value.Name.ExtractText()
+            : null;
+
+    private void DrawDetailZoneMapContent(Rect stage, IDalamudTextureWrap texture, float scale, int? confirmedPoiId,
+        HuntsView view, uint territoryId)
+    {
+        if (detailMapPendingFocus)
+        {
+            detailMapPendingFocus = false;
+            FocusDetailMap(stage, texture.Size);
+        }
+
         var drawList = ImGui.GetWindowDrawList();
         detailMapZoom.Draw(stage, texture, frameTheme, Metrics.Radius.Card * scale, showButtons: false);
 
@@ -529,9 +553,6 @@ internal sealed partial class HuntsApp
 
         var finalLocationResolved = detailMapFinalPhase && detailMapZoneConfirmed && detailMapPoints.Count == 1;
 
-        var pixelSize = (float)zone.Map.PixelSize;
-        var offsetX = (float)zone.Map.Offset.X;
-        var offsetY = (float)zone.Map.Offset.Y;
         drawList.PushClipRect(stage.Min, stage.Max, true);
         for (var index = 0; index < detailMapPoints.Count; index++)
         {
@@ -542,28 +563,46 @@ internal sealed partial class HuntsApp
             }
 
             var (rawX, rawY) = poi.ParsedLocation();
-            var normalizedX = (rawX - offsetX) / pixelSize;
-            var normalizedY = (rawY - offsetY) / pixelSize;
+            var (normalizedX, normalizedY) = MapPixelMath.NormalizeToFullCanvas(rawX, rawY);
             var dotPosition = new Vector2(min.X + normalizedX * (max.X - min.X),
                 min.Y + normalizedY * (max.Y - min.Y));
             DrawSpawnDot(drawList, dotPosition, scale, poi.Id, confirmedKnown, finalLocationResolved);
         }
 
-        var territoryId = zoneCatalog.ResolveTerritoryId(detailMapZoneId);
         var worldId = HuntDataCenterWorlds.WorldRowId(view.WorldId);
         var mapId = ResolveMapId(territoryId);
         for (var index = 0; index < detailMapAetherytePoints.Count; index++)
         {
             var poi = detailMapAetherytePoints[index];
             var (rawX, rawY) = poi.ParsedLocation();
-            var normalizedX = (rawX - offsetX) / pixelSize;
-            var normalizedY = (rawY - offsetY) / pixelSize;
+            var (normalizedX, normalizedY) = MapPixelMath.NormalizeToFullCanvas(rawX, rawY);
             var dotPosition = new Vector2(min.X + normalizedX * (max.X - min.X),
                 min.Y + normalizedY * (max.Y - min.Y));
             DrawAetheryteDot(drawList, dotPosition, scale, poi, territoryId, worldId, mapId, view.ZoneInstance);
         }
 
         drawList.PopClipRect();
+    }
+
+    private void FocusDetailMap(Rect stage, Vector2 textureSize)
+    {
+        if (detailMapPoints.Count == 0)
+        {
+            detailMapZoom.Reset();
+            return;
+        }
+
+        var min = new Vector2(float.MaxValue, float.MaxValue);
+        var max = new Vector2(float.MinValue, float.MinValue);
+        for (var index = 0; index < detailMapPoints.Count; index++)
+        {
+            var (rawX, rawY) = detailMapPoints[index].ParsedLocation();
+            var (normalizedX, normalizedY) = MapPixelMath.NormalizeToFullCanvas(rawX, rawY);
+            min = new Vector2(MathF.Min(min.X, normalizedX), MathF.Min(min.Y, normalizedY));
+            max = new Vector2(MathF.Max(max.X, normalizedX), MathF.Max(max.Y, normalizedY));
+        }
+
+        detailMapZoom.FocusOn(stage, textureSize, new Rect(min, max));
     }
 
     private void DrawSpawnDot(ImDrawListPtr drawList, Vector2 center, float scale, int poiId, bool confirmed,
