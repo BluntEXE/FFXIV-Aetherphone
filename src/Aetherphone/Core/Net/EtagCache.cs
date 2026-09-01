@@ -17,9 +17,10 @@ internal sealed class EtagCache
         public long LastUsed;
     }
 
-    public static string Key(string? bearer, string? appScope, Uri? uri)
+    public static string Key(string? bearer, string? appScope, Uri? uri, string? apiKey = null)
     {
-        return string.Concat(bearer ?? string.Empty, "\n", appScope ?? string.Empty, "\n", uri?.ToString() ?? string.Empty);
+        return string.Concat(bearer ?? string.Empty, "\n", appScope ?? string.Empty, "\n",
+            uri?.ToString() ?? string.Empty, "\n", apiKey ?? string.Empty);
     }
 
     public bool TryGet(string key, out string etag, out byte[] body)

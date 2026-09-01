@@ -331,7 +331,7 @@ internal sealed class HttpService : IDisposable
 
         ApplyHeaders(request, bearer, appScope, rawAuthorization, apiKey);
         var cacheKey = request.Method == HttpMethod.Get
-            ? EtagCache.Key(bearer, appScope, request.RequestUri)
+            ? EtagCache.Key(bearer, appScope, request.RequestUri, apiKey)
             : null;
         var hasCached = false;
         var cachedBody = Array.Empty<byte>();
