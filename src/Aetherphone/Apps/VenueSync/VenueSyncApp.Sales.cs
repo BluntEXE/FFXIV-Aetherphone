@@ -24,6 +24,7 @@ internal sealed partial class VenueSyncApp
     private string salesAmountText = string.Empty;
     private string? salesError;
     private volatile bool salesSubmitBusy;
+    private volatile bool salesServicesLoading;
 
     private void DrawSales(Rect area)
     {
@@ -202,11 +203,29 @@ internal sealed partial class VenueSyncApp
 
     private async Task LoadSalesServicesAsync()
     {
-        var response = await client.GetServicesAsync(configuration.VenueSyncSelectedVenueId, CancellationToken.None)
-            .ConfigureAwait(false);
-        if (response is not null)
+        if (salesServicesLoading)
         {
-            salesServices = response.Services;
+            return;
+        }
+
+        salesServicesLoading = true;
+        try
+        {
+            var response = await client
+                .GetServicesAsync(configuration.VenueSyncSelectedVenueId, CancellationToken.None)
+                .ConfigureAwait(false);
+            if (response is not null)
+            {
+                salesServices = response.Services;
+            }
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning($"[VenueSync/Sales] Failed to load services: {exception.Message}");
+        }
+        finally
+        {
+            salesServicesLoading = false;
         }
     }
 
