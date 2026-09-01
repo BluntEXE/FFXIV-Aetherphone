@@ -105,7 +105,10 @@ internal struct GroupCard
 
     public void DrawHoverHighlight(Vector4 color)
     {
-        callHovered[lastCallIndex] = true;
+        if (lastCallIndex < callHovered.Length)
+        {
+            callHovered[lastCallIndex] = true;
+        }
 
         var drawList = ImGui.GetWindowDrawList();
         var packed = ImGui.GetColorU32(color);
