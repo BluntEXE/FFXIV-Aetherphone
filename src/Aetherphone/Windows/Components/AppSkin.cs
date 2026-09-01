@@ -243,6 +243,22 @@ internal sealed class AppSkin
 
     public bool DangerPillButton(Rect rect, string label) => DangerPillButton(rect, label, Theme);
 
+    public static bool DangerPillButton(Rect rect, string label, bool enabled, PhoneTheme theme)
+    {
+        if (enabled)
+        {
+            return DangerPillButton(rect, label, theme);
+        }
+
+        var disabledDrawList = ImGui.GetWindowDrawList();
+        var disabledFill = Core.Theme.Palette.WithAlpha(theme.Danger, 0.45f);
+        Squircle.Fill(disabledDrawList, rect.Min, rect.Max, rect.Height * 0.5f, ImGui.GetColorU32(disabledFill));
+        var disabledTextSize = Typography.Measure(label, 0.9f, FontWeight.SemiBold);
+        Typography.Draw(disabledDrawList, rect.Center - disabledTextSize * 0.5f, label, theme.TextMuted, 0.9f,
+            FontWeight.SemiBold);
+        return false;
+    }
+
     public static bool DangerPillButton(Rect rect, string label, PhoneTheme theme)
     {
         var drawList = ImGui.GetWindowDrawList();

@@ -8,14 +8,18 @@ internal enum VenueSyncLoadState
     Failed,
 }
 
+internal sealed record VenueSyncShiftsSnapshot(VenueSyncShiftsResponse? Shifts, DateTime RefreshedAtUtc);
+
 internal sealed class VenueSyncState : IDisposable
 {
     private static readonly TimeSpan RefreshInterval = TimeSpan.FromSeconds(30);
+    private static readonly VenueSyncShiftsSnapshot EmptySnapshot = new(null, DateTime.MinValue);
     private readonly VenueSyncApiClient client;
     private readonly Configuration configuration;
     private readonly CancellationTokenSource cancellation = new();
+    private readonly object salesLock = new();
     private int refreshing;
-    private DateTime lastRefreshUtc;
+    private volatile VenueSyncShiftsSnapshot shiftsSnapshot = EmptySnapshot;
     private volatile VenueSyncLoadState shiftsState = VenueSyncLoadState.Idle;
 
     private int sessionSalesCount;
@@ -27,10 +31,22 @@ internal sealed class VenueSyncState : IDisposable
         this.configuration = configuration;
     }
 
-    public VenueSyncShiftsResponse? Shifts { get; private set; }
-    public DateTime LastRefreshUtc => lastRefreshUtc;
-    public int SessionSalesCount => sessionSalesCount;
-    public decimal SessionSalesTotal => sessionSalesTotal;
+    // Read Shifts and LastRefreshUtc together via ShiftsSnapshot when both must agree
+    // (see VenueSyncApp.Shifts.cs); the two convenience properties below are for call
+    // sites that only ever need one and can tolerate it moving independently.
+    public VenueSyncShiftsSnapshot ShiftsSnapshot => shiftsSnapshot;
+    public VenueSyncShiftsResponse? Shifts => shiftsSnapshot.Shifts;
+    public DateTime LastRefreshUtc => shiftsSnapshot.RefreshedAtUtc;
+
+    public int SessionSalesCount
+    {
+        get { lock (salesLock) { return sessionSalesCount; } }
+    }
+
+    public decimal SessionSalesTotal
+    {
+        get { lock (salesLock) { return sessionSalesTotal; } }
+    }
 
     public void EnsureShiftsFresh(bool force)
     {
@@ -46,7 +62,7 @@ internal sealed class VenueSyncState : IDisposable
         }
 
         var stale = shiftsState == VenueSyncLoadState.Idle ||
-                    DateTime.UtcNow - lastRefreshUtc >= RefreshInterval;
+                    DateTime.UtcNow - shiftsSnapshot.RefreshedAtUtc >= RefreshInterval;
         if (!force && !stale)
         {
             return;
@@ -73,8 +89,7 @@ internal sealed class VenueSyncState : IDisposable
             var response = await client.GetShiftsAsync(venueId, token).ConfigureAwait(false);
             if (response is not null)
             {
-                Shifts = response;
-                lastRefreshUtc = DateTime.UtcNow;
+                shiftsSnapshot = new VenueSyncShiftsSnapshot(response, DateTime.UtcNow);
                 shiftsState = VenueSyncLoadState.Ready;
             }
             else if (shiftsState != VenueSyncLoadState.Ready)
@@ -102,8 +117,11 @@ internal sealed class VenueSyncState : IDisposable
 
     public void RecordSale(decimal amount)
     {
-        sessionSalesCount++;
-        sessionSalesTotal += amount;
+        lock (salesLock)
+        {
+            sessionSalesCount++;
+            sessionSalesTotal += amount;
+        }
     }
 
     public void Dispose()

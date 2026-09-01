@@ -16,7 +16,7 @@ internal static class ShiftRow
     public const float Height = 64f;
 
     public static ShiftRowAction Draw(GroupCard card, Rect row, VenueSyncShift shift, bool isOpen, string? roleName,
-        PhoneTheme theme, Vector4 accent, string idSuffix, bool enabled = true)
+        PhoneTheme theme, Vector4 accent, string idSuffix, bool enabled = true, string? timeText = null)
     {
         var scale = UiScale.Current;
 
@@ -26,7 +26,7 @@ internal static class ShiftRow
             "COMPLETED" => Loc.T(L.VenueSync.CompletedShift),
             _ => Loc.T(L.VenueSync.UpcomingShift),
         };
-        var timeText = FormatTimeRange(shift.ScheduledStart, shift.ScheduledEnd);
+        timeText ??= FormatTimeRange(shift.ScheduledStart, shift.ScheduledEnd);
         var isActive = !isOpen && shift.Status == "ACTIVE";
         var label = isOpen ? Loc.T(L.VenueSync.Claim)
             : isActive ? Loc.T(L.VenueSync.ClockOut) : Loc.T(L.VenueSync.ClockIn);
@@ -64,7 +64,7 @@ internal static class ShiftRow
         }
 
         var clicked = isActive
-            ? AppSkin.DangerPillButton(actionRect, label, theme) && enabled
+            ? AppSkin.DangerPillButton(actionRect, label, enabled, theme)
             : AppSkin.PillButton(actionRect, label, true, enabled, theme);
 
         if (!clicked)
@@ -80,7 +80,7 @@ internal static class ShiftRow
         return isActive ? ShiftRowAction.ClockOut : ShiftRowAction.ClockIn;
     }
 
-    private static string FormatTimeRange(string startIso, string endIso)
+    internal static string FormatTimeRange(string startIso, string endIso)
     {
         if (!DateTime.TryParse(startIso, CultureInfo.InvariantCulture, DateTimeStyles.None, out var start) ||
             !DateTime.TryParse(endIso, CultureInfo.InvariantCulture, DateTimeStyles.None, out var end))

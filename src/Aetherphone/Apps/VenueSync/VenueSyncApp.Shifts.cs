@@ -9,7 +9,7 @@ using Dalamud.Interface;
 
 namespace Aetherphone.Apps.VenueSync;
 
-internal readonly record struct ShiftListEntry(VenueSyncShift Shift, string? RoleName);
+internal readonly record struct ShiftListEntry(VenueSyncShift Shift, string? RoleName, string TimeText);
 
 internal readonly record struct ShiftDayGroup(DateTime Date, List<ShiftListEntry> Entries);
 
@@ -49,7 +49,8 @@ internal sealed partial class VenueSyncApp
                 ImGui.Dummy(new Vector2(0f, 20f * scale + Metrics.Space.Sm * scale));
             }
 
-            var shiftsSnapshot = state.Shifts;
+            var snapshot = state.ShiftsSnapshot;
+            var shiftsSnapshot = snapshot.Shifts;
             if (shiftsSnapshot is null)
             {
                 var emptyOrigin = ImGui.GetCursorScreenPos();
@@ -59,7 +60,7 @@ internal sealed partial class VenueSyncApp
                 return;
             }
 
-            RegroupShiftsIfStale(shiftsSnapshot);
+            RegroupShiftsIfStale(shiftsSnapshot, snapshot.RefreshedAtUtc);
 
             var activeShift = cachedActiveShift;
             var openDayGroups = cachedOpenDayGroups;
@@ -98,7 +99,7 @@ internal sealed partial class VenueSyncApp
                         var entry = group.Entries[entryIndex];
                         var openRow = openCard.NextRow();
                         var action = ShiftRow.Draw(openCard, openRow, entry.Shift, isOpen: true, entry.RoleName,
-                            theme, ui.Accent, $"open-{entry.Shift.Id}", !shiftsActionBusy);
+                            theme, ui.Accent, $"open-{entry.Shift.Id}", !shiftsActionBusy, entry.TimeText);
                         HandleShiftAction(action, entry.Shift.Id);
                     }
 
@@ -124,7 +125,7 @@ internal sealed partial class VenueSyncApp
                         var entry = group.Entries[entryIndex];
                         var upcomingRow = upcomingCard.NextRow();
                         var action = ShiftRow.Draw(upcomingCard, upcomingRow, entry.Shift, isOpen: false, null, theme,
-                            ui.Accent, $"upcoming-{entry.Shift.Id}", !shiftsActionBusy);
+                            ui.Accent, $"upcoming-{entry.Shift.Id}", !shiftsActionBusy, entry.TimeText);
                         HandleShiftAction(action, entry.Shift.Id);
                     }
 
@@ -135,14 +136,14 @@ internal sealed partial class VenueSyncApp
         }
     }
 
-    private void RegroupShiftsIfStale(VenueSyncShiftsResponse shiftsSnapshot)
+    private void RegroupShiftsIfStale(VenueSyncShiftsResponse shiftsSnapshot, DateTime refreshedAtUtc)
     {
-        if (shiftsGroupedForRefreshUtc == state.LastRefreshUtc)
+        if (shiftsGroupedForRefreshUtc == refreshedAtUtc)
         {
             return;
         }
 
-        shiftsGroupedForRefreshUtc = state.LastRefreshUtc;
+        shiftsGroupedForRefreshUtc = refreshedAtUtc;
 
         VenueSyncShift? activeShift = null;
         var upcomingShifts = new List<VenueSyncShift>();
@@ -172,7 +173,8 @@ internal sealed partial class VenueSyncApp
                 ScheduledEnd = open.ScheduledEnd,
                 Status = "OPEN",
             };
-            openEntries.Add(new ShiftListEntry(shim, open.RoleName));
+            openEntries.Add(new ShiftListEntry(shim, open.RoleName, ShiftRow.FormatTimeRange(shim.ScheduledStart,
+                shim.ScheduledEnd)));
         }
 
         cachedOpenDayGroups = GroupByDay(openEntries);
@@ -180,7 +182,9 @@ internal sealed partial class VenueSyncApp
         var upcomingEntries = new List<ShiftListEntry>();
         for (var index = 0; index < upcomingShifts.Count; index++)
         {
-            upcomingEntries.Add(new ShiftListEntry(upcomingShifts[index], null));
+            var upcomingShift = upcomingShifts[index];
+            upcomingEntries.Add(new ShiftListEntry(upcomingShift, null,
+                ShiftRow.FormatTimeRange(upcomingShift.ScheduledStart, upcomingShift.ScheduledEnd)));
         }
 
         cachedUpcomingDayGroups = GroupByDay(upcomingEntries);
@@ -257,7 +261,7 @@ internal sealed partial class VenueSyncApp
 
     private static List<ShiftDayGroup> GroupByDay(List<ShiftListEntry> entries)
     {
-        var groups = new List<ShiftDayGroup>();
+        var parsed = new List<(DateTime Start, ShiftListEntry Entry)>(entries.Count);
         for (var index = 0; index < entries.Count; index++)
         {
             var entry = entries[index];
@@ -267,6 +271,15 @@ internal sealed partial class VenueSyncApp
                 continue;
             }
 
+            parsed.Add((start, entry));
+        }
+
+        parsed.Sort((left, right) => left.Start.CompareTo(right.Start));
+
+        var groups = new List<ShiftDayGroup>();
+        for (var index = 0; index < parsed.Count; index++)
+        {
+            var (start, entry) = parsed[index];
             var date = start.Date;
             var lastIndex = groups.Count - 1;
             if (lastIndex >= 0 && groups[lastIndex].Date == date)
