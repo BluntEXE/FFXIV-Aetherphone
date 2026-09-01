@@ -13,6 +13,13 @@ internal sealed partial class VenueSyncApp
     private const float StatusCardHeight = 90f;
     private const float ActionRowHeight = 64f;
 
+    private DateTime dashboardOpenShiftsCachedForRefreshUtc = DateTime.MinValue;
+    private string dashboardOpenShiftsCountText = "0";
+
+    private int dashboardCachedSalesCount = -1;
+    private decimal dashboardCachedSalesTotal = -1m;
+    private string dashboardCachedSessionValue = string.Empty;
+
     private void DrawDashboard(Rect area)
     {
         var scale = UiScale.Current;
@@ -72,10 +79,9 @@ internal sealed partial class VenueSyncApp
             var button = new Rect(new Vector2(card.Max.X - pad - buttonWidth, card.Center.Y - buttonHeight * 0.5f),
                 new Vector2(card.Max.X - pad, card.Center.Y + buttonHeight * 0.5f));
 
-            if (AppSkin.DangerPillButton(button, Loc.T(L.VenueSync.ClockOut), theme))
+            if (AppSkin.DangerPillButton(button, Loc.T(L.VenueSync.ClockOut), !shiftsActionBusy, theme))
             {
-                var shiftId = activeShift.Id;
-                _ = ClockOutFireAndForget(shiftId);
+                HandleShiftAction(ShiftRowAction.ClockOut, activeShift.Id);
             }
         }
         else
@@ -93,15 +99,6 @@ internal sealed partial class VenueSyncApp
         ImGui.Dummy(new Vector2(width, height));
     }
 
-    private async Task ClockOutFireAndForget(string shiftId)
-    {
-        var result = await client.ClockOutAsync(shiftId, CancellationToken.None).ConfigureAwait(false);
-        if (result is { Success: true })
-        {
-            state.EnsureShiftsFresh(true);
-        }
-    }
-
     private VenueSyncShift? FindActiveShift()
     {
         var shifts = state.Shifts?.Shifts;
@@ -110,11 +107,11 @@ internal sealed partial class VenueSyncApp
             return null;
         }
 
-        foreach (var shift in shifts)
+        for (var index = 0; index < shifts.Count; index++)
         {
-            if (shift.Status == "ACTIVE")
+            if (shifts[index].Status == "ACTIVE")
             {
-                return shift;
+                return shifts[index];
             }
         }
 
@@ -123,7 +120,14 @@ internal sealed partial class VenueSyncApp
 
     private void DrawActionsCard(float scale)
     {
-        var openShiftsCount = state.Shifts?.OpenShifts.Count ?? 0;
+        var snapshot = state.ShiftsSnapshot;
+        var openShiftsCount = snapshot.Shifts?.OpenShifts.Count ?? 0;
+        if (dashboardOpenShiftsCachedForRefreshUtc != snapshot.RefreshedAtUtc)
+        {
+            dashboardOpenShiftsCachedForRefreshUtc = snapshot.RefreshedAtUtc;
+            dashboardOpenShiftsCountText = openShiftsCount.ToString(Loc.Culture);
+        }
+
         var card = GroupCard.Begin(theme, 2, ActionRowHeight, showSeparators: false, glowAccent: ui.Accent,
             fillOverride: ui.Palette.CardFill);
 
@@ -139,7 +143,7 @@ internal sealed partial class VenueSyncApp
             : Loc.T(L.VenueSync.TapToViewAndClaim);
         var upcomingRow = card.NextRow();
         if (DrawActionRow(card, upcomingRow, FontAwesomeIcon.Clock, ui.Accent, Loc.T(L.VenueSync.UpcomingShifts),
-                upcomingSubtitle, openShiftsCount.ToString(), "venuesync.dashboard.upcoming"))
+                upcomingSubtitle, dashboardOpenShiftsCountText, "venuesync.dashboard.upcoming"))
         {
             router.Push(VenueSyncRoute.Shifts);
         }
@@ -152,12 +156,19 @@ internal sealed partial class VenueSyncApp
         var width = ImGui.GetContentRegionAvail().X;
         var sessionRow = new Rect(origin, new Vector2(origin.X + width, origin.Y + ActionRowHeight * scale));
         var count = state.SessionSalesCount;
-        var sessionValue = count == 0
-            ? Loc.T(L.VenueSync.NoSalesYet)
-            : $"{Loc.Plural(L.VenueSync.SaleCount, count)} · " +
-              $"{Loc.T(L.VenueSync.PriceGil, state.SessionSalesTotal.ToString("N0", Loc.Culture))}";
+        var total = state.SessionSalesTotal;
+        if (count != dashboardCachedSalesCount || total != dashboardCachedSalesTotal)
+        {
+            dashboardCachedSalesCount = count;
+            dashboardCachedSalesTotal = total;
+            dashboardCachedSessionValue = count == 0
+                ? Loc.T(L.VenueSync.NoSalesYet)
+                : $"{Loc.Plural(L.VenueSync.SaleCount, count)} · " +
+                  $"{Loc.T(L.VenueSync.PriceGil, total.ToString("N0", Loc.Culture))}";
+        }
+
         DrawActionRow(default, sessionRow, FontAwesomeIcon.Coins, theme.TextMuted, Loc.T(L.VenueSync.ThisSession),
-            sessionValue, null, "venuesync.dashboard.session", clickable: false);
+            dashboardCachedSessionValue, null, "venuesync.dashboard.session", clickable: false);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, ActionRowHeight * scale));
     }
