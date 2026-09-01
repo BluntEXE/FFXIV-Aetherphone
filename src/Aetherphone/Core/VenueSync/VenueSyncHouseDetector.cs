@@ -8,6 +8,8 @@ internal readonly record struct VenueSyncHouse(long HouseId, string Label);
 
 internal static unsafe class VenueSyncHouseDetector
 {
+    private const int MaxWardIndex = 30;
+
     public static VenueSyncHouse? Current(GameData gameData)
     {
         var housingManager = HousingManager.Instance();
@@ -19,7 +21,21 @@ internal static unsafe class VenueSyncHouseDetector
         var plotIndex = housingManager->GetCurrentPlot();
         if (plotIndex == NoPlotSentinel)
         {
-            return null;
+            // GetCurrentWard/GetCurrentPlot can read invalid while indoors (matches the fallback
+            // LocationShare.cs already applies); GetCurrentIndoorHouseId is reliable there instead.
+            if (housingManager->IndoorTerritory == null)
+            {
+                return null;
+            }
+
+            var indoorHouseId = housingManager->GetCurrentIndoorHouseId();
+            if (indoorHouseId.WardIndex >= MaxWardIndex)
+            {
+                return null;
+            }
+
+            var storedIndoorHouseId = (long)(ulong)indoorHouseId;
+            return new VenueSyncHouse(storedIndoorHouseId, LabelFor(indoorHouseId, gameData));
         }
 
         var wardIndex = housingManager->GetCurrentWard();
