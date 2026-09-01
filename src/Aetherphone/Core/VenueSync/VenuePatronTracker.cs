@@ -27,6 +27,7 @@ internal sealed class VenuePatronTracker : IDisposable
     private readonly HashSet<VenueGuestKey> guestPostInFlight = new();
     private readonly Dictionary<string, (bool Active, long FetchedAtMs)> eventPresence = new();
     private readonly HashSet<string> eventPresenceInFlight = new();
+    private readonly CancellationTokenSource cancellation = new();
     private long currentHouseId;
 
     public VenuePatronTracker(IFramework framework, IObjectTable objectTable, Configuration configuration,
@@ -84,6 +85,19 @@ internal sealed class VenuePatronTracker : IDisposable
 
     private void ClearGuests()
     {
+        if (guests.Count > 0 && currentHouseId != 0 &&
+            configuration.VenueSyncHouseLinks.TryGetValue(currentHouseId, out var venueId) &&
+            !string.IsNullOrEmpty(venueId))
+        {
+            foreach (var pair in guests)
+            {
+                if (pair.Value.InVenue && guestPostInFlight.Add(pair.Key))
+                {
+                    _ = PostVisitAsync(venueId, pair.Key, false);
+                }
+            }
+        }
+
         guests.Clear();
         currentHouseId = 0;
     }
@@ -110,8 +124,12 @@ internal sealed class VenuePatronTracker : IDisposable
         bool active;
         try
         {
-            var response = await client.GetActiveEventAsync(venueId, CancellationToken.None).ConfigureAwait(false);
+            var response = await client.GetActiveEventAsync(venueId, cancellation.Token).ConfigureAwait(false);
             active = response?.Active ?? false;
+        }
+        catch (OperationCanceledException)
+        {
+            return;
         }
         catch (Exception exception)
         {
@@ -153,12 +171,12 @@ internal sealed class VenuePatronTracker : IDisposable
 
             var key = new VenueGuestKey(name, world);
             seen.Add(key);
-            if (!guests.TryGetValue(key, out var existing) || !existing.InVenue || !existing.Synced)
+            if (!guests.TryGetValue(key, out var existing) || !existing.InVenue)
             {
                 guests[key] = new VenueGuestState(true, false, nowMs);
                 if (guestPostInFlight.Add(key))
                 {
-                    _ = PostVisitAsync(venueId, key, true, nowMs);
+                    _ = PostVisitAsync(venueId, key, true);
                 }
             }
             else
@@ -183,12 +201,12 @@ internal sealed class VenuePatronTracker : IDisposable
             guests[key] = new VenueGuestState(false, false, nowMs);
             if (guestPostInFlight.Add(key))
             {
-                _ = PostVisitAsync(venueId, key, false, nowMs);
+                _ = PostVisitAsync(venueId, key, false);
             }
         }
     }
 
-    private async Task PostVisitAsync(string venueId, VenueGuestKey key, bool expectedInVenue, long stateStampMs)
+    private async Task PostVisitAsync(string venueId, VenueGuestKey key, bool expectedInVenue)
     {
         var action = expectedInVenue ? "enter" : "leave";
         try
@@ -201,7 +219,7 @@ internal sealed class VenuePatronTracker : IDisposable
                 Action = action,
                 Timestamp = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture),
             };
-            var result = await client.PostPatronVisitAsync(request, CancellationToken.None).ConfigureAwait(false);
+            var result = await client.PostPatronVisitAsync(request, cancellation.Token).ConfigureAwait(false);
             if (result is not { Success: true })
             {
                 AepLog.Warning($"[VenueSync/Patron] Server rejected {action} for {key.Name}: " +
@@ -209,6 +227,10 @@ internal sealed class VenuePatronTracker : IDisposable
                 await framework.RunOnFrameworkThread(() => guestPostInFlight.Remove(key)).ConfigureAwait(false);
                 return;
             }
+        }
+        catch (OperationCanceledException)
+        {
+            return;
         }
         catch (Exception exception)
         {
@@ -219,8 +241,7 @@ internal sealed class VenuePatronTracker : IDisposable
 
         await framework.RunOnFrameworkThread(() =>
         {
-            if (guests.TryGetValue(key, out var current) && current.InVenue == expectedInVenue &&
-                current.LastSeenAtMs == stateStampMs)
+            if (guests.TryGetValue(key, out var current) && current.InVenue == expectedInVenue)
             {
                 guests[key] = current with { Synced = true };
             }
@@ -232,5 +253,7 @@ internal sealed class VenuePatronTracker : IDisposable
     public void Dispose()
     {
         ticker.Dispose();
+        cancellation.Cancel();
+        cancellation.Dispose();
     }
 }
