@@ -13,20 +13,28 @@ namespace Aetherphone.Apps.VenueSync;
 internal sealed partial class VenueSyncApp
 {
     private string settingsKeyInput = string.Empty;
+    private bool settingsKeyLoaded;
     private bool settingsKeyVisible;
     private List<VenueSyncVenue> settingsVenues = new();
     private bool settingsVenuePickerExpanded;
     private string? settingsError;
     private string? settingsCharacterLinkStatus;
     private volatile bool settingsCharacterLinkBusy;
+    private volatile bool settingsVenuesLoading;
+
+    private string? settingsHouseLinksCachedForVenueId;
+    private bool settingsHouseLinksDirty = true;
+    private List<long> cachedLinkedHouseIds = new();
+    private List<string> cachedLinkedHouseLabels = new();
 
     private void DrawSettings(Rect area)
     {
         var scale = UiScale.Current;
         AppHeader.Draw(new PhoneContext(area, theme, navigation), Loc.T(L.VenueSync.SyncSettings), back);
 
-        if (settingsKeyInput.Length == 0 && configuration.VenueSyncApiKey.Length > 0)
+        if (!settingsKeyLoaded)
         {
+            settingsKeyLoaded = true;
             settingsKeyInput = configuration.VenueSyncApiKey;
         }
 
@@ -96,12 +104,13 @@ internal sealed partial class VenueSyncApp
             var venueLabel = string.IsNullOrEmpty(configuration.VenueSyncSelectedVenueName)
                 ? Loc.T(L.VenueSync.SelectVenue)
                 : configuration.VenueSyncSelectedVenueName;
+            var venues = settingsVenues;
             var venueExpanded = settingsVenuePickerExpanded;
-            var venueCard = GroupCard.Begin(theme, 1 + (venueExpanded ? settingsVenues.Count : 0),
+            var venueCard = GroupCard.Begin(theme, 1 + (venueExpanded ? venues.Count : 0),
                 Metrics.Size.Row, fillOverride: ui.Palette.CardFill);
             if (SettingsRow.Disclosure(venueCard.NextRow(), Loc.T(L.VenueSync.Venue), venueLabel, theme))
             {
-                if (settingsVenues.Count == 0)
+                if (venues.Count == 0)
                 {
                     _ = LoadVenuesAsync();
                 }
@@ -111,8 +120,9 @@ internal sealed partial class VenueSyncApp
 
             if (venueExpanded)
             {
-                foreach (var venue in settingsVenues)
+                for (var venueIndex = 0; venueIndex < venues.Count; venueIndex++)
                 {
+                    var venue = venues[venueIndex];
                     var selected = venue.Id == configuration.VenueSyncSelectedVenueId;
                     if (SettingsRow.Selectable(venueCard.NextRow(), venue.Name, selected, theme,
                             $"venuesync.settings.venue-{venue.Id}"))
@@ -122,6 +132,7 @@ internal sealed partial class VenueSyncApp
                         configuration.Save();
                         state.EnsureShiftsFresh(true);
                         settingsVenuePickerExpanded = false;
+                        settingsHouseLinksDirty = true;
                     }
                 }
             }
@@ -245,6 +256,7 @@ internal sealed partial class VenueSyncApp
             {
                 configuration.VenueSyncHouseLinks[currentHouse.Value.HouseId] = configuration.VenueSyncSelectedVenueId;
                 configuration.Save();
+                settingsHouseLinksDirty = true;
             }
 
             ImGui.SetCursorScreenPos(new Vector2(linkRowOrigin.X, linkRowOrigin.Y + linkButtonHeight));
@@ -254,14 +266,24 @@ internal sealed partial class VenueSyncApp
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
         SettingsSection.Header(Loc.T(L.VenueSync.LinkedPlotsHeader), theme);
 
-        var linkedHouseIds = new List<long>();
-        foreach (var pair in configuration.VenueSyncHouseLinks)
+        if (settingsHouseLinksDirty || settingsHouseLinksCachedForVenueId != configuration.VenueSyncSelectedVenueId)
         {
-            if (pair.Value == configuration.VenueSyncSelectedVenueId)
+            settingsHouseLinksDirty = false;
+            settingsHouseLinksCachedForVenueId = configuration.VenueSyncSelectedVenueId;
+            cachedLinkedHouseIds = new List<long>();
+            cachedLinkedHouseLabels = new List<string>();
+            foreach (var pair in configuration.VenueSyncHouseLinks)
             {
-                linkedHouseIds.Add(pair.Key);
+                if (pair.Value == configuration.VenueSyncSelectedVenueId)
+                {
+                    cachedLinkedHouseIds.Add(pair.Key);
+                    cachedLinkedHouseLabels.Add(VenueSyncHouseDetector.LabelFor(pair.Key, gameData));
+                }
             }
         }
+
+        var linkedHouseIds = cachedLinkedHouseIds;
+        var linkedHouseLabels = cachedLinkedHouseLabels;
 
         if (linkedHouseIds.Count == 0)
         {
@@ -276,7 +298,7 @@ internal sealed partial class VenueSyncApp
         {
             var houseId = linkedHouseIds[index];
             var row = linkedCard.NextRow();
-            var label = VenueSyncHouseDetector.LabelFor(houseId, gameData);
+            var label = linkedHouseLabels[index];
             var labelMaxWidth = MathF.Max(1f, row.Width - unlinkButtonWidth - Metrics.Space.Sm * scale);
             Marquee.DrawLeftAuto($"venuesync.settings.linked-plot-{houseId}", label, row.Min.X,
                 row.Center.Y - Typography.Measure(label, TextStyles.Body).Y * 0.5f, labelMaxWidth, TextStyles.Body,
@@ -289,6 +311,7 @@ internal sealed partial class VenueSyncApp
             {
                 configuration.VenueSyncHouseLinks.Remove(houseId);
                 configuration.Save();
+                settingsHouseLinksDirty = true;
             }
         }
 
@@ -297,6 +320,12 @@ internal sealed partial class VenueSyncApp
 
     private async Task LoadVenuesAsync()
     {
+        if (settingsVenuesLoading)
+        {
+            return;
+        }
+
+        settingsVenuesLoading = true;
         try
         {
             var response = await client.GetVenuesAsync(CancellationToken.None).ConfigureAwait(false);
@@ -313,6 +342,10 @@ internal sealed partial class VenueSyncApp
         catch (Exception)
         {
             settingsError = Loc.T(L.VenueSync.FailedToLoadVenues);
+        }
+        finally
+        {
+            settingsVenuesLoading = false;
         }
     }
 

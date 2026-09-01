@@ -61,6 +61,9 @@ internal sealed partial class VenueSyncApp : IPhoneApp
         salesError = null;
         settingsError = null;
         settingsCharacterLinkStatus = null;
+        settingsKeyLoaded = false;
+        settingsHouseLinksDirty = true;
+        settingsHouseLinksCachedForVenueId = null;
     }
 
     public void Draw(in PhoneContext context)
@@ -75,8 +78,17 @@ internal sealed partial class VenueSyncApp : IPhoneApp
         router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
     }
 
+    private VenueSyncRoute? lastDrawnRoute;
+
     private void DrawView(VenueSyncRoute route, Rect area, int depth)
     {
+        if (route != lastDrawnRoute)
+        {
+            OnRouteEntered(route);
+        }
+
+        lastDrawnRoute = route;
+
         ui.Body(area);
         switch (route)
         {
@@ -94,6 +106,14 @@ internal sealed partial class VenueSyncApp : IPhoneApp
                 break;
             default:
                 break;
+        }
+    }
+
+    private void OnRouteEntered(VenueSyncRoute route)
+    {
+        if (route == VenueSyncRoute.Settings)
+        {
+            settingsCharacterLinkStatus = null;
         }
     }
 
